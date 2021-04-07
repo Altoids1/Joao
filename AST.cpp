@@ -1,0 +1,109 @@
+#include <iostream>
+
+#include "AST.h"
+
+#define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
+
+Value ASTNode::resolve()
+{
+	//Failure! ASTNodes don't have a default way of resolving when this proc isn't overridden!
+	exit(1);
+}
+
+Literal::Literal(::Value V)
+{
+	heldval = V;
+}
+
+
+
+//resolve()
+Value Literal::resolve()
+{
+	return heldval;
+}
+Value BinaryExpression::resolve()
+{
+	//The Chef's ingredients: t_op, t_lhs, t_rhs
+	Value lhs = t_lhs.resolve();
+	Value rhs = t_rhs.resolve(); //TODO: This fails the principle of short-circuiting but we'll be fine for now
+
+	Value::vType lhs_type = lhs.t_vType;
+	Value::vType rhs_type = rhs.t_vType;
+
+	/*
+	So for this we're going to do something a little wacky.
+	I want this to be only one switch statement, but there's three dimensions of combinatorics:
+	the operator used, the type of lhs, and the type of rhs.
+	To do this, I am going to synthesize these three UInt8 enums into one Uint32 that is then switched against to find what to do.
+	*/
+
+	uint32_t switcher = BIN_ENUMS(t_op, lhs_type, rhs_type);
+
+	switch (switcher)
+	{
+	//DOUBLE & DOUBLE
+	case(BIN_ENUMS(bOps::Add, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double + rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Subtract, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double - rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Multiply, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double * rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Divide, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double / rhs.t_value.as_double);
+
+	//DOUBLE & INT
+	case(BIN_ENUMS(bOps::Add, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double + rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Subtract, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double - rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Multiply, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double * rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Divide, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double / rhs.t_value.as_int);
+
+	//INT & DOUBLE
+	case(BIN_ENUMS(bOps::Add, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int + rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Subtract, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int - rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Multiply, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int * rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Divide, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int / rhs.t_value.as_double);
+
+	//INT & INT
+	case(BIN_ENUMS(bOps::Add, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int + rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Subtract, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int - rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Multiply, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int * rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Divide, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int / rhs.t_value.as_int);
+
+	default:
+		std::cout << "WARNING: Invalid operation detected!\n";
+		return Value();
+	}
+}
+
+
+Value Function::resolve()
+{
+	for (auto it = statements.begin(); it != statements.end(); ++it)
+	{
+		if (it->class_name() == "ReturnStatement")
+		{
+			ReturnStatement rt = *it; // Is this safe?
+			if (rt.has_expr) // If this actually has something to return
+				return rt.resolve(); // Do that
+			break;// otherwise use the default returnValue
+		}
+		else
+		{
+			it->resolve(); // I dunno.
+		}
+	}
+	return returnValue;
+}
