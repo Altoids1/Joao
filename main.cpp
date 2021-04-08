@@ -11,22 +11,33 @@ Somewhat dynamically typed but lets not get too angsty about it
 
 #include "Forward.h"
 #include "AST.h"
-#include "Parser.h"
 #include "Interpreter.h"
 #include "Object.h"
+#include "Parser.h"
 
 int main()
 {
-	Program parsed(Function("main", std::vector<Expression>{BinaryExpression(
-		
-	)});
+	//std::vector<int> foo = std::vector<int>({ 1,3,4 });
+
+	Literal a = Literal(Value(2)), b = Literal(Value(1));
+	BinaryExpression binexpr = BinaryExpression(
+		BinaryExpression::bOps::Add,
+		a,
+		b
+	);
+	ReturnStatement ret = ReturnStatement(binexpr);
+	std::vector<Expression> vret = { ret };
+
+	Function foo = Function("main", vret);
+
+	Program parsed = Program(foo);
 
 	Interpreter interpreter;
 	parsed.set_interp(interpreter);
 
 	Value v = interpreter.execute(parsed);
 
-	std::cout << v.t_value.as_double;
+	std::cout << v.t_value.as_int;
 
 
 	return EXIT_SUCCESS;

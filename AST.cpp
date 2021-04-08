@@ -23,13 +23,8 @@ Value::~Value()
 Value ASTNode::resolve(Interpreter& interp)
 {
 	interp.RuntimeError(*this, "Attempted to resolve() an abstract ASTNode!");
+	return Value();
 }
-
-Literal::Literal(::Value V)
-{
-	heldval = V;
-}
-
 
 
 //resolve()
@@ -99,6 +94,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 
 	default:
 		interp.RuntimeError(*this, "Failed to do a binary operation!");
+		return Value();
 	}
 }
 
@@ -124,6 +120,5 @@ Value Function::resolve(Interpreter & interp)
 
 Value CallExpression::resolve(Interpreter& interp)
 {
-	Function fnct = interp.get_func(func_name);
-	return fnct.resolve(interp);
+	return interp.get_func(func_name).resolve(interp);
 }

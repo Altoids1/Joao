@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AST.h"
-
+#include "Object.h"
 
 
 class Program // this is, especially for now, just a wrapper for a master function which constitutes main()
@@ -26,7 +26,7 @@ public:
 	// I wanna point out that this is distinct from Interpreter's version of this function; it's a raw call to a function's name, directory data and all, while Interpreter's resolves scope first.
 	Function get_func(std::string name)
 	{
-		assert(definedFunctions.find(name) != definedFunctions.end());
+		assert(definedFunctions.count(name));
 		return definedFunctions[name];
 	}
 	void set_func(std::string name, Function& f)

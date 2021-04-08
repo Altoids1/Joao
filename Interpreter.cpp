@@ -20,6 +20,6 @@ Function Interpreter::get_func(std::string str)
 
 	
 	//*Then* get & return the function
-	Function f = prog.get_func("newstr");
+	Function f = prog.get_func(newstr);
 	return f;
 }

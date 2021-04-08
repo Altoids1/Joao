@@ -2,12 +2,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 //#define NDEBUG
 #include <assert.h> 
 
 #include "Forward.h"
-#include "Object.h"
 
 class Value { // A general pseudo-typeless Value used to store data within the programming language.
 
@@ -30,7 +30,10 @@ public:
 	}t_value;
 
 	//Constructors
-	Value();
+	Value()
+	{
+
+	};
 	Value(int i)
 	{
 		t_value.as_int = i;
@@ -69,7 +72,11 @@ public:
 class Literal : public ASTNode { // A node which denotes a plain ol' literal.
 	Value heldval;
 public:
-	Literal(Value);
+	Literal(Value V)
+		:heldval(V)
+	{
+	}
+
 	virtual Value resolve(Interpreter&) override;
 };
 
@@ -81,6 +88,8 @@ class Expression : public ASTNode
 
 class BinaryExpression : public Expression 
 { // An ASTNode which is an operation between two, smaller Expressions.
+
+public:
 	enum class bOps : uint8_t {
 		Add,
 		Subtract,
@@ -136,8 +145,13 @@ class Function : public ASTNode
 {
 	Value returnValue = Value(); // My return value
 	std::vector<Expression> statements; // The statements which're executed when I am run
+	//std::vector<Expression> args;
 	std::string t_name; // My name
 public:
+	Function()
+	{
+		std::cout << "Why was I default-constructed?";
+	}
 	Function(std::string name, std::vector<Expression>& exprs)
 	{
 		t_name = name;
