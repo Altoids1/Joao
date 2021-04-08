@@ -1,13 +1,28 @@
 #include <iostream>
 
 #include "AST.h"
+#include "Interpreter.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 
-Value ASTNode::resolve()
+/*
+* I've yet to be convinced that it's necessary for me to do this.
+Value::~Value()
 {
-	//Failure! ASTNodes don't have a default way of resolving when this proc isn't overridden!
-	exit(1);
+	if (t_vType == vType::String)
+	{
+		(*t_value.as_string_ptr).~std::string;
+	}
+	else if (t_vType == vType::Object)
+	{
+		delete(*(t_value.as_object_ptr));
+	}
+}
+*/
+
+Value ASTNode::resolve(Interpreter& interp)
+{
+	interp.RuntimeError(*this, "Attempted to resolve() an abstract ASTNode!");
 }
 
 Literal::Literal(::Value V)
@@ -18,15 +33,15 @@ Literal::Literal(::Value V)
 
 
 //resolve()
-Value Literal::resolve()
+Value Literal::resolve(Interpreter& interp)
 {
 	return heldval;
 }
-Value BinaryExpression::resolve()
+Value BinaryExpression::resolve(Interpreter& interp)
 {
 	//The Chef's ingredients: t_op, t_lhs, t_rhs
-	Value lhs = t_lhs.resolve();
-	Value rhs = t_rhs.resolve(); //TODO: This fails the principle of short-circuiting but we'll be fine for now
+	Value lhs = t_lhs.resolve(interp);
+	Value rhs = t_rhs.resolve(interp); //TODO: This fails the principle of short-circuiting but we'll be fine for now
 
 	Value::vType lhs_type = lhs.t_vType;
 	Value::vType rhs_type = rhs.t_vType;
@@ -83,13 +98,12 @@ Value BinaryExpression::resolve()
 		return Value(lhs.t_value.as_int / rhs.t_value.as_int);
 
 	default:
-		std::cout << "WARNING: Invalid operation detected!\n";
-		return Value();
+		interp.RuntimeError(*this, "Failed to do a binary operation!");
 	}
 }
 
 
-Value Function::resolve()
+Value Function::resolve(Interpreter & interp)
 {
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
@@ -97,13 +111,19 @@ Value Function::resolve()
 		{
 			ReturnStatement rt = *it; // Is this safe?
 			if (rt.has_expr) // If this actually has something to return
-				return rt.resolve(); // Do that
+				return rt.resolve(interp); // Do that
 			break;// otherwise use the default returnValue
 		}
 		else
 		{
-			it->resolve(); // I dunno.
+			it->resolve(interp); // I dunno.
 		}
 	}
 	return returnValue;
+}
+
+Value CallExpression::resolve(Interpreter& interp)
+{
+	Function fnct = interp.get_func(func_name);
+	return fnct.resolve(interp);
 }

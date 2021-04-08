@@ -3,14 +3,11 @@
 #include <unordered_map>
 #include <vector>
 
+//#define NDEBUG
+#include <assert.h> 
+
 #include "Forward.h"
-
-class Object {
-
-public:
-	std::string object_type; // A string denoting the directory position of this object.
-	std::unordered_map<std::string, Value> properties; // A general container for all properties of this object.
-};
+#include "Object.h"
 
 class Value { // A general pseudo-typeless Value used to store data within the programming language.
 
@@ -32,6 +29,7 @@ public:
 		Object* as_object_ptr;
 	}t_value;
 
+	//Constructors
 	Value();
 	Value(int i)
 	{
@@ -60,17 +58,21 @@ public:
 	}
 };
 
-class Program { // A Master Controller which holds the top (global) scope, king of all scopes and ASTnodes.
-
-};
-
 class ASTNode // ASTNodes are abstract symbols which together form a "flow chart" tree of symbols that the parser creates from the text that the interpreter then interprets.
 {
 
 public:
 	virtual const std::string class_name() const { return "ASTNode"; }
-	virtual Value resolve(); // Collapses this symbol into a real dang thing or process that the interpreter can do.
+	virtual Value resolve(Interpreter&); // Collapses this symbol into a real dang thing or process that the interpreter can do.
 };
+
+class Literal : public ASTNode { // A node which denotes a plain ol' literal.
+	Value heldval;
+public:
+	Literal(Value);
+	virtual Value resolve(Interpreter&) override;
+};
+
 
 class Expression : public ASTNode
 {
@@ -94,7 +96,7 @@ class BinaryExpression : public Expression
 	{
 		
 	}
-	virtual Value resolve() override;
+	virtual Value resolve(Interpreter&) override;
 };
 
 class ReturnStatement : public Expression {
@@ -113,18 +115,33 @@ public:
 	}
 };
 
+class CallExpression : public Expression {
+	std::string func_name;
+public:
+	CallExpression(std::string str)
+		:func_name(str)
+	{
+
+	}
+	CallExpression(Value &v)
+	{
+		assert(v.t_vType == Value::vType::String);
+		func_name = *(v.t_value.as_string_ptr);
+	}
+
+	virtual Value resolve(Interpreter&) override;
+};
+
 class Function : public ASTNode
 {
-	Value returnValue = Value();
-	std::vector<Expression> statements;
+	Value returnValue = Value(); // My return value
+	std::vector<Expression> statements; // The statements which're executed when I am run
+	std::string t_name; // My name
 public:
-	virtual Value resolve() override;
+	Function(std::string name, std::vector<Expression>& exprs)
+	{
+		t_name = name;
+		statements = exprs;
+	}
+	virtual Value resolve(Interpreter&) override;
 };
-
-class Literal : public ASTNode { // A node which denotes a plain ol' literal.
-	Value heldval;
-public:
-	Literal(Value);
-	virtual Value resolve() override;
-};
-

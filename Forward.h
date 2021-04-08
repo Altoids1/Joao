@@ -2,3 +2,4 @@
 
 class Object;
 class Value;
+class Interpreter;
