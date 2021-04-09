@@ -96,9 +96,9 @@ public:
 		Multiply,
 		Divide
 	}t_op;
-	ASTNode t_lhs, t_rhs;
+	ASTNode* t_lhs, *t_rhs;
 
-	BinaryExpression(bOps Operator, ASTNode &l, ASTNode &r)
+	BinaryExpression(bOps Operator, ASTNode* l, ASTNode* r)
 		:t_lhs(l) // What the fuck is this syntax holy shit
 		,t_rhs(r)
 		,t_op(Operator)
@@ -109,18 +109,25 @@ public:
 };
 
 class ReturnStatement : public Expression {
-	ASTNode held_expr;
+	ASTNode *held_expr;
 public:
 	bool has_expr{ false };
+
+	virtual const std::string class_name() const override { return "ReturnStatement"; }
+
 	ReturnStatement()
-		:held_expr(Literal(Value()))
+		:held_expr(&Literal(Value()))
 	{
 
 	}
-	ReturnStatement(ASTNode& node)
+	ReturnStatement(ASTNode* node)
 		:held_expr(node)
 	{
 		has_expr = true;
+	}
+	virtual Value resolve(Interpreter& interp) override
+	{
+		return held_expr->resolve(interp);
 	}
 };
 
@@ -144,18 +151,19 @@ public:
 class Function : public ASTNode
 {
 	Value returnValue = Value(); // My return value
-	std::vector<Expression> statements; // The statements which're executed when I am run
+	std::vector<Expression*> statements; // The statements which're executed when I am run
 	//std::vector<Expression> args;
 	std::string t_name; // My name
 public:
-	Function()
+	Function(std::string name, Expression* expr)
 	{
-		std::cout << "Why was I default-constructed?";
+		statements = std::vector<Expression*>{ expr };
 	}
-	Function(std::string name, std::vector<Expression>& exprs)
+	Function(std::string name, std::vector<Expression*> &exprs) // Hopefully this works. :(
 	{
 		t_name = name;
 		statements = exprs;
 	}
 	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "Function"; }
 };

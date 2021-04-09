@@ -15,22 +15,22 @@ Somewhat dynamically typed but lets not get too angsty about it
 #include "Object.h"
 #include "Parser.h"
 
+
 int main()
 {
-	//std::vector<int> foo = std::vector<int>({ 1,3,4 });
 
-	Literal a = Literal(Value(2)), b = Literal(Value(1));
-	BinaryExpression binexpr = BinaryExpression(
+	/*
+	main()
+	{
+		return 2 + 1;
+	}
+	*/
+	Function foo = Function("main", &ReturnStatement(&BinaryExpression(
 		BinaryExpression::bOps::Add,
-		a,
-		b
-	);
-	ReturnStatement ret = ReturnStatement(binexpr);
-	std::vector<Expression> vret = { ret };
-
-	Function foo = Function("main", vret);
-
-	Program parsed = Program(foo);
+		&Literal(Value(2)),
+		&Literal(Value(1))
+	)));
+	Program parsed = Program(&foo);
 
 	Interpreter interpreter;
 	parsed.set_interp(interpreter);

@@ -13,11 +13,11 @@ public:
 	Interpreter();
 
 	Value execute(Program&);
-	Function get_func(std::string);
+	Function* get_func(std::string);
 	void RuntimeError(ASTNode& a,std::string what)
 	{
 		//This is just a basic setup while everything else is fleshed out.
 		std::cout <<"ERROR: " <<what;
-		exit(1);
+		//exit(1);
 	}
 };

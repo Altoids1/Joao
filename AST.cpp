@@ -22,7 +22,7 @@ Value::~Value()
 
 Value ASTNode::resolve(Interpreter& interp)
 {
-	interp.RuntimeError(*this, "Attempted to resolve() an abstract ASTNode!");
+	interp.RuntimeError(*this, "Attempted to resolve() an abstract ASTNode! (Type:" + class_name()  + ")");
 	return Value();
 }
 
@@ -35,8 +35,8 @@ Value Literal::resolve(Interpreter& interp)
 Value BinaryExpression::resolve(Interpreter& interp)
 {
 	//The Chef's ingredients: t_op, t_lhs, t_rhs
-	Value lhs = t_lhs.resolve(interp);
-	Value rhs = t_rhs.resolve(interp); //TODO: This fails the principle of short-circuiting but we'll be fine for now
+	Value lhs = t_lhs->resolve(interp);
+	Value rhs = t_rhs->resolve(interp); //TODO: This fails the principle of short-circuiting but we'll be fine for now
 
 	Value::vType lhs_type = lhs.t_vType;
 	Value::vType rhs_type = rhs.t_vType;
@@ -103,16 +103,19 @@ Value Function::resolve(Interpreter & interp)
 {
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
-		if (it->class_name() == "ReturnStatement")
+		//it is a pointer to a pointer to an Expression.
+		Expression* ptr = *it;
+		if (ptr->class_name() == "ReturnStatement")
 		{
-			ReturnStatement rt = *it; // Is this safe?
+			ReturnStatement rt = *((ReturnStatement*)ptr); // Is this safe?
+
 			if (rt.has_expr) // If this actually has something to return
 				return rt.resolve(interp); // Do that
 			break;// otherwise use the default returnValue
 		}
 		else
 		{
-			it->resolve(interp); // I dunno.
+			ptr->resolve(interp); // I dunno.
 		}
 	}
 	return returnValue;
@@ -120,5 +123,5 @@ Value Function::resolve(Interpreter & interp)
 
 Value CallExpression::resolve(Interpreter& interp)
 {
-	return interp.get_func(func_name).resolve(interp);
+	return interp.get_func(func_name)->resolve(interp);
 }
