@@ -1,6 +1,7 @@
 #include "Forward.h"
 #include "AST.h"
 #include "Interpreter.h"
+#include "Directory.h"
 
 Interpreter::Interpreter()
 {
