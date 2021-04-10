@@ -7,7 +7,7 @@ Somewhat dynamically typed but lets not get too angsty about it
 
 
 */
-#include <iostream>
+
 
 #include "Forward.h"
 #include "AST.h"

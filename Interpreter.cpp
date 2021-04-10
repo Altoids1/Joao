@@ -1,3 +1,4 @@
+#include "Forward.h"
 #include "AST.h"
 #include "Interpreter.h"
 
