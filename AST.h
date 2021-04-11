@@ -89,7 +89,7 @@ public:
 	Identifier(std::string s)
 		:t_name(s)
 	{
-		std::cout << "I've been created with name " + s + "!\n";
+		//std::cout << "I've been created with name " + s + "!\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 	std::string get_str()
@@ -102,11 +102,11 @@ public:
 class AssignmentStatement : public Expression
 {
 	enum class aOps : uint8_t {
-		Assign,
-		AssignAdd,
-		AssignSubtract,
-		AssignMultiply,
-		AssignDivide
+		Assign, // =
+		AssignAdd, // +=
+		AssignSubtract, // -=
+		AssignMultiply, // *=
+		AssignDivide // /=
 	}t_op;
 	Identifier* id;
 	ASTNode* rhs;
@@ -116,7 +116,7 @@ public:
 		rhs(r),
 		t_op(o)
 	{
-		std::cout << "My identifier has the name " + id->get_str() + "!\n";
+		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 };

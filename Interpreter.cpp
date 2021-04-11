@@ -16,8 +16,8 @@ Value Interpreter::execute(Program& program)
 
 void Interpreter::set_var(std::string varname, Value val, ASTNode* setter)
 {
-	std::cout << "Setting variable " + varname;
-	varscope.set(varname, &val);
+	//std::cout << "Setting variable " + varname + " to value " + std::to_string(val.t_value.as_int) + "\n";
+	varscope.set(varname, val);
 }
 
 Value Interpreter::get_var(std::string varname, ASTNode *getter)

@@ -15,13 +15,11 @@ Somewhat dynamically typed but lets not get too angsty about it
 #include "Object.h"
 #include "Parser.h"
 
+
 #define PROGRAM 2
 
 int main()
 {
-
-
-
 #if PROGRAM == 1
 	/*
 	main()
@@ -44,13 +42,23 @@ int main()
 	}
 	*/
 
-	Function main = Function("main", &AssignmentStatement(&Identifier("a"), &Literal(Value(7))));
-	main.append(&AssignmentStatement(&Identifier("b"), &Literal(Value(3))));
-	main.append(&ReturnStatement(&BinaryExpression(
-		BinaryExpression::bOps::Add,
-		&Identifier("a"),
-		&Identifier("b")
-	)));
+	Identifier a = Identifier("a");
+	Identifier b = Identifier("b");
+	Literal seven = Literal(Value(7));
+	Literal three = Literal(Value(4));
+	AssignmentStatement a_seven = AssignmentStatement(&a, &seven);
+	AssignmentStatement b_three = AssignmentStatement(&b, &three);
+	BinaryExpression a_plus_b = BinaryExpression(
+		BinaryExpression::bOps::Subtract,
+		&a,
+		&b
+	);
+	ReturnStatement ret_aplusb = ReturnStatement(&a_plus_b);
+
+
+	Function main = Function("main", &a_seven);
+	main.append(&b_three);
+	main.append(&ret_aplusb);
 #endif
 	Program parsed = Program(&main);
 

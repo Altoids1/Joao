@@ -35,9 +35,10 @@ public:
 		//else...
 		return nullptr; // Give up.
 	}
-	void set(std::string name, _Ty* t)
+	void set(std::string name, _Ty &t)
 	{
-		ScopeTable[name] = t;
+		_Ty* T = new _Ty(t); // Make a dynamically-allocated copy
+		ScopeTable[name] = T; // and store its pointery-doodle.
 	}
 
 

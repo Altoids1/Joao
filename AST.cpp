@@ -33,9 +33,11 @@ Value Literal::resolve(Interpreter& interp)
 }
 
 Value Identifier::resolve(Interpreter& interp)
-{// So to "resolve" this means to get its current value, if it has one.
+{
+	// So to "resolve" this means to get its current value, if it has one.
 	//Some uses of this class may actually not call the resolve function, and instead simply use it to store the string name of a variable,
 	//so as to be able to set it within a scope or, whatever, like for assignment and assignment-y purposes.
+
 	return interp.get_var(t_name,this);
 }
 
@@ -48,10 +50,10 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
 	}
 
-	//std::cout << "Their name is " + id->get_str() + "!";
+	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 	//exit(1);
 
-	interp.set_var(id->get_str(), &rhs_val, this);
+	interp.set_var(id->get_str(), rhs_val, this);
 
 	return rhs_val;
 }
