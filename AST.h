@@ -55,6 +55,8 @@ public:
 		t_value.as_object_ptr = &o;
 		t_vType = vType::Object;
 	}
+
+	std::string to_string();
 };
 
 class ASTNode // ASTNodes are abstract symbols which together form a "flow chart" tree of symbols that the parser creates from the text that the interpreter then interprets.

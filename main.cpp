@@ -67,7 +67,7 @@ int main()
 
 	Value v = interpreter.execute(parsed);
 
-	std::cout << v.t_value.as_int;
+	std::cout << v.to_string();
 
 
 	return EXIT_SUCCESS;

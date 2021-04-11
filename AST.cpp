@@ -19,6 +19,25 @@ Value::~Value()
 }
 */
 
+std::string Value::to_string()
+{
+	switch (t_vType)
+	{
+	case(vType::Null):
+		return "NULL";
+	case(vType::Bool):
+		return std::to_string(t_value.as_bool);
+	case(vType::Integer):
+		return std::to_string(t_value.as_int);
+	case(vType::Double):
+		return std::to_string(t_value.as_double);
+	case(vType::String):
+		return *(t_value.as_string_ptr);
+	case(vType::Object):
+		return t_value.as_object_ptr->dump();
+	}
+}
+
 Value ASTNode::resolve(Interpreter& interp)
 {
 	interp.RuntimeError(*this, "Attempted to resolve() an abstract ASTNode! (Type:" + class_name()  + ")");
