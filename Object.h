@@ -16,6 +16,17 @@ public:
 	{
 
 	}
+	std::string dump()
+	{
+		std::string st = object_type + "/{";
+
+		for (auto& it : properties) {
+			// Do stuff
+			st += "(" + it.first + "," + it.second.to_string() + ") ";
+		}
+
+		return st + "}";
+	}
 };
 
 class ObjectType // Stores the default methods and properties of this type of Object.
