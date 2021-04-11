@@ -45,11 +45,11 @@ int main()
 	Identifier a = Identifier("a");
 	Identifier b = Identifier("b");
 	Literal seven = Literal(Value(7));
-	Literal three = Literal(Value(4));
+	Literal three = Literal(Value(3));
 	AssignmentStatement a_seven = AssignmentStatement(&a, &seven);
 	AssignmentStatement b_three = AssignmentStatement(&b, &three);
 	BinaryExpression a_plus_b = BinaryExpression(
-		BinaryExpression::bOps::Subtract,
+		BinaryExpression::bOps::Add,
 		&a,
 		&b
 	);
