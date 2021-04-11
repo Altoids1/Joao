@@ -3,7 +3,7 @@
 #include "Interpreter.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
-
+#define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
 //It's necessary for me to do this.
 Value::~Value()
@@ -102,6 +102,45 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 	interp.set_var(id->get_str(), rhs_val, this);
 
 	return rhs_val;
+}
+
+Value UnaryExpression::resolve(Interpreter& interp)
+{
+	Value rhs = t_rhs->resolve(interp);
+	Value::vType rtype = rhs.t_vType;
+
+
+	uint32_t switcher = UN_ENUMS(t_op, rtype);
+
+	switch (switcher)
+	{
+	//NEGATE
+	case(UN_ENUMS(uOps::Negate,Value::vType::Integer)):
+		return Value(-rhs.t_value.as_int);
+	case(UN_ENUMS(uOps::Negate, Value::vType::Double)):
+		return Value(-rhs.t_value.as_double);
+	//NOT
+	case(UN_ENUMS(uOps::Not, Value::vType::Null)): // !NULL === NULL
+		return Value();
+	case(UN_ENUMS(uOps::Not, Value::vType::Integer)):
+		return Value(!rhs.t_value.as_int);
+	case(UN_ENUMS(uOps::Not, Value::vType::Double)):
+		return Value(!rhs.t_value.as_double);
+	//BITWISENOT
+	case(UN_ENUMS(uOps::BitwiseNot, Value::vType::Integer)):
+		return Value(~rhs.t_value.as_int);
+	case(UN_ENUMS(uOps::BitwiseNot, Value::vType::Double)): // Does, indeed, flip the bits of the double
+	{
+		uint64_t fauxint = ~*(reinterpret_cast<uint64_t*>(&rhs.t_value.as_double));
+		fauxint = fauxint;
+		double newdouble = *(reinterpret_cast<double*>(&fauxint));
+		return Value(newdouble);
+	}
+
+	default:
+		interp.RuntimeError(*this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
+		return Value();
+	}
 }
 
 Value BinaryExpression::resolve(Interpreter& interp)

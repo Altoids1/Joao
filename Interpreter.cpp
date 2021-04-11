@@ -33,6 +33,7 @@ Value Interpreter::get_var(std::string varname, ASTNode *getter)
 
 Function* Interpreter::get_func(std::string funkname, ASTNode *caller)
 {
+
 	std::string objscope = objscopestr;
 	while (true)
 	{

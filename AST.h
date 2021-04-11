@@ -128,6 +128,23 @@ public:
 	virtual Value resolve(Interpreter&) override;
 };
 
+class UnaryExpression : public Expression
+{
+	enum class uOps : uint8_t {
+		Not,
+		Negate,
+		BitwiseNot
+	}t_op;
+	ASTNode* t_rhs;
+	UnaryExpression(uOps Operator, ASTNode* r)
+		:t_op(Operator)
+		,t_rhs(r)
+	{
+
+	}
+	virtual Value resolve(Interpreter&) override;
+};
+
 class BinaryExpression : public Expression 
 { // An ASTNode which is an operation between two, smaller Expressions.
 
