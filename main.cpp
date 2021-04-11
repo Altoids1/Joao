@@ -16,11 +16,11 @@ Somewhat dynamically typed but lets not get too angsty about it
 #include "Parser.h"
 
 
-#define PROGRAM 2
+#define PROGRAM 3
 
 int main()
 {
-#if PROGRAM == 1
+#if PROGRAM == 1 // Tests adding two literals together and returning
 	/*
 	main()
 	{
@@ -32,7 +32,7 @@ int main()
 		&Literal(Value(2)),
 		&Literal(Value(1))
 	)));
-#elif PROGRAM == 2
+#elif PROGRAM == 2 // Tests setting vars and doing math with them
 	/*
 	main()
 	{
@@ -48,6 +48,33 @@ int main()
 	Literal three = Literal(Value(3));
 	AssignmentStatement a_seven = AssignmentStatement(&a, &seven);
 	AssignmentStatement b_three = AssignmentStatement(&b, &three);
+	BinaryExpression a_plus_b = BinaryExpression(
+		BinaryExpression::bOps::Add,
+		&a,
+		&b
+	);
+	ReturnStatement ret_aplusb = ReturnStatement(&a_plus_b);
+
+
+	Function main = Function("main", &a_seven);
+	main.append(&b_three);
+	main.append(&ret_aplusb);
+#elif PROGRAM == 3 // Tests Values containing strings, and doing math with them
+	/*
+	main()
+	{
+		a = "Hello";
+		b = " World!";
+		return a + b;
+	}
+	*/
+	Identifier a = Identifier("a");
+	Identifier b = Identifier("b");
+	std::string h = "Hello", _w = " World!";
+	Literal hello = Literal(Value(h));
+	Literal _world = Literal(Value(_w));
+	AssignmentStatement a_seven = AssignmentStatement(&a, &hello);
+	AssignmentStatement b_three = AssignmentStatement(&b, &_world);
 	BinaryExpression a_plus_b = BinaryExpression(
 		BinaryExpression::bOps::Add,
 		&a,

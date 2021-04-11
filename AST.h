@@ -29,7 +29,8 @@ public:
 	Value()
 	{
 
-	};
+	}
+	~Value();
 	Value(int i)
 	{
 		t_value.as_int = i;
@@ -45,10 +46,12 @@ public:
 		t_value.as_bool = b;
 		t_vType = vType::Bool;
 	}
-	Value(std::string& s)
+	Value(std::string s)
 	{
-		t_value.as_string_ptr = &s;
+		std::string* our_str = new std::string(s);
+		t_value.as_string_ptr = our_str;
 		t_vType = vType::String;
+		//std::cout << "Construction successful: " + *(t_value.as_string_ptr);
 	}
 	Value(Object& o)
 	{
@@ -57,6 +60,7 @@ public:
 	}
 
 	std::string to_string();
+	std::string typestring();
 };
 
 class ASTNode // ASTNodes are abstract symbols which together form a "flow chart" tree of symbols that the parser creates from the text that the interpreter then interprets.
@@ -73,6 +77,7 @@ public:
 	Literal(Value V)
 		:heldval(V)
 	{
+		//std::cout << "Constructing literal...\n";
 	}
 
 	virtual Value resolve(Interpreter&) override;

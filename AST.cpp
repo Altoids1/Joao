@@ -4,20 +4,24 @@
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 
-/*
-* I've yet to be convinced that it's necessary for me to do this.
+
+//It's necessary for me to do this.
 Value::~Value()
 {
+	//std::cout << "*Yoda Scream*\n";
+	//TODO: Make sure we're not the only being in the universe that has a pointer to these things.
+	/*
 	if (t_vType == vType::String)
 	{
-		(*t_value.as_string_ptr).~std::string;
+		delete t_value.as_string_ptr;
 	}
 	else if (t_vType == vType::Object)
 	{
-		delete(*(t_value.as_object_ptr));
+		delete t_value.as_object_ptr;
 	}
+	*/
 }
-*/
+
 
 std::string Value::to_string()
 {
@@ -159,9 +163,40 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		return Value(lhs.t_value.as_int * rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Integer, Value::vType::Integer)):
 		return Value(lhs.t_value.as_int / rhs.t_value.as_int);
+	
+	//STRING & STRING
+	case(BIN_ENUMS(bOps::Add, Value::vType::String, Value::vType::String)):
+	{
+		std::string newstr = *(lhs.t_value.as_string_ptr) + *(rhs.t_value.as_string_ptr);
+		return Value(newstr);
+	}
+	//STRING & INT
+	case(BIN_ENUMS(bOps::Add, Value::vType::String, Value::vType::Integer)):
+	{
+		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_int);
+		return Value(newstr);
+	}
+	//INT & STRING
+	case(BIN_ENUMS(bOps::Add, Value::vType::Integer, Value::vType::String)):
+	{
+		std::string newstr = std::to_string(lhs.t_value.as_int) + *(rhs.t_value.as_string_ptr);
+		return Value(newstr);
+	}
+	//STRING & DOUBLE
+	case(BIN_ENUMS(bOps::Add, Value::vType::String, Value::vType::Double)):
+	{
+		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_double);
+		return Value(newstr);
+	}
+	//DOUBLE & STRING
+	case(BIN_ENUMS(bOps::Add, Value::vType::Double, Value::vType::String)):
+	{
+		std::string newstr = std::to_string(lhs.t_value.as_double) + *(rhs.t_value.as_string_ptr);
+		return Value(newstr);
+	}
 
 	default:
-		interp.RuntimeError(*this, "Failed to do a binary operation! (" + std::to_string(lhs.t_value.as_int) + ", " + std::to_string(rhs.t_value.as_int) + ")");
+		interp.RuntimeError(*this, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
 		return Value();
 	}
 }
