@@ -35,6 +35,29 @@ std::string Value::to_string()
 		return *(t_value.as_string_ptr);
 	case(vType::Object):
 		return t_value.as_object_ptr->dump();
+	default:
+		return "???";
+	}
+}
+
+std::string Value::typestring()
+{
+	switch (t_vType)
+	{
+	case(vType::Null):
+		return "NULL";
+	case(vType::Bool):
+		return "Boolean";
+	case(vType::Integer):
+		return "Integer";
+	case(vType::Double):
+		return "Double";
+	case(vType::String):
+		return "String";
+	case(vType::Object):
+		return "Object";
+	default:
+		return "UNKNOWN!!";
 	}
 }
 
