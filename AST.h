@@ -82,6 +82,45 @@ class Expression : public ASTNode
 
 };
 
+class Identifier : public ASTNode
+{
+	std::string t_name;
+public:
+	Identifier(std::string s)
+		:t_name(s)
+	{
+		std::cout << "I've been created with name " + s + "!\n";
+	}
+	virtual Value resolve(Interpreter&) override;
+	std::string get_str()
+	{
+		return t_name;
+	}
+	virtual const std::string class_name() const override { return "Identifier"; }
+};
+
+class AssignmentStatement : public Expression
+{
+	enum class aOps : uint8_t {
+		Assign,
+		AssignAdd,
+		AssignSubtract,
+		AssignMultiply,
+		AssignDivide
+	}t_op;
+	Identifier* id;
+	ASTNode* rhs;
+public:
+	AssignmentStatement(Identifier* i, ASTNode* r, aOps o = aOps::Assign)
+		:id(i),
+		rhs(r),
+		t_op(o)
+	{
+		std::cout << "My identifier has the name " + id->get_str() + "!\n";
+	}
+	virtual Value resolve(Interpreter&) override;
+};
+
 class BinaryExpression : public Expression 
 { // An ASTNode which is an operation between two, smaller Expressions.
 
@@ -155,11 +194,17 @@ public:
 	{
 		statements = std::vector<Expression*>{ expr };
 	}
-	Function(std::string name, std::vector<Expression*> &exprs) // Hopefully this works. :(
+	Function(std::string name, std::vector<Expression*> exprs) // Hopefully this works. :(
 	{
 		t_name = name;
 		statements = exprs;
 	}
+	Function* append(Expression* expr)
+	{
+		statements.push_back(expr);
+		return this;
+	}
+
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "Function"; }
 };

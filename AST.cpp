@@ -31,6 +31,31 @@ Value Literal::resolve(Interpreter& interp)
 {
 	return heldval;
 }
+
+Value Identifier::resolve(Interpreter& interp)
+{// So to "resolve" this means to get its current value, if it has one.
+	//Some uses of this class may actually not call the resolve function, and instead simply use it to store the string name of a variable,
+	//so as to be able to set it within a scope or, whatever, like for assignment and assignment-y purposes.
+	return interp.get_var(t_name,this);
+}
+
+Value AssignmentStatement::resolve(Interpreter& interp)
+{
+	Value rhs_val = rhs->resolve(interp);
+
+	if (t_op != aOps::Assign)
+	{
+		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+	}
+
+	//std::cout << "Their name is " + id->get_str() + "!";
+	//exit(1);
+
+	interp.set_var(id->get_str(), &rhs_val, this);
+
+	return rhs_val;
+}
+
 Value BinaryExpression::resolve(Interpreter& interp)
 {
 	//The Chef's ingredients: t_op, t_lhs, t_rhs
@@ -92,10 +117,12 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		return Value(lhs.t_value.as_int / rhs.t_value.as_int);
 
 	default:
-		interp.RuntimeError(*this, "Failed to do a binary operation!");
+		interp.RuntimeError(*this, "Failed to do a binary operation! (" + std::to_string(lhs.t_value.as_int) + ", " + std::to_string(rhs.t_value.as_int) + ")");
 		return Value();
 	}
 }
+
+
 
 
 Value Function::resolve(Interpreter & interp)
@@ -122,5 +149,5 @@ Value Function::resolve(Interpreter & interp)
 
 Value CallExpression::resolve(Interpreter& interp)
 {
-	return interp.get_func(func_name)->resolve(interp);
+	return interp.get_func(func_name,this)->resolve(interp);
 }
