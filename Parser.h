@@ -2,6 +2,7 @@
 
 #include "AST.h"
 #include "Object.h"
+#include "Scanner.h"
 
 template <class _Ty>
 class Scope {
@@ -98,4 +99,24 @@ public:
 class Parser
 {
 	Program t_program;
+	std::vector<Token> tokens;
+protected:
+	void ParserError()
+	{
+		std::cout << "PARSER_ERROR: UNKNOWN!";
+		exit(1);
+	}
+	void ParserError(Token& t, std::string what)
+	{
+		//This is just a basic setup while everything else is fleshed out.
+		std::cout << "PARSER_ERROR: " << what << "\n";
+		exit(1);
+	}
+public:
+	Parser(std::vector<Token>&t)
+		:tokens(t)
+	{
+
+	}
+
 };
