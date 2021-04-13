@@ -65,7 +65,7 @@ public:
 	virtual std::string class_name() const override { return "NumberToken"; }
 };
 
-class SymbolToken final : Token
+class SymbolToken final : public Token
 {
 	char symbol[2];
 public:
@@ -76,7 +76,15 @@ public:
 		symbol[1] = symb2;
 	}
 
-	virtual std::string dump() override;
+	virtual std::string dump() override {
+		std::string str = "";
+		str.push_back(symbol[0]);
+		if (symbol[1] != '\0')
+		{
+			str.push_back(symbol[1]);
+		}
+		return "LINE: " + std::to_string(line) + std::string("SYMBOL: ") + str;
+	}
 	virtual std::string class_name() const override { return "SymbolToken"; }
 };
 
@@ -90,7 +98,10 @@ public:
 		word = w;
 	}
 
-	virtual std::string dump() override;
+	virtual std::string dump() override
+	{
+		return "LINE: " + std::to_string(line) + std::string("WORD: ") + word;
+	}
 	virtual std::string class_name() const override { return "WordToken"; }
 };
 
@@ -103,7 +114,66 @@ public:
 		line = l;
 		word = w;
 	}
+	virtual std::string dump() override
+	{
+		return "LINE: " + std::to_string(line) + std::string("STRING: ") + word;
+	}
 	virtual std::string class_name() const override { return "StringToken"; }
+};
+
+class PairSymbolToken final : public Token
+{
+public:
+	enum class pairOp
+	{
+		Brace,
+		Bracket,
+		Paren
+	}t_pOp;
+	bool is_start = false; // FALSE if it's an end pairlet, TRUE if it's the start of a pair
+	PairSymbolToken(uint32_t& l, char c)
+	{
+		line = l;
+		switch (c)
+		{
+		case('{'):
+			is_start = true;
+		case('}'):
+			t_pOp = pairOp::Brace;
+			break;
+
+		case('['):
+			is_start = true;
+		case(']'):
+			t_pOp = pairOp::Bracket;
+			break;
+
+		case('('):
+			is_start = true;
+		case(')'):
+			t_pOp = pairOp::Paren;
+			break;
+
+		default:
+			std::cout << "Unknown character given to PairSymbolToken!";
+			exit(1);
+		}
+	}
+	virtual std::string dump() override
+	{
+		std::string str;
+		switch (t_pOp)
+		{
+		case(pairOp::Brace):
+			is_start ? str = "{" : str = "}";
+		case(pairOp::Bracket):
+			is_start ? str = "[" : str = "]";
+		case(pairOp::Paren):
+			is_start ? str = "(" : str = ")";
+		}
+		return "LINE: " + std::to_string(line) + std::string("PAIRSYMBOL: ") + str;
+	}
+	virtual std::string class_name() const override { return "PairSymbolToken"; }
 };
 
 
@@ -140,7 +210,7 @@ class Scanner
 		linenum++;
 		append(t);
 	}
-	void makeNumber(bool is_double, std::string& str)
+	void makeNumber(bool is_double, std::string& str, int base = 10)
 	{
 		if (is_double)
 		{
@@ -151,13 +221,21 @@ class Scanner
 		}
 		else
 		{
-			int i = std::stoi(str); //^^^ Ditto for stoi().
+			int i = std::stoi(str, nullptr, base); //^^^ Ditto for stoi().
 			Token* t = &NumberToken(linenum, i);
 			append(t);
 		}
 	}
+	void makeWord(std::string& str)
+	{
+		Token* t = &WordToken(linenum, str);
+		append(t);
+	}
 	int readString(int);
 	int readNumber(int);
+	int readPairSymbol(int);
+	int readSymbol(int);
+	int readWord(int);
 public:
 	void scan(std::ifstream&);
 };
