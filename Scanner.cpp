@@ -1,6 +1,11 @@
 
 #include "Scanner.h"
 
+#define DIGITS '1','2','3','4','5','6','7','8','9','0'
+#define TOKEN_SEPARATOR ' ','\t'
+
+
+
 int Scanner::readString(int it)
 {
 	++it;
@@ -41,6 +46,38 @@ int Scanner::readString(int it)
 	return it;
 }
 
+int Scanner::readNumber(int it)
+{
+	bool is_double = false; // False until proven otherwise with a decimal place. Note that this means that "1.0" resolves towards a double.
+	std::string str = "";
+	for (; it < line.length(); ++it)
+	{
+		char c = line[it];
+		switch (c)
+		{
+		case('.'):
+			if (is_double) // Wait, we already found a decimal! What gives??
+			{
+				ScannerError(it, "Malformed Number!");
+				return it;
+			}
+			is_double = true; // WARNING: CASCADING CASE BLOCK
+		case(DIGITS):
+			str.push_back(c);
+			break;
+		case(TOKEN_SEPARATOR,'\n'): // Okay we're done I guess
+			makeNumber(is_double, str);
+			return it;
+		case(';'): // Ugh, we have to do the endline token as well
+			makeNumber(is_double, str);
+			makeEndline();
+			return it;
+		}
+	}
+	makeNumber(is_double, str);
+	return it;
+}
+
 
 void Scanner::scan(std::ifstream& ifst)
 {
@@ -58,10 +95,10 @@ void Scanner::scan(std::ifstream& ifst)
 				continue;
 			case(';'): // End of statement
 			{
-				Token* t = &EndLineToken(linenum);
-				linenum++;
-				append(t);
+				makeEndline();
 			}
+			case(DIGITS):
+				i = readNumber(i);
 			}
 		}
 		
@@ -71,3 +108,4 @@ void Scanner::scan(std::ifstream& ifst)
 }
 
 #undef DIGITS
+#undef TOKEN_SEPARATOR

@@ -134,7 +134,30 @@ class Scanner
 		Token* T = new Token(t);
 		tokens.push_back(T);
 	}
+	void makeEndline() // This is its own function to allow for the read___() functions to quickly call it when they accidentally tread onto a semicolon while deciphering a token.
+	{
+		Token* t = &EndLineToken(linenum);
+		linenum++;
+		append(t);
+	}
+	void makeNumber(bool is_double, std::string& str)
+	{
+		if (is_double)
+		{
+			double d = std::stod(str); // Because of how stringent we were with assembling this string, we can pretty confidently do this w/o sanity-checking;
+			//stod() will pretty much for-sure give us something sensible.
+			Token* t = &NumberToken(linenum, d);
+			append(t);
+		}
+		else
+		{
+			int i = std::stoi(str); //^^^ Ditto for stoi().
+			Token* t = &NumberToken(linenum, i);
+			append(t);
+		}
+	}
 	int readString(int);
+	int readNumber(int);
 public:
 	void scan(std::ifstream&);
 };
