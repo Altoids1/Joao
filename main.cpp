@@ -18,7 +18,7 @@ Somewhat dynamically typed but lets not get too angsty about it
 
 #define PROGRAM 3
 
-int main()
+int main(int argc, char** argv)
 {
 #if PROGRAM == 1 // Tests adding two literals together and returning
 	/*
@@ -83,11 +83,30 @@ int main()
 	ReturnStatement ret_aplusb = ReturnStatement(&a_plus_b);
 
 
-	Function main = Function("main", &a_seven);
-	main.append(&b_three);
-	main.append(&ret_aplusb);
+	Function testmain = Function("main", &a_seven);
+	testmain.append(&b_three);
+	testmain.append(&ret_aplusb);
 #endif
-	Program parsed = Program(&main);
+	Program parsed;
+	if (argc == 1)
+	{
+		parsed = Program(&testmain);
+	}
+	else
+	{
+		std::ifstream file;
+		std::cout << "Opening file " << argv[1] << "...\n";
+		file.open(argv[1]);
+		if (file.bad())
+		{
+			std::cout << "Unable to open file " << argv[1] << "!\n";
+			exit(1);
+		}
+		Scanner scn;
+		scn.scan(file);
+		file.close();
+
+	}
 
 	Interpreter interpreter;
 	parsed.set_interp(interpreter);
