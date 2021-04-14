@@ -10,7 +10,8 @@ The SCANNER is a device that takes in the raw text file and outputs a system of 
 */
 class Token
 {
-protected:
+
+public:
 	enum class cEnum {
 		Token,
 		EndLineToken,
@@ -18,9 +19,9 @@ protected:
 		SymbolToken,
 		WordToken,
 		StringToken,
-		PairSymbolToken
+		PairSymbolToken,
+		KeywordToken
 	};
-public:
 	uint32_t line;
 	Token()
 	{
@@ -88,6 +89,11 @@ public:
 		line = l;
 		symbol[0] = symb;
 		symbol[1] = symb2;
+	}
+
+	char* get_symbol()
+	{
+		return symbol;
 	}
 
 	virtual std::string dump() override {
@@ -190,12 +196,37 @@ public:
 	NAME_CONST_METHODS(PairSymbolToken);
 };
 
+class KeywordToken : public Token
+{
+public:
+	enum class Key {
+		If,
+		While,
+		For,
+		Return,
+	}t_key;
+
+	KeywordToken(uint32_t linenum, Key k)
+	{
+		line = linenum;
+		t_key = k;
+	}
+
+	NAME_CONST_METHODS(KeywordToken);
+};
 
 class Scanner
 {
 	uint32_t linenum = 0;
 	std::string line;
 	std::vector<Token*> tokens;
+
+	const std::unordered_map<std::string, KeywordToken::Key> keywordhash = {
+		{"if",KeywordToken::Key::If},
+		{"while",KeywordToken::Key::While},
+		{"for",KeywordToken::Key::For},
+		{"return",KeywordToken::Key::Return}
+	};
 
 	void ScannerError()
 	{
@@ -242,6 +273,14 @@ class Scanner
 	}
 	void makeWord(std::string& str)
 	{
+		//first check if this is a keyword
+		if (keywordhash.count(str))
+		{
+			Token* t = &KeywordToken(linenum, keywordhash[str]);
+			append(t);
+		}
+
+		//otherwise, do the normal business
 		Token* t = &WordToken(linenum, str);
 		append(t);
 	}
