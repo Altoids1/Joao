@@ -2,11 +2,24 @@
 
 #include "Forward.h"
 
+#define NAME_CONST_METHODS(the_thing) virtual cEnum class_enum() const override { return cEnum::##the_thing; } \
+						  virtual std::string class_name() const override { return #the_thing; }
+
 /*
 The SCANNER is a device that takes in the raw text file and outputs a system of tokens which can be parsed by the PARSER.
 */
 class Token
 {
+protected:
+	enum class cEnum {
+		Token,
+		EndLineToken,
+		NumberToken,
+		SymbolToken,
+		WordToken,
+		StringToken,
+		PairSymbolToken
+	};
 public:
 	uint32_t line;
 	Token()
@@ -24,6 +37,7 @@ public:
 		return "LINE: " + std::to_string(line) + "NULL_TOKEN";
 	}
 
+	virtual cEnum class_enum() const { return cEnum::Token; }
 	virtual std::string class_name() const { return "Token"; }
 };
 
@@ -34,7 +48,7 @@ public:
 	{
 		line = l;
 	}
-	virtual std::string class_name() const { return "EndLineToken"; }
+	NAME_CONST_METHODS(EndLineToken);
 };
 
 class NumberToken final : public Token
@@ -62,7 +76,7 @@ public:
 	{
 		return "LINE: " + std::to_string(line) + std::string("NUMBER: ") + std::to_string(is_double ? num.as_double : num.as_int); // god.
 	}
-	virtual std::string class_name() const override { return "NumberToken"; }
+	NAME_CONST_METHODS(NumberToken);
 };
 
 class SymbolToken final : public Token
@@ -85,7 +99,7 @@ public:
 		}
 		return "LINE: " + std::to_string(line) + std::string("SYMBOL: ") + str;
 	}
-	virtual std::string class_name() const override { return "SymbolToken"; }
+	NAME_CONST_METHODS(SymbolToken);
 };
 
 class WordToken final : public Token
@@ -102,7 +116,7 @@ public:
 	{
 		return "LINE: " + std::to_string(line) + std::string("WORD: ") + word;
 	}
-	virtual std::string class_name() const override { return "WordToken"; }
+	NAME_CONST_METHODS(WordToken);
 };
 
 class StringToken final : public Token
@@ -118,7 +132,7 @@ public:
 	{
 		return "LINE: " + std::to_string(line) + std::string("STRING: ") + word;
 	}
-	virtual std::string class_name() const override { return "StringToken"; }
+	NAME_CONST_METHODS(StringToken);
 };
 
 class PairSymbolToken final : public Token
@@ -173,7 +187,7 @@ public:
 		}
 		return "LINE: " + std::to_string(line) + std::string("PAIRSYMBOL: ") + str;
 	}
-	virtual std::string class_name() const override { return "PairSymbolToken"; }
+	NAME_CONST_METHODS(PairSymbolToken);
 };
 
 
