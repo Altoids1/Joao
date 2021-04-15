@@ -282,3 +282,8 @@ Value CallExpression::resolve(Interpreter& interp)
 	ourfunc->give_args(vargs,interp);
 	return ourfunc->resolve(interp);
 }
+
+Value NativeFunction::resolve(Interpreter& interp)
+{
+	return lambda(t_args); // Woag.
+}

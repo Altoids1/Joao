@@ -253,3 +253,29 @@ public:
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "Function"; }
 };
+
+class NativeFunction final : public Function
+{
+	/*
+	So this kinda overrides a lot of the typical behavior of a function, instead deferring it into some kickass lambda stored within.
+	*/
+	Value(*lambda)(std::vector<Value>) = nullptr;
+	// Value lambda() {};
+public:
+	NativeFunction(std::string n)
+	{
+		t_name = n;
+		lambda = []()
+		{
+			return Value();
+		};
+	}
+	NativeFunction(std::string n, Value(*luh)(std::vector<Value>))
+	{
+		t_name = n;
+		lambda = luh;
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "NativeFunction"; }
+};
