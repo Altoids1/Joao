@@ -132,7 +132,6 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	case(UN_ENUMS(uOps::BitwiseNot, Value::vType::Double)): // Does, indeed, flip the bits of the double
 	{
 		uint64_t fauxint = ~*(reinterpret_cast<uint64_t*>(&rhs.t_value.as_double));
-		fauxint = fauxint;
 		double newdouble = *(reinterpret_cast<double*>(&fauxint));
 		return Value(newdouble);
 	}
@@ -241,8 +240,14 @@ Value BinaryExpression::resolve(Interpreter& interp)
 }
 
 
-
-
+void Function::give_args(std::vector<Value>& args, Interpreter& interp)
+{
+	t_args = args;
+	if (t_args.size() < t_argnames.size()) // If we were not given enough arguments
+	{
+		interp.RuntimeError(*this, "Insufficient amonut of arguments given!");
+	}
+}
 Value Function::resolve(Interpreter & interp)
 {
 	for (auto it = statements.begin(); it != statements.end(); ++it)
@@ -267,5 +272,13 @@ Value Function::resolve(Interpreter & interp)
 
 Value CallExpression::resolve(Interpreter& interp)
 {
-	return interp.get_func(func_name,this)->resolve(interp);
+	std::vector<Value> vargs;
+	for (auto it = args.begin(); it != args.end(); ++it)
+	{
+		Expression* e = *it;
+		vargs.push_back(e->resolve(interp));
+	}
+	Function* ourfunc = interp.get_func(func_name, this);
+	ourfunc->give_args(vargs,interp);
+	return ourfunc->resolve(interp);
 }

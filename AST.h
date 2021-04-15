@@ -108,6 +108,9 @@ public:
 
 class AssignmentStatement : public Expression
 {
+	Identifier* id;
+	ASTNode* rhs;
+public:
 	enum class aOps : uint8_t {
 		Assign, // =
 		AssignAdd, // +=
@@ -115,9 +118,6 @@ class AssignmentStatement : public Expression
 		AssignMultiply, // *=
 		AssignDivide // /=
 	}t_op;
-	Identifier* id;
-	ASTNode* rhs;
-public:
 	AssignmentStatement(Identifier* i, ASTNode* r, aOps o = aOps::Assign)
 		:id(i),
 		rhs(r),
@@ -192,6 +192,7 @@ public:
 
 class CallExpression : public Expression {
 	std::string func_name;
+	std::vector<Expression*> args;
 public:
 	CallExpression(std::string str)
 		:func_name(str)
@@ -203,26 +204,46 @@ public:
 		assert(v.t_vType == Value::vType::String);
 		func_name = *(v.t_value.as_string_ptr);
 	}
+	CallExpression* append_arg(Expression* expr)
+	{
+		args.push_back(expr);
+		return this;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 };
 
 class Function : public ASTNode
 {
+protected:
 	Value returnValue = Value(); // My return value
 	std::vector<Expression*> statements; // The statements which're executed when I am run
+	std::vector<Value> t_args;
+	std::vector<std::string> t_argnames;
 	//std::vector<Expression> args;
 	std::string t_name; // My name
+
+	Function()
+	{
+
+	}
 public:
 	Function(std::string name, Expression* expr)
 	{
 		statements = std::vector<Expression*>{ expr };
 	}
-	Function(std::string name, std::vector<Expression*> exprs) // Hopefully this works. :(
+	Function(std::string name, std::vector<Expression*> exprs) // argument-less-ness
 	{
 		t_name = name;
 		statements = exprs;
 	}
+	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string> sargs) // Hopefully this works. :(
+	{
+		t_name = name;
+		statements = exprs;
+		t_argnames = sargs;
+	}
+	void give_args(std::vector<Value>&, Interpreter&);
 	Function* append(Expression* expr)
 	{
 		statements.push_back(expr);
