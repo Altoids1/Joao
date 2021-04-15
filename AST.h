@@ -59,6 +59,14 @@ public:
 		t_vType = vType::Object;
 	}
 
+	Value(Value::vType vt, int errcode)
+	{
+		if (vt != Value::vType::Null)
+			return;
+
+		t_value.as_int = errcode;
+	}
+
 	std::string to_string();
 	std::string typestring();
 };

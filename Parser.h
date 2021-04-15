@@ -69,9 +69,14 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	std::unordered_map<std::string, ObjectType*> definedObjTypes;
 	Interpreter* myinterp{ nullptr };
 public:
+	enum class ErrorCode : int {
+		BadArgType,
+		NotEnoughArgs
+	};
 	Program()
 	{
-
+		//Construct all the native functions
+		construct_natives();
 	}
 	Program(Function *f)
 	{
@@ -81,6 +86,7 @@ public:
 	{
 		myinterp = &interp;
 	}
+	void construct_natives();
 
 	// I wanna point out that this is distinct from Interpreter's version of this function; it's a raw call to a function's name, directory data and all, while Interpreter's resolves scope first.
 	Function* get_func(std::string name)

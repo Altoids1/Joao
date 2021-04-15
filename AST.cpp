@@ -285,5 +285,20 @@ Value CallExpression::resolve(Interpreter& interp)
 
 Value NativeFunction::resolve(Interpreter& interp)
 {
-	return lambda(t_args); // Woag.
+	Value result = lambda(t_args);
+	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
+	{
+		switch (result.t_value.as_int)
+		{
+		case(Program::ErrorCode::BadArgType):
+			interp.RuntimeError(*this, "Args of improper type given to NativeFunction!");
+			break;
+		case(Program::ErrorCode::NotEnoughArgs):
+			interp.RuntimeError(*this, "Not enough args provided to NativeFunction!");
+			break;
+		default:
+			interp.RuntimeError(*this, "Unknown RuntimeError in NativeFunction!");
+		}
+	}
+	return result; // Woag.
 }
