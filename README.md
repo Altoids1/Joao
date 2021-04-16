@@ -1,6 +1,7 @@
-![Joao_White_Small](https://user-images.githubusercontent.com/29939414/114955235-d0419380-9e21-11eb-8947-ab3eb557f886.png)
+![Joao_Color_Smaller](https://user-images.githubusercontent.com/29939414/114955666-c9ffe700-9e22-11eb-95fd-649fd2ef250b.png)
 
 #### A directory- and object-oriented interpreted programming language.
+
 
 
 ## Why João?
