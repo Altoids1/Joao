@@ -20,7 +20,8 @@ public:
 		WordToken,
 		StringToken,
 		PairSymbolToken,
-		KeywordToken
+		KeywordToken,
+		LiteralToken
 	};
 	uint32_t line;
 	Token()
@@ -110,8 +111,8 @@ public:
 
 class WordToken final : public Token
 {
-	std::string word;
 public:
+	std::string word;
 	WordToken(uint32_t& l, std::string w)
 	{
 		line = l;
@@ -201,9 +202,12 @@ class KeywordToken : public Token
 public:
 	enum class Key {
 		If,
+		Elseif,
+		Else,
 		While,
 		For,
 		Return,
+		Break
 	}t_key;
 
 	KeywordToken(uint32_t linenum, Key k)
@@ -213,6 +217,23 @@ public:
 	}
 
 	NAME_CONST_METHODS(KeywordToken);
+};
+
+class LiteralToken : public Token
+{
+public:
+	enum class Literal {
+		Null,
+		False,
+		True,
+	}t_literal;
+	LiteralToken(uint32_t linenum, Literal k)
+	{
+		line = linenum;
+		t_literal = k;
+	}
+
+	NAME_CONST_METHODS(LiteralToken);
 };
 
 class Scanner
@@ -226,6 +247,11 @@ class Scanner
 		{"while",KeywordToken::Key::While},
 		{"for",KeywordToken::Key::For},
 		{"return",KeywordToken::Key::Return}
+	};
+	const std::unordered_map<std::string, LiteralToken::Literal> literalhash = {
+		{"null",LiteralToken::Literal::Null},
+		{"false",LiteralToken::Literal::False},
+		{"true",LiteralToken::Literal::True}
 	};
 
 	void ScannerError()
@@ -280,6 +306,13 @@ class Scanner
 			append(&kt);
 			return;
 		}
+		//then check if this is a literal (like 'true')
+
+		if (literalhash.count(str))
+		{
+			LiteralToken lt = LiteralToken(linenum, literalhash.at(str));
+			append(&lt);
+			return;
 		}
 
 
