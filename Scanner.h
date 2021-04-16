@@ -261,14 +261,14 @@ class Scanner
 		{
 			double d = std::stod(str); // Because of how stringent we were with assembling this string, we can pretty confidently do this w/o sanity-checking;
 			//stod() will pretty much for-sure give us something sensible.
-			Token* t = &NumberToken(linenum, d);
-			append(t);
+			NumberToken nt = NumberToken(linenum, d);
+			append(&nt);
 		}
 		else
 		{
 			int i = std::stoi(str, nullptr, base); //^^^ Ditto for stoi().
-			Token* t = &NumberToken(linenum, i);
-			append(t);
+			NumberToken nt = NumberToken(linenum, i);
+			append(&nt);
 		}
 	}
 	void makeWord(std::string str)
@@ -276,13 +276,16 @@ class Scanner
 		//first check if this is a keyword
 		if (keywordhash.count(str))
 		{
-			Token* t = &KeywordToken(linenum, keywordhash.at(str));
-			append(t);
+			KeywordToken kt = KeywordToken(linenum, keywordhash.at(str));
+			append(&kt);
+			return;
+		}
 		}
 
+
 		//otherwise, do the normal business
-		Token* t = &WordToken(linenum, str);
-		append(t);
+		WordToken wt = WordToken(linenum, str);
+		append(&wt);
 	}
 	int readString(int);
 	int readNumber(int);
