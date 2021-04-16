@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 	AssignmentStatement a_seven = AssignmentStatement(&a, &hello);
 	AssignmentStatement b_three = AssignmentStatement(&b, &_world);
 	BinaryExpression a_plus_b = BinaryExpression(
-		BinaryExpression::bOps::Add,
+		BinaryExpression::bOps::Concatenate,
 		&a,
 		&b
 	);

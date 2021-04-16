@@ -161,7 +161,31 @@ public:
 		Add,
 		Subtract,
 		Multiply,
-		Divide
+		Divide,
+		//
+		FloorDivide,
+		Exponent,
+		Modulo,
+		//
+		BitwiseAnd,
+		BitwiseXor,
+		BitwiseOr,
+		//
+		ShiftRight,
+		ShiftLeft,
+		//
+		Concatenate,
+		//
+		LessThan,
+		LessEquals,
+		Greater,
+		GreaterEquals,
+		Equals,
+		NotEquals,
+		//
+		LogicalAnd,
+		LogicalOr,
+		LogicalXor
 	}t_op;
 	ASTNode* t_lhs, *t_rhs;
 
@@ -273,7 +297,7 @@ public:
 	NativeFunction(std::string n)
 	{
 		t_name = n;
-		lambda = []()
+		lambda = [](std::vector<Value> args)
 		{
 			return Value();
 		};

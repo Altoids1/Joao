@@ -171,6 +171,38 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		return Value(lhs.t_value.as_double * rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Double, Value::vType::Double)):
 		return Value(lhs.t_value.as_double / rhs.t_value.as_double);
+	//
+	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Double, Value::vType::Double)):
+		return Value(floor(lhs.t_value.as_double / rhs.t_value.as_double));
+	case(BIN_ENUMS(bOps::Exponent, Value::vType::Double, Value::vType::Double)):
+		return Value(pow(lhs.t_value.as_double, rhs.t_value.as_double));
+	case(BIN_ENUMS(bOps::Modulo, Value::vType::Double, Value::vType::Double)):
+		return Value(modf(lhs.t_value.as_double/rhs.t_value.as_double, nullptr));
+	//
+		//Bitwise :(
+	//
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Double)):
+		return Value(std::to_string(lhs.t_value.as_double) + std::to_string(rhs.t_value.as_double));
+	//
+	case(BIN_ENUMS(bOps::LessThan, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double < rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double <= rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Greater, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double > rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double >= rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Equals, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double == rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double != rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double && rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Double, Value::vType::Double)):
+		return Value(lhs.t_value.as_double || rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Double, Value::vType::Double)):
+		return Value((lhs.t_value.as_double || rhs.t_value.as_double) && !(lhs.t_value.as_double && rhs.t_value.as_double));
+
 
 	//DOUBLE & INT
 	case(BIN_ENUMS(bOps::Add, Value::vType::Double, Value::vType::Integer)):
@@ -181,6 +213,39 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		return Value(lhs.t_value.as_double * rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Double, Value::vType::Integer)):
 		return Value(lhs.t_value.as_double / rhs.t_value.as_int);
+	//
+	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Double, Value::vType::Integer)):
+		return Value(floor(lhs.t_value.as_double / rhs.t_value.as_int));
+	case(BIN_ENUMS(bOps::Exponent, Value::vType::Double, Value::vType::Integer)):
+		return Value(pow(lhs.t_value.as_double, rhs.t_value.as_int));
+	case(BIN_ENUMS(bOps::Modulo, Value::vType::Double, Value::vType::Integer)):
+		return Value(modf(lhs.t_value.as_double / rhs.t_value.as_int, nullptr));
+	//
+		//Bitwise :(
+	//
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Integer)):
+		return Value(std::to_string(lhs.t_value.as_double) + std::to_string(rhs.t_value.as_int));
+	//
+	case(BIN_ENUMS(bOps::LessThan, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double < rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double <= rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Greater, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double > rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double >= rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Equals, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double == rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double != rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double && rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Double, Value::vType::Integer)):
+		return Value(lhs.t_value.as_double || rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Double, Value::vType::Integer)):
+		return Value((lhs.t_value.as_double || rhs.t_value.as_int) && !(lhs.t_value.as_double && rhs.t_value.as_int));
+
+
 
 	//INT & DOUBLE
 	case(BIN_ENUMS(bOps::Add, Value::vType::Integer, Value::vType::Double)):
@@ -191,6 +256,38 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		return Value(lhs.t_value.as_int * rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Integer, Value::vType::Double)):
 		return Value(lhs.t_value.as_int / rhs.t_value.as_double);
+	//
+	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Integer, Value::vType::Double)):
+		return Value(floor(lhs.t_value.as_int / rhs.t_value.as_double));
+	case(BIN_ENUMS(bOps::Exponent, Value::vType::Integer, Value::vType::Double)):
+		return Value(pow(lhs.t_value.as_int, rhs.t_value.as_double));
+	case(BIN_ENUMS(bOps::Modulo, Value::vType::Integer, Value::vType::Double)):
+		return Value(modf(lhs.t_value.as_int / rhs.t_value.as_double, nullptr));
+	//
+		//TODO: Bitwise stuff with doubles, too
+	//
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::Double)):
+		return Value(std::to_string(lhs.t_value.as_int) + std::to_string(rhs.t_value.as_double));
+	//
+	case(BIN_ENUMS(bOps::LessThan, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int < rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int <= rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Greater, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int > rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int >= rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::Equals, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int == rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int != rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int && rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Integer, Value::vType::Double)):
+		return Value(lhs.t_value.as_int || rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Integer, Value::vType::Double)):
+		return Value((lhs.t_value.as_int || rhs.t_value.as_double) && !(lhs.t_value.as_int && rhs.t_value.as_double));
+
 
 	//INT & INT
 	case(BIN_ENUMS(bOps::Add, Value::vType::Integer, Value::vType::Integer)):
@@ -200,34 +297,75 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::Multiply, Value::vType::Integer, Value::vType::Integer)):
 		return Value(lhs.t_value.as_int * rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Integer, Value::vType::Integer)):
+	//
+	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Integer, Value::vType::Integer)): // :)
 		return Value(lhs.t_value.as_int / rhs.t_value.as_int);
-	
+	case(BIN_ENUMS(bOps::Exponent, Value::vType::Integer, Value::vType::Integer)):
+		return Value(pow(lhs.t_value.as_int, rhs.t_value.as_int));
+	case(BIN_ENUMS(bOps::Modulo, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int % rhs.t_value.as_int);
+	//
+	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int & rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::BitwiseXor, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int ^ rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::BitwiseOr, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int | rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int >> rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int << rhs.t_value.as_int);
+	//
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::Integer)):
+		return Value(std::to_string(lhs.t_value.as_int) + std::to_string(rhs.t_value.as_int));
+	//
+	case(BIN_ENUMS(bOps::LessThan, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int < rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int <= rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Greater, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int > rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int >= rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::Equals, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int == rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int != rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int && rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Integer, Value::vType::Integer)):
+		return Value(lhs.t_value.as_int || rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Integer, Value::vType::Integer)):
+		return Value((lhs.t_value.as_int || rhs.t_value.as_int) && !(lhs.t_value.as_int && rhs.t_value.as_int));
+
+
+
 	//STRING & STRING
-	case(BIN_ENUMS(bOps::Add, Value::vType::String, Value::vType::String)):
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::String)):
 	{
 		std::string newstr = *(lhs.t_value.as_string_ptr) + *(rhs.t_value.as_string_ptr);
 		return Value(newstr);
 	}
 	//STRING & INT
-	case(BIN_ENUMS(bOps::Add, Value::vType::String, Value::vType::Integer)):
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Integer)):
 	{
 		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_int);
 		return Value(newstr);
 	}
 	//INT & STRING
-	case(BIN_ENUMS(bOps::Add, Value::vType::Integer, Value::vType::String)):
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::String)):
 	{
 		std::string newstr = std::to_string(lhs.t_value.as_int) + *(rhs.t_value.as_string_ptr);
 		return Value(newstr);
 	}
 	//STRING & DOUBLE
-	case(BIN_ENUMS(bOps::Add, Value::vType::String, Value::vType::Double)):
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Double)):
 	{
 		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_double);
 		return Value(newstr);
 	}
 	//DOUBLE & STRING
-	case(BIN_ENUMS(bOps::Add, Value::vType::Double, Value::vType::String)):
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::String)):
 	{
 		std::string newstr = std::to_string(lhs.t_value.as_double) + *(rhs.t_value.as_string_ptr);
 		return Value(newstr);
@@ -290,10 +428,10 @@ Value NativeFunction::resolve(Interpreter& interp)
 	{
 		switch (result.t_value.as_int)
 		{
-		case(Program::ErrorCode::BadArgType):
+		case(int(Program::ErrorCode::BadArgType)):
 			interp.RuntimeError(*this, "Args of improper type given to NativeFunction!");
 			break;
-		case(Program::ErrorCode::NotEnoughArgs):
+		case(int(Program::ErrorCode::NotEnoughArgs)):
 			interp.RuntimeError(*this, "Not enough args provided to NativeFunction!");
 			break;
 		default:

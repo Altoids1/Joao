@@ -271,12 +271,12 @@ class Scanner
 			append(t);
 		}
 	}
-	void makeWord(std::string& str)
+	void makeWord(std::string str)
 	{
 		//first check if this is a keyword
 		if (keywordhash.count(str))
 		{
-			Token* t = &KeywordToken(linenum, keywordhash[str]);
+			Token* t = &KeywordToken(linenum, keywordhash.at(str));
 			append(t);
 		}
 
