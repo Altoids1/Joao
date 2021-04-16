@@ -1,5 +1,7 @@
-# João
- A directory- and object-oriented interpreted programming language.
+![Joao_White_Small](https://user-images.githubusercontent.com/29939414/114955235-d0419380-9e21-11eb-8947-ab3eb557f886.png)
+
+#### A directory- and object-oriented interpreted programming language.
+
 
 ## Why João?
 
