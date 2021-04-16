@@ -81,6 +81,7 @@ public:
 	Program(Function *f)
 	{
 		definedFunctions["main"] = f;
+		construct_natives();
 	}
 	void set_interp(Interpreter& interp)
 	{
