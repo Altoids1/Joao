@@ -15,6 +15,7 @@ Somewhat dynamically typed but lets not get too angsty about it
 #include "Object.h"
 #include "Parser.h"
 
+#include <chrono>
 
 #define PROGRAM 3
 
@@ -88,6 +89,7 @@ int main(int argc, char** argv)
 	testmain.append(&ret_aplusb);
 #endif
 	Program parsed;
+	std::chrono::steady_clock::time_point t1;
 	if (argc == 1)
 	{
 		parsed = Program(&testmain);
@@ -102,17 +104,25 @@ int main(int argc, char** argv)
 			std::cout << "Unable to open file " << argv[1] << "!\n";
 			exit(1);
 		}
+		t1 = std::chrono::steady_clock::now();
 		Scanner scn;
 		scn.scan(file);
 		file.close();
+		std::cout << "Scanning took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
+		t1 = std::chrono::steady_clock::now();
 		Parser pears(scn);
 		Program parsed = pears.parse();
+		std::cout << "Parsing took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 	}
+
+	t1 = std::chrono::steady_clock::now();
 
 	Interpreter interpreter;
 	parsed.set_interp(interpreter);
 
 	Value v = interpreter.execute(parsed);
+
+	std::cout << "Execution took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 
 	std::cout << v.to_string();
 
