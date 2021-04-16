@@ -105,7 +105,8 @@ int main(int argc, char** argv)
 		Scanner scn;
 		scn.scan(file);
 		file.close();
-
+		Parser pears(scn);
+		Program parsed = pears.parse();
 	}
 
 	Interpreter interpreter;

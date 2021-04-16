@@ -106,11 +106,42 @@ public:
 class Parser
 {
 	Program t_program;
-	std::vector<Token> tokens;
+	std::vector<Token*> tokens;
+
+	std::vector<Token*> expression_stack;
+
+	/*
+	enum class PState { // The state of the parser state machine
+		className, // We are reading the name of a class (or perhaps class method)
+		readingParams, // We are reading the parameters of a function
+		resolvingBlock_func // We are resolving the innards of a function block
+	}state;
+	*/
+	//TODO: Eventually convert the bullshit below into an enum like the above
+	
+	enum class Expect { // idfk, maybe this will help with disambiguating what to do when parse() does its dumb turing machine garbage
+		//THE HORROR OF THE UNKNOWN
+		Anything,
+		//DIRECTORY STUFF
+		DirSymbol,
+		DirName,
+		//FUNCTION STUFF
+		DefinitionParams,
+		StartOfBlock,
+		//MATH STUFF
+		Operator,
+		LiteralOrVariable
+	}t_expect{ Expect::Anything };
 protected:
 	void ParserError()
 	{
 		std::cout << "PARSER_ERROR: UNKNOWN!";
+		exit(1);
+	}
+	void ParserError(Token* t, std::string what)
+	{
+		//This is just a basic setup while everything else is fleshed out.
+		std::cout << "PARSER_ERROR: " << what << "\n";
 		exit(1);
 	}
 	void ParserError(Token& t, std::string what)
@@ -120,10 +151,10 @@ protected:
 		exit(1);
 	}
 public:
-	Parser(std::vector<Token>&t)
-		:tokens(t)
+	Parser(Scanner&t)
+		:tokens(t.tokens)
 	{
 
 	}
-
+	Program parse();
 };

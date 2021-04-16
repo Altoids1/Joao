@@ -144,7 +144,7 @@ public:
 class PairSymbolToken final : public Token
 {
 public:
-	enum class pairOp
+	enum class pairOp : uint8_t
 	{
 		Brace,
 		Bracket,
@@ -291,4 +291,6 @@ class Scanner
 	int readWord(int);
 public:
 	void scan(std::ifstream&);
+
+	friend class Parser;
 };
