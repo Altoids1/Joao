@@ -1,6 +1,6 @@
 Here is the complete syntax of João in extended BNF. As usual in extended BNF, {A} means 0 or more As, and [A] means an optional A. Brace characters are escaped with single-quotes.
 	
-	program ::= block
+	program ::= {classdef | funcdef}
 
 	block ::= {stat} [retstat]
 
@@ -11,11 +11,14 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 		 while(exp)'{'block'}' | 
 		 if(exp)'{'block'}' {elseif(exp)'{'block'}'} [else'{'block'}']|
 		 for([varstat]';'[exp]';'[exp])'{'block'}' |
-		 {directory}'/'Name funcbody | 
 
 	retstat ::= return exp ';'
 
 	directory ::= {'/'Name}
+	
+	classdef ::=  {directory}'/'Name'{'{varstat}'}'
+	
+	funcdef ::= {directory}'/'Name‘(’ [parlist] ‘){'block'}'
 
 	varstat ::= var assignop exp
 
@@ -33,8 +36,6 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	functioncall ::=  var args
 
 	args ::=  ‘(’ [explist] ‘)’
-
-	funcbody ::= ‘(’ [parlist] ‘){'block'}'
 
 	parlist ::= namelist [‘,’ ‘...’] | ‘...’
 
