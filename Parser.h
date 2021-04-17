@@ -283,7 +283,7 @@ class Parser
 			ParserError(t, "Pairlet operators are not implemented for expressions!");
 			break;
 		default:
-			ParserError(t, "Unexpected Token when reading Expression!");
+			ParserError(t, "Unexpected Token when reading Expression! " + t->class_name());
 			break;
 		}
 		
@@ -327,13 +327,26 @@ class Parser
 		return lvalue;
 	}
 
-	std::vector<Expression*> readBlock(BlockType bt)
+	std::vector<Expression*> readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.
 	{
-		//Blocks are composed of statements and are ended by an end brace.
+		//Blocks are composed of a starting brace, following by statements, and are ended by an end brace.
+		
+		//Starting brace checks
+		Token* t = tokens[tokenheader];
+		if (t->class_enum() != Token::cEnum::PairSymbolToken)
+		{
+			ParserError(t, "Unexpected character where open-brace was expected!");
+		}
+		PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
+		if (!pt.is_start || pt.t_pOp != PairSymbolToken::pairOp::Brace)
+		{
+			ParserError(t, "Unexpected character where open-brace was expected!");
+		}
+
 
 		//In AST land, blocks are a list of expressions associated with a particular scope.
 		std::vector<Expression*> ASTs;
-		Token* t = tokens[tokenheader];
+		++tokenheader;
 		//I wanna point out that block is the only grammar object that has stats, so we can unroll the description of stats into this for-and-switch.
 		for (; tokenheader < tokens.size(); ++tokenheader)
 		{
@@ -364,9 +377,14 @@ class Parser
 					continue;
 				case(KeywordToken::Key::Return):
 				{
-					ReturnStatement* rs = new ReturnStatement(readExp(t,true));
+					++tokenheader; // Consume this return token
+					ReturnStatement* rs = new ReturnStatement(readExp(tokens[tokenheader],true));
 					ASTs.push_back(rs);
+					continue;
 				}
+				default:
+					ParserError(t, "Unknown keyword!");
+					continue;
 				}
 			}
 			case(Token::cEnum::PairSymbolToken):
@@ -378,13 +396,14 @@ class Parser
 					++tokenheader;
 					goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
 				}
+
 			}
 			case(Token::cEnum::WordToken):
 			case(Token::cEnum::StringToken):
 			case(Token::cEnum::NumberToken):
 			case(Token::cEnum::SymbolToken):
 				//This is.. probably an stat.
-				ParserError(t, "Statements that are not return statements are not implemented! (Shut up, this is hard!)");
+				ParserError(t, "Statements that are not return statements are not implemented! " + t->class_name());
 				continue;
 			default:
 				ParserError(t, "Unknown Token type found when traversing block!");

@@ -111,7 +111,7 @@ Program Parser::parse() // This is w/o question the hardest part of this to writ
 			if (pop == PairSymbolToken::pairOp::Paren) // THIS IS A FUNCDEF! HOT DAMN we're getting somewhere
 			{
 				//TODO: IMPLEMENT PARAMETER DEFINITIONS
-				++tokenheader; // jumps over the implied ')', hackish!
+				tokenheader += 2; // jumps over the implied '()', hackish!
 				grammarstack.push_front(GrammarState::block);
 
 				std::vector<Expression*> bluh = readBlock(BlockType::Function);
