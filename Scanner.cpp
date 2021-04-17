@@ -190,6 +190,7 @@ void Scanner::scan(std::ifstream& ifst)
 				continue;
 			PAIRSYMBOL:
 				i = readPairSymbol(i);
+				continue;
 			ascii_UPPER:
 			ascii_lower:
 			ascii_other:
