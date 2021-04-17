@@ -10,8 +10,17 @@ Interpreter::Interpreter()
 
 Value Interpreter::execute(Program& program)
 {
-	prog = program;
-	return prog.get_func("main")->resolve(*this);
+	prog = &program;
+
+	Function* main = prog->get_func("/main");
+
+	if (!main)
+	{
+		RuntimeError(main, "/main() is not defined!");
+		exit(1); // HAS to be a forced-exit since this crashes the .exe otherwise!
+	}
+
+	return main->resolve(*this);
 }
 
 void Interpreter::set_var(std::string varname, Value val, ASTNode* setter)
@@ -37,7 +46,7 @@ Function* Interpreter::get_func(std::string funkname, ASTNode *caller)
 	std::string objscope = objscopestr;
 	while (true)
 	{
-		Function* f = prog.get_func(objscopestr + "/" + funkname); // Try the localest obj scope
+		Function* f = prog->get_func(objscopestr + "/" + funkname); // Try the localest obj scope
 		if (f != nullptr) return f; // if we find it, cool
 		//else, go up a scope and try again!
 

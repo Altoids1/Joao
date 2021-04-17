@@ -5,7 +5,7 @@
 
 class Interpreter
 {
-	Program prog;
+	Program* prog;
 	std::string objscopestr;
 	Scope<Value> varscope = Scope<Value>("GLOB");
 public:
@@ -17,6 +17,12 @@ public:
 	void RuntimeError()
 	{
 		std::cout << "RUNTIME_ERROR: UNKNOWN!";
+		exit(1);
+	}
+	void RuntimeError(ASTNode* a, std::string what)
+	{
+		//This is just a basic setup while everything else is fleshed out.
+		std::cout << "RUNTIME_ERROR: " << what << "\n";
 		exit(1);
 	}
 	void RuntimeError(ASTNode& a, std::string what)

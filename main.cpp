@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 		std::cout << "Scanning took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 		t1 = std::chrono::steady_clock::now();
 		Parser pears(scn);
-		Program parsed = pears.parse();
+		parsed = pears.parse();
 		std::cout << "Parsing took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 	}
 
