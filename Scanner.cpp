@@ -26,7 +26,7 @@ int Scanner::readString(int it)
 		switch (c)
 		{
 		case('\n'):
-			ScannerError(it, "Unterminated string!");
+			ScannerError(it, ScanError::UnterminatedString);
 			return it;
 		case('\\'): // An escape character! Fancy
 		{
@@ -52,7 +52,7 @@ int Scanner::readString(int it)
 			str.push_back(c);
 		}
 	}
-	ScannerError(it, "Unterminated string!");
+	ScannerError(it, ScanError::UnterminatedString);
 	return it;
 }
 
@@ -71,7 +71,7 @@ int Scanner::readNumber(int it)
 		case('.'):
 			if (is_double) // Wait, we already found a decimal! What gives??
 			{
-				ScannerError(it, "Malformed Number!");
+				ScannerError(it, ScanError::MalformedNumber);
 				return it;
 			}
 			is_double = true; // WARNING: CASCADING CASE BLOCK
@@ -142,7 +142,8 @@ int Scanner::readWord(int it)
 			makeWord(str);
 			return it;
 		case('"'): // Oy, you can't just be starting strings right after Word things!
-			ScannerError(it, "Malformed String!");
+			std::cout << "What?\n\n\n";
+			ScannerError(it, ScanError::MalformedString);
 			return it;
 		default: // we're not smart enough to smell any other rubbish, just make the Word and leave if we get to this point.
 			makeWord(str);
@@ -186,7 +187,7 @@ void Scanner::scan(std::ifstream& ifst)
 				i = readWord(i);
 				continue;
 			default:
-				ScannerError(i, "Unknown character!");
+				ScannerError(i, ScanError::UnknownCharacter);
 			}
 		}
 		

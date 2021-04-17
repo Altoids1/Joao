@@ -242,6 +242,14 @@ class Scanner
 	std::string line;
 	std::vector<Token*> tokens;
 
+	enum class ScanError {
+		Unknown,
+		UnterminatedString,
+		UnknownCharacter,
+		MalformedNumber,
+		MalformedString
+	};
+
 	const std::unordered_map<std::string, KeywordToken::Key> keywordhash = {
 		{"if",KeywordToken::Key::If},
 		{"while",KeywordToken::Key::While},
@@ -253,16 +261,34 @@ class Scanner
 		{"false",LiteralToken::Literal::False},
 		{"true",LiteralToken::Literal::True}
 	};
+	void ScannerError(unsigned int column_num = 0, ScanError what = ScanError::Unknown)
+	{
+		std::string msg = "";
 
-	void ScannerError()
-	{
-		std::cout << "SCANNER_ERROR: UNKNOWN!";
-		exit(1);
-	}
-	void ScannerError(int column_num, std::string what)
-	{
-		//This is just a basic setup while everything else is fleshed out.
-		std::cout << "SCANNER_ERROR: " << what << "\n";
+		unsigned int spaces = (column_num) ? (column_num - 1) : 0;
+		std::string squiggly = std::string(spaces, ' ') + std::string("^");;  // A string to print under a print-out of the line we're looking at,
+		//which points to the offending character.
+
+		switch (what)
+		{
+		case(ScanError::Unknown):
+			std::cout << "SCANNER_ERROR: UNKNOWN!"; // This is an error at printing an error. So meta!
+			exit(1);
+		case(ScanError::UnterminatedString):
+			msg =  "SCANNER_ERROR: Unterminated String!";
+			break;
+		case(ScanError::UnknownCharacter):
+			msg = "SCANNER_ERROR: Unknown character!";
+			break;
+		case(ScanError::MalformedNumber):
+			msg = "SCANNER_ERROR: Malformed Number!";
+			break;
+		case(ScanError::MalformedString):
+			msg = "SCANNER_ERROR: Malformed String!";
+			break;
+		}
+
+		std::cout << msg << std::endl << line << std::endl << squiggly << std::endl;
 		exit(1);
 	}
 	void append(Token* t)
