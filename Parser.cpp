@@ -94,21 +94,21 @@ Program Parser::parse() // This is w/o question the hardest part of this to writ
 			//The next token has to be either a '(', which disambiguates us into being a funcdef,
 			//or a '{', which brings us towards being a classdef.
 			Token* t = tokens[tokenheader];
-			if (t->class_enum() != Token::cEnum::SymbolToken)
+			if (t->class_enum() != Token::cEnum::PairSymbolToken)
 			{
 				ParserError(t, "Unexpected Token at global-scope definition!");
 				continue; // ?????????
 			}
 
-			SymbolToken st = *static_cast<SymbolToken*>(t); // Allah
+			PairSymbolToken st = *static_cast<PairSymbolToken*>(t); // Allah
 
-			char* c = st.get_symbol();
-			if (c[1] != '\0')
+			PairSymbolToken::pairOp pop = st.t_pOp;
+			if (pop == PairSymbolToken::pairOp::Bracket || !st.is_start)
 			{
-				ParserError(t, "Unexpected Symbol at global-scope definition!");
+				ParserError(t, "Unexpected PairSymbol at global-scope definition!");
 				continue;
 			}
-			if (c[0] == '(') // THIS IS A FUNCDEF! HOT DAMN we're getting somewhere
+			if (pop == PairSymbolToken::pairOp::Paren) // THIS IS A FUNCDEF! HOT DAMN we're getting somewhere
 			{
 				//TODO: IMPLEMENT PARAMETER DEFINITIONS
 				++tokenheader; // jumps over the implied ')', hackish!
@@ -123,13 +123,13 @@ Program Parser::parse() // This is w/o question the hardest part of this to writ
 
 				continue;
 			}
-			else if (c[0] == '{') // THIS IS A CLASSDEF!
+			else if (pop == PairSymbolToken::pairOp::Brace) // THIS IS A CLASSDEF!
 			{
 				ParserError(t, "Classdefs are not implemented yet!");
 			}
 			else
 			{
-				ParserError(t, "Unexpected Symbol at global-scope definition!");
+				ParserError(t, "Unexpected Pairsymbol at global-scope definition!");
 				continue;
 			}
 		}
