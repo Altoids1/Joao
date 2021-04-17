@@ -76,97 +76,74 @@ void Program::construct_natives()
 }
 
 
-Program Parser::parse()
+Program Parser::parse() // This is w/o question the hardest part of this to write.
 {
 	assert(tokens.size() > 0);
 
-	//*MAN*, how do you even write something like this? Uh...
-	Token* prevtoken = nullptr;
-	for (auto it = tokens.begin(); it != tokens.end(); ++it)
+	for (tokenheader = 0; tokenheader < tokens.size(); ++tokenheader)
 	{
-		Token* t = *it;
-		switch (t->class_enum())
+
+		switch (grammarstack.front())
 		{
-		case(Token::cEnum::SymbolToken): // FINDING A SYMBOL
+		case(GrammarState::program): // This state implies we're surfing the global scope, looking for things to def.
 		{
-			SymbolToken st = *(static_cast<SymbolToken*>(t)); // I pray to Allah every sundown, asking him to ensure that doing this shit actually works
+			//Expecting: a bunch of classdefs and funcdefs
+			//Both of these start with a directory that ends in a '/'Name, so lets read that in
+			std::string dir_name = read_dir_name(); // This, as a side effect, increments tokenheader up to pointing at the first thing that ain't this directory thing.
+
+			//The next token has to be either a '(', which disambiguates us into being a funcdef,
+			//or a '{', which brings us towards being a classdef.
+			Token* t = tokens[tokenheader];
+			if (t->class_enum() != Token::cEnum::SymbolToken)
+			{
+				ParserError(t, "Unexpected Token at global-scope definition!");
+				continue; // ?????????
+			}
+
+			SymbolToken st = *static_cast<SymbolToken*>(t); // Allah
+
 			char* c = st.get_symbol();
-			uint16_t switcher = SYMBOL_ENUMS(c[0],c[1]);
-			switch (switcher)
+			if (c[1] != '\0')
 			{
-			case(SYMBOL_ENUMS('/','\0')):
-				//POSSIBLE MEANINGS: DIVISION, DIRECTORY, ...
-				/*
-				So a thing that can be used to disambiguate between divison and directory is uh,
-				the fact that directories start with a beginning slash,
-				which can be interpreted as being sort of a, "unary operation" against the initial word symbol, maybe
-				*/
-				switch (t_expect)
-				{
-				case(Expect::Anything):
-					//ROLLS OVER INTO DIRSYMBOL
-				case(Expect::DirSymbol):
-					t_expect = Expect::DirName;
-					//Yeah, good. OK.
-					expression_stack.push_back(t);
-					continue;
-				case(Expect::Operator):
-					expression_stack.push_back(t); // I dunno.
-					continue;
-				default:
-					ParserError(t, "Unknown syntax around '/' operator!");
-
-				}
-			default:
-				ParserError(t, "Unknown Symbol!");
-			}
-		}
-		case(Token::cEnum::WordToken): //FINDING A WORD
-			switch (t_expect)
-			{
-			case(Expect::Anything): // This is like, the start of an expression or something I guess
-			case(Expect::LiteralOrVariable):
-				expression_stack.push_back(t);
-				t_expect = Expect::Operator;
+				ParserError(t, "Unexpected Symbol at global-scope definition!");
 				continue;
-			case(Expect::DirName):
-				expression_stack.push_back(t);
-				t_expect = Expect::DirSymbol;
-			default:
-				ParserError(t, "Unknown syntax around Word!");
 			}
-		case(Token::cEnum::EndLineToken): // FINDING A SEMICOLON
-			//flush_expression_stack();
+			if (c[0] == '(') // THIS IS A FUNCDEF! HOT DAMN we're getting somewhere
+			{
+				//TODO: IMPLEMENT PARAMETER DEFINITIONS
+				++tokenheader; // jumps over the implied ')', hackish!
+				grammarstack.push_front(GrammarState::block);
+
+				std::vector<Expression*> bluh = readBlock(BlockType::Function);
+				--tokenheader;
+
+				Function* func = new Function(dir_name, bluh);
+
+				t_program.set_func(dir_name, func);
+
+				continue;
+			}
+			else if (c[0] == '{') // THIS IS A CLASSDEF!
+			{
+				ParserError(t, "Classdefs are not implemented yet!");
+			}
+			else
+			{
+				ParserError(t, "Unexpected Symbol at global-scope definition!");
+				continue;
+			}
+		}
+		case(GrammarState::block): // This state implies we're entering into a scope
+		//Right now, it's the Interpreter's duty to comprehend how things scope out. We're just here to parse things, not run them.
+		{
+			ParserError(tokens[tokenheader], "Parsing block in an unknown context!");
+			readBlock(BlockType::Unknown); // Has to be a function so as to allow itself to call itself recursively.
+			--tokenheader;
 			continue;
-		case(Token::cEnum::PairSymbolToken): // FINDING A PAIRLET
-		{
-			PairSymbolToken pst = *(static_cast<PairSymbolToken*>(t));
-			uint8_t b = pst.is_start, c = uint8_t(pst.t_pOp);
-			/*
-			switch (t_expect)
-			{
-			case(Expect::StartOfBlock):
+		}
+		}
 
-			}
-			*/
-		}
-		case(Token::cEnum::KeywordToken):
-		{
-			KeywordToken kt = *(static_cast<KeywordToken*>(t)); // Allah
-			switch (kt.t_key)
-			{
-			case(KeywordToken::Key::Return):
-
-			default:
-				ParserError(t, "Keyword recognised by Scanner but not by Parser!");
-			}
-		}
-		default:
-			ParserError(t, "Unknown Token Type!");
-		}
-		prevtoken = t;
 	}
 
-	//do stuff
 	return t_program;
 }

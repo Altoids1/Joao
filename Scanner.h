@@ -55,12 +55,12 @@ public:
 
 class NumberToken final : public Token
 {
+public:
 	union {
 		double as_double;
 		int as_int;
 	}num;
 	bool is_double;
-public:
 	NumberToken(uint32_t& l, double d)
 	{
 		line = l;
@@ -128,8 +128,8 @@ public:
 
 class StringToken final : public Token
 {
-	std::string word;
 public:
+	std::string word;
 	StringToken(uint32_t& l, std::string w)
 	{
 		line = l;
