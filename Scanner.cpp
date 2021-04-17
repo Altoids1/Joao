@@ -1,20 +1,22 @@
 
 #include "Scanner.h"
 
-#define DIGITS '1','2','3','4','5','6','7','8','9','0'
-#define HEX_DIGITS DIGITS,'a','b','c','d','e','f'
-#define TOKEN_SEPARATOR ' ','\t','\n'
+#define DIGITS case '1':case '2':case '3':case '4':case '5':case '6':case '7':case '8':case '9':case '0'
+#define HEX_DIGITS DIGITS,case 'a':case 'b':case 'c':case 'd':case 'e':case 'f'
+#define TOKEN_SEPARATOR case ' ':case '\t':case '\n'
 
 //PairSymbols are things like [ and ], { and }, etc.; things that must come in pairs.
-#define PAIRSYMBOL '{','}','[',']','(',')'
+#define PAIRSYMBOL case '{':case '}':case '[':case ']':case '(':case ')'
 
-#define SYMBOL '+','-','*','/','.',',','&','|','^','~','?','>','<','=','!','%'
-#define DOUBLEABLE_SYMBOL '+','-','&','|','^','='
+#define SYMBOL case '+':case '-':case '*':case '/':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '>':case '<':case '=':case '!':case '%'
+#define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '='
 
 //Defines used to mark what is a valid Word (incl. valid variable names)
-#define ascii_UPPER 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'
-#define ascii_lower 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
-#define ascii_other '_'
+#define ascii_UPPER case 'A':case 'B':case 'C':case 'D':case 'E':case 'F':case 'G':case 'H':case 'I':case 'J':case 'K':case 'L':case 'M':case 'N':case 'O':case 'P':case 'Q':case 'R':case 'S':case 'T':case 'U':case 'V':case 'W':case 'X':case 'Y':case 'Z'
+#define ascii_lower case 'a':case 'b':case 'c':case 'd':case 'e':case 'f':case 'g':case 'h':case 'i':case 'j':case 'k':case 'l':case 'm':case 'n':case 'o':case 'p':case 'q':case 'r':case 's':case 't':case 'u':case 'v':case 'w':case 'x':case 'y':case 'z'
+#define ascii_other case '_'
+
+
 
 int Scanner::readString(int it)
 {
@@ -33,9 +35,11 @@ int Scanner::readString(int it)
 			char cc = line[++it];
 			switch (cc)
 			{
-			case('n', 'N'):
+			case('n'):
+			case('N'):
 				str.push_back('\n');
-			case('t', 'T'):
+			case('t'):
+			case('T'):
 				str.push_back('\t');
 			default:
 				str.push_back(cc); // \" and \' and all that rubbish funnels into here in the end.
@@ -75,10 +79,10 @@ int Scanner::readNumber(int it)
 				return it;
 			}
 			is_double = true; // WARNING: CASCADING CASE BLOCK
-		case(DIGITS):
+		DIGITS:
 			str.push_back(c);
 			break;
-		case(TOKEN_SEPARATOR): // Okay we're done I guess
+		TOKEN_SEPARATOR: // Okay we're done I guess
 			makeNumber(is_double, str, base);
 			return it;
 		case(';'): // Ugh, we have to do the endline token as well
@@ -113,7 +117,7 @@ int Scanner::readSymbol(int it)
 		char c = line[it + 1]; // Do a little look-ahead
 		switch (c)
 		{
-		case(DOUBLEABLE_SYMBOL): // if this is a doubleable symbol
+		DOUBLEABLE_SYMBOL: // if this is a doubleable symbol
 			if (c == first)// and it genuinely doubles
 			{
 				second = c; //woag it's a double symbol
@@ -136,13 +140,14 @@ int Scanner::readWord(int it)
 		char c = line[it];
 		switch (c)
 		{
-		case(ascii_lower,ascii_other,ascii_UPPER):
+		ascii_lower:
+		ascii_other:
+		ascii_UPPER:
 			str.push_back(c);
-		case(TOKEN_SEPARATOR): // Oohp, we're done
+		TOKEN_SEPARATOR: // Oohp, we're done
 			makeWord(str);
 			return it;
 		case('"'): // Oy, you can't just be starting strings right after Word things!
-			std::cout << "What?\n\n\n";
 			ScannerError(it, ScanError::MalformedString);
 			return it;
 		default: // we're not smart enough to smell any other rubbish, just make the Word and leave if we get to this point.
@@ -163,9 +168,10 @@ void Scanner::scan(std::ifstream& ifst)
 		for (int i = 0; i < line.length(); ++i)
 		{
 			char c = line[i];
+
 			switch (c)
 			{
-			case(TOKEN_SEPARATOR):
+			TOKEN_SEPARATOR:
 				continue;
 			case('"'): // Start of string
 				i = readString(i);
@@ -175,15 +181,17 @@ void Scanner::scan(std::ifstream& ifst)
 				makeEndline();
 				continue;
 			}
-			case(DIGITS):
+			DIGITS:
 				i = readNumber(i);
 				continue;
-			case(SYMBOL):
+			SYMBOL:
 				i = readSymbol(i);
 				continue;
-			case(PAIRSYMBOL):
+			PAIRSYMBOL:
 				i = readPairSymbol(i);
-			case(ascii_UPPER,ascii_lower,ascii_other):
+			ascii_UPPER:
+			ascii_lower:
+			ascii_other:
 				i = readWord(i);
 				continue;
 			default:
