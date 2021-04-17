@@ -48,7 +48,7 @@ int Scanner::readString(int it)
 		}
 		case('"')://Delimiter found, returning...
 		{
-			Token* t = &StringToken(linenum,str);
+			Token* t = new StringToken(linenum,str);
 			append(t);
 			return it;
 		}
@@ -101,7 +101,7 @@ int Scanner::readNumber(int it)
 
 int Scanner::readPairSymbol(int it)
 {
-	Token* t = &PairSymbolToken(linenum, line[it]);
+	Token* t = new PairSymbolToken(linenum, line[it]);
 	append(t);
 	return it;
 }
@@ -127,7 +127,8 @@ int Scanner::readSymbol(int it)
 		}
 	}
 
-	Token* t = &SymbolToken(linenum, first, second);
+	Token* t = new SymbolToken(linenum, first, second);
+
 	append(t);
 	return it;
 }

@@ -26,8 +26,7 @@ public:
 	uint32_t line;
 	Token()
 	{
-		std::cout << "Why am I default constructed???";
-		exit(1);
+		//Weird.
 	}
 	Token(uint32_t l)
 		:line(l)
@@ -293,17 +292,11 @@ class Scanner
 	}
 	void append(Token* t)
 	{
-		Token* T = new Token(*t);
-		tokens.push_back(T);
-	}
-	void append(Token& t)
-	{
-		Token* T = new Token(t);
-		tokens.push_back(T);
+		tokens.push_back(t);
 	}
 	void makeEndline() // This is its own function to allow for the read___() functions to quickly call it when they accidentally tread onto a semicolon while deciphering a token.
 	{
-		Token* t = &EndLineToken(linenum);
+		Token* t = new EndLineToken(linenum);
 		linenum++;
 		append(t);
 	}
@@ -313,14 +306,14 @@ class Scanner
 		{
 			double d = std::stod(str); // Because of how stringent we were with assembling this string, we can pretty confidently do this w/o sanity-checking;
 			//stod() will pretty much for-sure give us something sensible.
-			NumberToken nt = NumberToken(linenum, d);
-			append(&nt);
+			NumberToken* nt = new NumberToken(linenum, d);
+			append(nt);
 		}
 		else
 		{
 			int i = std::stoi(str, nullptr, base); //^^^ Ditto for stoi().
-			NumberToken nt = NumberToken(linenum, i);
-			append(&nt);
+			NumberToken* nt = new NumberToken(linenum, i);
+			append(nt);
 		}
 	}
 	void makeWord(std::string str)
@@ -328,23 +321,23 @@ class Scanner
 		//first check if this is a keyword
 		if (keywordhash.count(str))
 		{
-			KeywordToken kt = KeywordToken(linenum, keywordhash.at(str));
-			append(&kt);
+			KeywordToken* kt = new KeywordToken(linenum, keywordhash.at(str));
+			append(kt);
 			return;
 		}
 		//then check if this is a literal (like 'true')
 
 		if (literalhash.count(str))
 		{
-			LiteralToken lt = LiteralToken(linenum, literalhash.at(str));
-			append(&lt);
+			LiteralToken* lt = new LiteralToken(linenum, literalhash.at(str));
+			append(lt);
 			return;
 		}
 
 
 		//otherwise, do the normal business
-		WordToken wt = WordToken(linenum, str);
-		append(&wt);
+		WordToken* wt = new WordToken(linenum, str);
+		append(wt);
 	}
 	int readString(int);
 	int readNumber(int);
