@@ -369,6 +369,16 @@ class Parser
 				}
 				}
 			}
+			case(Token::cEnum::PairSymbolToken):
+			{
+				PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
+				if (pt.t_pOp == PairSymbolToken::pairOp::Brace && !pt.is_start)
+				{
+					//This pretty much has to be the end of the block; lets return our vector of shit.
+					++tokenheader;
+					goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
+				}
+			}
 			case(Token::cEnum::WordToken):
 			case(Token::cEnum::StringToken):
 			case(Token::cEnum::NumberToken):
@@ -380,7 +390,7 @@ class Parser
 				ParserError(t, "Unknown Token type found when traversing block!");
 			}
 		}
-
+		BLOCK_RETURN_ASTS:
 		if (ASTs.size() == 0)
 		{
 			ParserError(t, "Block created with no Expressions inside!");
