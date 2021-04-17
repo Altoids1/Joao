@@ -158,7 +158,7 @@ class BinaryExpression : public Expression
 
 public:
 	enum class bOps : uint8_t {
-		NoOp, // Used by the parser to store what is basically a null into one of these bOps enum.
+		NoOp, // Used by the parser to store what is basically a null into one of these bOps enums.
 		//
 		Add,
 		Subtract,
