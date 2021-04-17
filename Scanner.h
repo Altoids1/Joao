@@ -151,7 +151,7 @@ public:
 		Paren
 	}t_pOp;
 	bool is_start = false; // FALSE if it's an end pairlet, TRUE if it's the start of a pair
-	PairSymbolToken(uint32_t& l, char c)
+	PairSymbolToken(uint32_t l, char c)
 	{
 		line = l;
 		switch (c)
@@ -277,7 +277,7 @@ class Scanner
 			msg =  "SCANNER_ERROR: Unterminated String!";
 			break;
 		case(ScanError::UnknownCharacter):
-			msg = "SCANNER_ERROR: Unknown character!";
+			msg = "SCANNER_ERROR: Unknown character!\nCharacter is: " + std::to_string(int(line[column_num]));
 			break;
 		case(ScanError::MalformedNumber):
 			msg = "SCANNER_ERROR: Malformed Number!";
@@ -325,7 +325,7 @@ class Scanner
 			append(kt);
 			return;
 		}
-		//then check if this is a literal (like 'true')
+		//then check if this is a literal (like 'true' or 'null')
 
 		if (literalhash.count(str))
 		{

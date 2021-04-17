@@ -145,6 +145,7 @@ int Scanner::readWord(int it)
 		ascii_other:
 		ascii_UPPER:
 			str.push_back(c);
+			continue;
 		TOKEN_SEPARATOR: // Oohp, we're done
 			makeWord(str);
 			return it;
