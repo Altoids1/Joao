@@ -298,30 +298,94 @@ class Parser
 
 		Token* t2 = tokens[tokenheader];
 
-		BinaryExpression::bOps bippitybop = BinaryExpression::bOps::NoOp;
+		
 
-		if (t2->class_enum() == Token::cEnum::SymbolToken)
+		BinaryExpression::bOps bippitybop = BinaryExpression::bOps::NoOp;
+		if (t2->class_enum() == Token::cEnum::EndLineToken)
 		{
-			SymbolToken st = *static_cast<SymbolToken*>(t);
-			char* c = st.get_symbol();
-			
-			switch (c[0])
+			if (!expecting_semicolon)
 			{
-			case('+'):
+				ParserError(t2,"Unexpected semicolon in expression!");
+			}
+			return lvalue;
+		}
+		else if (t2->class_enum() == Token::cEnum::SymbolToken)
+		{
+			SymbolToken st = *static_cast<SymbolToken*>(t2);
+
+			char* c = st.get_symbol();
+
+			if (c[1] != '\0')
+				ParserError(t2, "Binary Operations longer than one character are not implemented!");
+
+			switch (c[0]) // FIXME: This fails to support multichar symbols.
+			{
+			//This Switch tries to keep the binOps in the order in which they appear in JoaoGrammar.txt.
+			case('+')://multichar needed
 				bippitybop = BinaryExpression::bOps::Add;
 				break;
-			case('-'):
+			case('-')://multichar needed
 				bippitybop = BinaryExpression::bOps::Subtract;
 				break;
-			default:
-				ParserError(t2, "Unknown operation? Or something?");
+			case('*'):
+				bippitybop = BinaryExpression::bOps::Multiply;
 				break;
+			case('/'): //FIXME: The Scanner currently creates ambiguous Tokens, such that the Parser can't distinguish between "/apple/rotten/a / b" and "/apple/rotten/a/b".
+				bippitybop = BinaryExpression::bOps::Divide;
+				break;
+			case('^'):
+				bippitybop = BinaryExpression::bOps::Exponent;
+				break;
+			case('%'):
+				bippitybop = BinaryExpression::bOps::Modulo;
+				break;
+			case('&')://multichar needed
+				bippitybop = BinaryExpression::bOps::BitwiseAnd;
+				break;
+			case('~')://multichar needed
+				bippitybop = BinaryExpression::bOps::BitwiseXor;
+				break;
+			case('|')://multichar needed
+				bippitybop = BinaryExpression::bOps::BitwiseOr;
+				break;
+			case('>')://multichar needed
+				bippitybop = BinaryExpression::bOps::Greater;
+				break;
+			case('<')://multichar needed
+				bippitybop = BinaryExpression::bOps::LessThan;
+				break;
+			case('='):
+				//We actually can deduce that this is == w/o looking at the second char in symbol. If this were assignment, we'd be reading a varstat, not an exp.
+				bippitybop = BinaryExpression::bOps::Equals;
+				break;
+			case('!'):
+				//Related to the logic above, this has to be operator!=.
+				//...that being said, we should genuinely check (FIXME) that these are accurate; they may be malformed symbols. Perhaps the check could even be in Scanner?
+				bippitybop = BinaryExpression::bOps::NotEquals;
+				break;
+			default:
+			{
+				ParserError(t2, "Unknown or unimplemented operation: " + t2->dump());
+				break;
+			}
 			}
 		}
 		if (bippitybop == BinaryExpression::bOps::NoOp) // No operation found, simply return.
 		{
 			return lvalue;
 		}
+		++tokenheader;//We're past the binop symbol.
+		//We're in "exp binop exp" land now, baby.
+		
+		ASTNode* rvalue = readExp(tokens[tokenheader]);
+		if (!rvalue)
+		{
+			ParserError(tokens[tokenheader], "BinaryExpression missing rvalue!");
+			//by default have it be.. like, null, I guess.
+			rvalue = new Literal(Value());
+		}
+
+		return new BinaryExpression(bippitybop, lvalue, rvalue);
 
 		ParserError(t2, "BinaryExpressions are not implemented!");
 		return lvalue;
