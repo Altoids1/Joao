@@ -35,7 +35,7 @@ public:
 	}
 
 	virtual std::string dump() {
-		return "LINE: " + std::to_string(line) + "NULL_TOKEN";
+		return "LINE: " + std::to_string(line) + " " +  class_name();
 	}
 
 	virtual cEnum class_enum() const { return cEnum::Token; }
@@ -75,7 +75,7 @@ public:
 
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + std::string("NUMBER: ") + std::to_string(is_double ? num.as_double : num.as_int); // god.
+		return "LINE: " + std::to_string(line) + std::string(" NUMBER: ") + std::to_string(is_double ? num.as_double : num.as_int); // god.
 	}
 	NAME_CONST_METHODS(NumberToken);
 };
@@ -103,7 +103,7 @@ public:
 		{
 			str.push_back(symbol[1]);
 		}
-		return "LINE: " + std::to_string(line) + std::string("SYMBOL: ") + str;
+		return "LINE: " + std::to_string(line) + std::string(" SYMBOL: ") + str;
 	}
 	NAME_CONST_METHODS(SymbolToken);
 };
@@ -120,7 +120,7 @@ public:
 
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + std::string("WORD: ") + word;
+		return "LINE: " + std::to_string(line) + std::string(" WORD: ") + word;
 	}
 	NAME_CONST_METHODS(WordToken);
 };
@@ -136,7 +136,7 @@ public:
 	}
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + std::string("STRING: ") + word;
+		return "LINE: " + std::to_string(line) + std::string(" STRING: ") + word;
 	}
 	NAME_CONST_METHODS(StringToken);
 };
@@ -191,7 +191,8 @@ public:
 		case(pairOp::Paren):
 			is_start ? str = "(" : str = ")";
 		}
-		return "LINE: " + std::to_string(line) + std::string("PAIRSYMBOL: ") + str;
+
+		return "LINE: " + std::to_string(line) + std::string(" PAIRSYMBOL: ") + str;
 	}
 	NAME_CONST_METHODS(PairSymbolToken);
 };
@@ -297,7 +298,6 @@ class Scanner
 	void makeEndline() // This is its own function to allow for the read___() functions to quickly call it when they accidentally tread onto a semicolon while deciphering a token.
 	{
 		Token* t = new EndLineToken(linenum);
-		linenum++;
 		append(t);
 	}
 	void makeNumber(bool is_double, std::string& str, int base = 10)

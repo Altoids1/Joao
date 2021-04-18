@@ -205,6 +205,14 @@ void Scanner::scan(std::ifstream& ifst)
 
 		line = "";
 	} while (!ifst.eof());
+
+#ifdef LOUD_SCANNER
+	std::cout << "SCANNER_DEBUG: CONTENTS OF TOKENS:\n";
+	for (int i = 0; i < tokens.size(); ++i)
+	{
+		std::cout << tokens[i]->dump() << std::endl;
+	}
+#endif
 }
 
 #undef DIGITS
