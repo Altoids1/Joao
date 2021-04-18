@@ -87,11 +87,20 @@ class SymbolToken final : public Token
 {
 	char symbol[2];
 public:
-	SymbolToken(uint32_t& l, char symb, char symb2 = '\0')
+	char len;
+	SymbolToken(uint32_t& l, char symb)
+	{
+		line = l;
+		symbol[0] = symb;
+		symbol[1] = '\0';
+		len = 1;
+	}
+	SymbolToken(uint32_t& l, char symb, char symb2)
 	{
 		line = l;
 		symbol[0] = symb;
 		symbol[1] = symb2;
+		len = 2;
 	}
 
 	char* get_symbol()

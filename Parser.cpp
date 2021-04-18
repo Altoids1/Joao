@@ -147,3 +147,143 @@ Program Parser::parse() // This is w/o question the hardest part of this to writ
 
 	return t_program;
 }
+
+ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
+{
+	//Okay, god, we're really getting close to actually being able to *resolve* something.
+
+	ASTNode* lvalue = nullptr;
+
+
+	//First things first, lets find the "lvalue" of this expression, the thing on the left
+	switch (t->class_enum())
+	{
+	case(Token::cEnum::LiteralToken):
+	{
+		LiteralToken lt = *static_cast<LiteralToken*>(t);
+		switch (lt.t_literal)
+		{
+		case(LiteralToken::Literal::Null):
+		{
+			lvalue = new Literal(Value());
+			break;
+		}
+		case(LiteralToken::Literal::False):
+		{
+			lvalue = new Literal(Value(false));
+			break;
+		}
+		case(LiteralToken::Literal::True):
+		{
+			lvalue = new Literal(Value(true));
+			break;
+		}
+		default:
+			ParserError(t, "Unknown LiteralToken type!");
+			break;
+		}
+		break;
+	}
+	case(Token::cEnum::NumberToken):
+	{
+		NumberToken nt = *static_cast<NumberToken*>(t);
+		if (nt.is_double)
+		{
+			lvalue = new Literal(Value(nt.num.as_double));
+		}
+		else
+		{
+			lvalue = new Literal(Value(nt.num.as_int));
+		}
+		break;
+	}
+	case(Token::cEnum::StringToken):
+	{
+		StringToken st = *static_cast<StringToken*>(t);
+		lvalue = new Literal(Value(st.word));
+		break;
+	}
+	case(Token::cEnum::WordToken):
+		ParserError(t, "Variables are not implemented!");
+		break;
+	case(Token::cEnum::EndLineToken):
+		ParserError(t, "Endline found when expression was expected!");
+		break;
+	case(Token::cEnum::SymbolToken):
+		//uhh... okay?
+		//If this is a unary operator then its fine; lets ask
+		ParserError(t, "Unary operators are not implemented!");
+		break;
+	case(Token::cEnum::PairSymbolToken):
+		ParserError(t, "Pairlet operators are not implemented for expressions!");
+		break;
+	default:
+		ParserError(t, "Unexpected Token when reading Expression! " + t->class_name());
+		break;
+	}
+
+	if (!lvalue)
+	{
+		ParserError(t, "Failed to comprehend lvalue of Expression!");
+	}
+
+	//Now lets see if there's a binary operator and, if so, construct a BinaryExpression() to return.
+
+	++tokenheader;
+
+	Token* t2 = tokens[tokenheader];
+
+
+
+	BinaryExpression::bOps bippitybop = BinaryExpression::bOps::NoOp;
+	if (t2->class_enum() == Token::cEnum::EndLineToken)
+	{
+		if (!expecting_semicolon)
+		{
+			ParserError(t2, "Unexpected semicolon in expression!");
+		}
+		return lvalue;
+	}
+	else if (t2->class_enum() == Token::cEnum::SymbolToken)
+	{
+		SymbolToken st = *static_cast<SymbolToken*>(t2);
+
+		char* c = st.get_symbol();
+
+		switch (st.len)
+		{
+		case(1):
+			bippitybop = readbOpOneChar(c,&st);
+			break;
+		case(2):
+			bippitybop = readbOpTwoChar(c,&st);
+			break;
+		case(3):
+		case(4):
+			ParserError(t2, "Binary operations longer than two characters are not implemented!");
+			break;
+		default:
+			ParserError(t2, "SymbolToken with malformed len property detected!");
+		}
+	}
+
+	if (bippitybop == BinaryExpression::bOps::NoOp) // No operation found, simply return.
+	{
+		return lvalue;
+	}
+	++tokenheader;//We're past the binop symbol.
+	//We're in "exp binop exp" land now, baby.
+
+	ASTNode* rvalue = readExp(tokens[tokenheader]);
+	if (!rvalue)
+	{
+		ParserError(tokens[tokenheader], "BinaryExpression missing rvalue!");
+		//by default have it be.. like, null, I guess.
+		rvalue = new Literal(Value());
+	}
+
+	return new BinaryExpression(bippitybop, lvalue, rvalue);
+
+	ParserError(t2, "BinaryExpressions are not implemented!");
+	return lvalue;
+}
