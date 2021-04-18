@@ -26,6 +26,9 @@ public:
 	uint32_t line;
 	Token()
 	{
+#ifdef LOUD_DEFAULT_CONSTRUCT
+		std::cout << class_name() << " was default-constructed!" << std::endl;
+#endif
 		//Weird.
 	}
 	Token(uint32_t l)
