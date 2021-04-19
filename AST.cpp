@@ -301,7 +301,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Integer, Value::vType::Integer)): // :)
 		return Value(lhs.t_value.as_int / rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Integer, Value::vType::Integer)):
-		return Value(pow(lhs.t_value.as_int, rhs.t_value.as_int));
+		return Value(static_cast<int>(pow(lhs.t_value.as_int, rhs.t_value.as_int)));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Integer, Value::vType::Integer)):
 		return Value(lhs.t_value.as_int % rhs.t_value.as_int);
 	//
