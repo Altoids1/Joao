@@ -2,6 +2,7 @@
 
 #include "AST.h"
 #include "Parser.h"
+#include "Scope.h"
 
 class Interpreter
 {
@@ -30,5 +31,14 @@ public:
 		//This is just a basic setup while everything else is fleshed out.
 		std::cout <<"RUNTIME_ERROR: " << what << "\n";
 		exit(1);
+	}
+
+	void push_stack(std::string name = "")
+	{
+		varscope.push(name);
+	}
+	void pop_stack()
+	{
+		varscope.pop();
 	}
 };

@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <forward_list>
 #include <list>
 
 //Debug flags

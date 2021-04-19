@@ -314,3 +314,4 @@ public:
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "NativeFunction"; }
 };
+
