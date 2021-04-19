@@ -39,6 +39,7 @@ public:
 			return parent_scope->get(name); // ask them
 		}
 		//else...
+
 		return nullptr; // Give up.
 	}
 	void set(std::string name, _Ty &t)
@@ -322,96 +323,54 @@ class Parser
 
 	ASTNode* readExp(Token*, bool);
 
-	std::vector<Expression*> readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.
+	AssignmentStatement::aOps readaOp()
 	{
-		//Blocks are composed of a starting brace, following by statements, and are ended by an end brace.
-		
-		//Starting brace checks
 		Token* t = tokens[tokenheader];
-		if (t->class_enum() != Token::cEnum::PairSymbolToken)
+
+		if (t->class_enum() != Token::cEnum::SymbolToken)
 		{
-			ParserError(t, "Unexpected character where open-brace was expected!");
+			ParserError(t, "Unexpected Token when aOp was expected!");
+			++tokenheader;
+			return AssignmentStatement::aOps::NoOp;
 		}
-		PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
-		if (!pt.is_start || pt.t_pOp != PairSymbolToken::pairOp::Brace)
+		SymbolToken st = *static_cast<SymbolToken*>(t);
+
+		char* c = st.get_symbol();
+
+		if (st.len == 1)
 		{
-			ParserError(t, "Unexpected character where open-brace was expected!");
+			if (c[0] == '=')
+			{
+				++tokenheader;
+				return AssignmentStatement::aOps::Assign;
+			}
+			else
+			{
+				ParserError(t, "Unexpected single-char SymbolToken; aOp was expected!");
+			}
 		}
 
+		ParserError(t, "Two-char assignment operations are not implemented!");
 
-		//In AST land, blocks are a list of expressions associated with a particular scope.
-		std::vector<Expression*> ASTs;
 		++tokenheader;
-		//I wanna point out that block is the only grammar object that has stats, so we can unroll the description of stats into this for-and-switch.
-		for (; tokenheader < tokens.size(); ++tokenheader)
-		{
-			t = tokens[tokenheader];
-			switch (t->class_enum())
-			{
-				//this switch kinda goes from most obvious implementation to least obvious, heh
-			case(Token::cEnum::EndLineToken):
-				continue;
-			case(Token::cEnum::KeywordToken):
-			{
-				KeywordToken kt = *static_cast<KeywordToken*>(t);
-				switch (kt.t_key)
-				{
-				case(KeywordToken::Key::For):
-					ParserError(t, "For-loops are not implemented!");
-					continue;
-				case(KeywordToken::Key::If):
-				case(KeywordToken::Key::Elseif):
-				case(KeywordToken::Key::Else):
-					ParserError(t, "If statements are not implemented!");
-					continue;
-				case(KeywordToken::Key::Break):
-					ParserError(t, "Break statements are not implemented!");
-					continue;
-				case(KeywordToken::Key::While):
-					ParserError(t, "While-loops are not implemented!");
-					continue;
-				case(KeywordToken::Key::Return):
-				{
-					++tokenheader; // Consume this return token
-					ReturnStatement* rs = new ReturnStatement(readExp(tokens[tokenheader],true));
-					ASTs.push_back(rs);
-					continue;
-				}
-				default:
-					ParserError(t, "Unknown keyword!");
-					continue;
-				}
-			}
-			case(Token::cEnum::PairSymbolToken):
-			{
-				PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
-				if (pt.t_pOp == PairSymbolToken::pairOp::Brace && !pt.is_start)
-				{
-					//This pretty much has to be the end of the block; lets return our vector of shit.
-					++tokenheader;
-					goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
-				}
-
-			}
-			case(Token::cEnum::WordToken):
-			case(Token::cEnum::StringToken):
-			case(Token::cEnum::NumberToken):
-			case(Token::cEnum::SymbolToken):
-				//This is.. probably an stat.
-				ParserError(t, "Statements that are not return statements are not implemented! " + t->class_name());
-				continue;
-			default:
-				ParserError(t, "Unknown Token type found when traversing block!");
-			}
-		}
-		BLOCK_RETURN_ASTS:
-		if (ASTs.size() == 0)
-		{
-			ParserError(t, "Block created with no Expressions inside!");
-		}
-
-		return ASTs;
+		return AssignmentStatement::aOps::NoOp;
 	}
+
+	std::string readIdentifierStr(bool is_word) // false if token is pointing at symbol
+	{
+		if (!is_word)
+		{
+			ParserError(tokens[tokenheader], "Non-local identifiers are not implemented!");
+			return "";
+		}
+
+		WordToken wt = *static_cast<WordToken*>(tokens[tokenheader]);
+
+		return wt.word;
+	}
+
+	std::vector<Expression*> readBlock(BlockType);
+	
 protected:
 	void ParserError()
 	{
@@ -422,6 +381,7 @@ protected:
 	{
 		//This is just a basic setup while everything else is fleshed out.
 		std::cout << "PARSER_ERROR: " << what << "\n";
+		std::cout << t->dump();
 		exit(1);
 	}
 	void ParserError(Token& t, std::string what)

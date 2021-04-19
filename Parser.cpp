@@ -204,16 +204,28 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 		break;
 	}
 	case(Token::cEnum::WordToken):
-		ParserError(t, "Variables are not implemented!");
+		lvalue = new Identifier(readIdentifierStr(true));
 		break;
 	case(Token::cEnum::EndLineToken):
 		ParserError(t, "Endline found when expression was expected!");
 		break;
 	case(Token::cEnum::SymbolToken):
-		//uhh... okay?
-		//If this is a unary operator then its fine; lets ask
+	{
+		//This could be two things: a directory-scoped variable Identifier,
+		//or a Unary operator.
+
+		//check for the former
+		SymbolToken* st = static_cast<SymbolToken*>(t);
+		if (st->get_symbol()[0] == '/' || st->get_symbol()[0] == '.')
+		{
+			lvalue = new Identifier(readIdentifierStr(false));
+			break;
+		}
+
+		//Then try the latter
 		ParserError(t, "Unary operators are not implemented!");
 		break;
+	}
 	case(Token::cEnum::PairSymbolToken):
 		ParserError(t, "Pairlet operators are not implemented for expressions!");
 		break;
@@ -230,13 +242,10 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 	//Now lets see if there's a binary operator and, if so, construct a BinaryExpression() to return.
 
 	++tokenheader;
-
 	Token* t2 = tokens[tokenheader];
 
-
-
 	BinaryExpression::bOps bippitybop = BinaryExpression::bOps::NoOp;
-	if (t2->class_enum() == Token::cEnum::EndLineToken)
+	/*if (t2->class_enum() == Token::cEnum::EndLineToken)
 	{
 		if (!expecting_semicolon)
 		{
@@ -244,7 +253,7 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 		}
 		return lvalue;
 	}
-	else if (t2->class_enum() == Token::cEnum::SymbolToken)
+	else */if (t2->class_enum() == Token::cEnum::SymbolToken)
 	{
 		SymbolToken st = *static_cast<SymbolToken*>(t2);
 
@@ -286,4 +295,120 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 
 	ParserError(t2, "BinaryExpressions are not implemented!");
 	return lvalue;
+}
+
+std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.
+{
+	//Blocks are composed of a starting brace, following by statements, and are ended by an end brace.
+
+	//Starting brace checks
+	Token* t = tokens[tokenheader];
+	if (t->class_enum() != Token::cEnum::PairSymbolToken)
+	{
+		ParserError(t, "Unexpected character where open-brace was expected!");
+	}
+	PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
+	if (!pt.is_start || pt.t_pOp != PairSymbolToken::pairOp::Brace)
+	{
+		ParserError(t, "Unexpected character where open-brace was expected!");
+	}
+
+
+	//In AST land, blocks are a list of expressions associated with a particular scope.
+	std::vector<Expression*> ASTs;
+	++tokenheader;
+	//I wanna point out that block is the only grammar object that has stats, so we can unroll the description of stats into this for-and-switch.
+	for (; tokenheader < tokens.size(); ++tokenheader)
+	{
+		t = tokens[tokenheader];
+		switch (t->class_enum())
+		{
+			//this switch kinda goes from most obvious implementation to least obvious, heh
+		case(Token::cEnum::EndLineToken):
+			continue;
+		case(Token::cEnum::KeywordToken):
+		{
+			KeywordToken kt = *static_cast<KeywordToken*>(t);
+			switch (kt.t_key)
+			{
+			case(KeywordToken::Key::For):
+				ParserError(t, "For-loops are not implemented!");
+				continue;
+			case(KeywordToken::Key::If):
+			case(KeywordToken::Key::Elseif):
+			case(KeywordToken::Key::Else):
+				ParserError(t, "If statements are not implemented!");
+				continue;
+			case(KeywordToken::Key::Break):
+				ParserError(t, "Break statements are not implemented!");
+				continue;
+			case(KeywordToken::Key::While):
+				ParserError(t, "While-loops are not implemented!");
+				continue;
+			case(KeywordToken::Key::Return):
+			{
+				++tokenheader; // Consume this return token
+				ReturnStatement* rs = new ReturnStatement(readExp(tokens[tokenheader], true));
+				ASTs.push_back(rs);
+				continue;
+			}
+			default:
+				ParserError(t, "Unknown keyword!");
+				continue;
+			}
+		}
+		case(Token::cEnum::PairSymbolToken):
+		{
+			PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
+			if (pt.t_pOp == PairSymbolToken::pairOp::Brace && !pt.is_start)
+			{
+				//This pretty much has to be the end of the block; lets return our vector of shit.
+				++tokenheader;
+				goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
+			}
+
+		}
+		case(Token::cEnum::SymbolToken):
+			/*
+			If the Grammar serves me right, this is either a varstat or a functioncall.
+
+			VARSTAT:
+			there's three ways of doing varstats: in the Local scope, Object Scope, or Global Scope.
+			x = 3; -- local (or property!) assignment
+			./x = 3; -- assignment of property in object scope (this/x = 3; is also valid and more explicit)
+			/x = 3; -- global scope asignment (glob/x = 3 also valid, and more explicit since you're saying you're setting a Value and not just getting a type)
+			*/
+
+			ParserError(t, "Non-local scope assignments are not implemented! " + t->class_name());
+		case(Token::cEnum::WordToken):
+		{
+			//CASE 1. local/property assign
+
+			WordToken wt = *static_cast<WordToken*>(t);
+
+			Identifier* id = new Identifier(readIdentifierStr(true));
+			++tokenheader;
+			AssignmentStatement::aOps aesop = readaOp();
+
+			ASTNode* rvalue = readExp(tokens[tokenheader], false);
+
+			ASTs.push_back(new AssignmentStatement(id, rvalue, aesop));
+
+			continue;
+		}
+		case(Token::cEnum::StringToken):
+		case(Token::cEnum::NumberToken):
+			ParserError(t, "Misplaced literal detected when lvalue expected");
+			break;
+		default:
+			ParserError(t, "Unknown Token type found when traversing block!");
+		}
+	}
+BLOCK_RETURN_ASTS:
+	if (ASTs.size() == 0)
+	{
+		ParserError(t, "Block created with no Expressions inside!");
+	}
+
+	return ASTs;
 }

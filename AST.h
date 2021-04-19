@@ -120,6 +120,7 @@ class AssignmentStatement : public Expression
 	ASTNode* rhs;
 public:
 	enum class aOps : uint8_t {
+		NoOp, // More a Parser abstraction than anything else
 		Assign, // =
 		AssignAdd, // +=
 		AssignSubtract, // -=
