@@ -165,10 +165,12 @@ void Scanner::scan(std::ifstream& ifst)
 {
 	do
 	{
+		linenum++; // At the start so that we're 1-indexed instead of 0-indexed
 		std::getline(ifst, line);
 
 		for (int i = 0; i < line.length(); ++i)
 		{
+			
 			char c = line[i];
 
 			switch (c)

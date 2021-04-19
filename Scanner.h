@@ -100,7 +100,14 @@ public:
 		line = l;
 		symbol[0] = symb;
 		symbol[1] = symb2;
-		len = 2;
+		if (symb2 == '\0')
+		{
+			len = 1;
+		}
+		else
+		{
+			len = 2;
+		}
 	}
 
 	char* get_symbol()
@@ -115,7 +122,7 @@ public:
 		{
 			str.push_back(symbol[1]);
 		}
-		return "LINE: " + std::to_string(line) + std::string(" SYMBOL: ") + str;
+		return "LINE: " + std::to_string(line) + std::string(" SYMBOL: (") + str + std::string(") LEN: ") + std::to_string(int(len));
 	}
 	NAME_CONST_METHODS(SymbolToken);
 };
@@ -198,10 +205,15 @@ public:
 		{
 		case(pairOp::Brace):
 			is_start ? str = "{" : str = "}";
+			break;
 		case(pairOp::Bracket):
 			is_start ? str = "[" : str = "]";
+			break;
 		case(pairOp::Paren):
 			is_start ? str = "(" : str = ")";
+			break;
+		default:
+			str = "UNKNOWN???";
 		}
 
 		return "LINE: " + std::to_string(line) + std::string(" PAIRSYMBOL: ") + str;
