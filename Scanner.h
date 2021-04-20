@@ -40,7 +40,7 @@ public:
 	}
 
 	virtual std::string dump() {
-		return "LINE: " + std::to_string(line) + " " +  class_name();
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + " " +  class_name();
 	}
 
 	virtual cEnum class_enum() const { return cEnum::Token; }
@@ -83,7 +83,7 @@ public:
 
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + std::string(" NUMBER: ") + std::to_string(is_double ? num.as_double : num.as_int); // god.
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" NUMBER: ") + std::to_string(is_double ? num.as_double : num.as_int); // god.
 	}
 	NAME_CONST_METHODS(NumberToken);
 };
@@ -129,7 +129,7 @@ public:
 		{
 			str.push_back(symbol[1]);
 		}
-		return "LINE: " + std::to_string(line) + std::string(" SYMBOL: (") + str + std::string(") LEN: ") + std::to_string(int(len));
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" SYMBOL: (") + str + std::string(") LEN: ") + std::to_string(int(len));
 	}
 	NAME_CONST_METHODS(SymbolToken);
 };
@@ -147,7 +147,7 @@ public:
 
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + std::string(" WORD: ") + word;
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" WORD: ") + word;
 	}
 	NAME_CONST_METHODS(WordToken);
 };
@@ -164,7 +164,7 @@ public:
 	}
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + std::string(" STRING: ") + word;
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" STRING: ") + word;
 	}
 	NAME_CONST_METHODS(StringToken);
 };
@@ -227,7 +227,7 @@ public:
 			str = "UNKNOWN???";
 		}
 
-		return "LINE: " + std::to_string(line) + std::string(" PAIRSYMBOL: ") + str;
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" PAIRSYMBOL: ") + str;
 	}
 	NAME_CONST_METHODS(PairSymbolToken);
 };
@@ -275,11 +275,48 @@ public:
 
 class Scanner
 {
-	uint32_t linenum = 0;
-	uint32_t syntactic_linenum = 0;
+	enum class OperationPrecedence { // First is done first, last is done last
+		NONE, // Used by the Scanner to report that no operation takes place within an expression.
+		Power, // ^
+		Unary, // - ! #
+		Factor, // / *
+		Term, // + - 
+		Concat, // .. (Lua does this so we're doing this)
+		Bitwise, // & ~ |
+		Comparison, // == != >= =< > <
+		Logical //  && || ^^
+	};
 
-	std::string line;
-	std::vector<Token*> tokens;
+	const std::unordered_map<std::string, OperationPrecedence> str_to_precedence = {
+		{"+",OperationPrecedence::Term},
+		{"-",OperationPrecedence::Term},
+		{"*",OperationPrecedence::Factor},
+		{"/",OperationPrecedence::Factor},
+		//
+		{"//",OperationPrecedence::Factor},
+		{"^",OperationPrecedence::Power},
+		{"%",OperationPrecedence::Factor},
+		//
+		{"&",OperationPrecedence::Bitwise},
+		{"~",OperationPrecedence::Bitwise},
+		{"|",OperationPrecedence::Bitwise},
+		//
+		{">>",OperationPrecedence::Bitwise},
+		{"<<",OperationPrecedence::Bitwise},
+		//
+		{"..",OperationPrecedence::Concat},
+		//
+		{"<",OperationPrecedence::Comparison},
+		{"<=",OperationPrecedence::Comparison},
+		{">",OperationPrecedence::Comparison},
+		{">=",OperationPrecedence::Comparison},
+		{"==",OperationPrecedence::Comparison},
+		{"!=",OperationPrecedence::Comparison},
+		//
+		{"&&",OperationPrecedence::Logical},
+		{"||",OperationPrecedence::Logical},
+		{"~~",OperationPrecedence::Logical},
+	};
 
 	enum class ScanError {
 		Unknown,
@@ -288,6 +325,15 @@ class Scanner
 		MalformedNumber,
 		MalformedString
 	};
+
+	uint32_t linenum = 0;
+	uint32_t syntactic_linenum = 0;
+
+	std::string line;
+	std::vector<Token*> tokens;
+	std::vector<OperationPrecedence> lowest_ops; // A vector which stores the lowest-priority operation used in the syntactic line its index points to.
+
+	OperationPrecedence lowop = OperationPrecedence::NONE;
 
 	const std::unordered_map<std::string, KeywordToken::Key> keywordhash = {
 		{"if",KeywordToken::Key::If},

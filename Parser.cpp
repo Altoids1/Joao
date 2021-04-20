@@ -325,6 +325,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 		{
 			//this switch kinda goes from most obvious implementation to least obvious, heh
 		case(Token::cEnum::EndLineToken):
+			ParserError(t, "Unexpected semicolon in global scope!"); // Yes I'm *that* picky, piss off
 			continue;
 		case(Token::cEnum::KeywordToken):
 		{

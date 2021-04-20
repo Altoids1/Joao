@@ -112,7 +112,7 @@ int Scanner::readSymbol(int it)
 	char second = '\0';
 
 	//We don't really have to do a whole proper for-loop here since symbols can only be one or two characters in size.
-	if (it < line.length())
+	if (it + 1 < line.length())
 	{
 		char c = line[it + 1]; // Do a little look-ahead
 		switch (c)
@@ -122,7 +122,26 @@ int Scanner::readSymbol(int it)
 			{
 				second = c; //woag it's a double symbol
 				++it;
+				std::string str{ first, second };
+				if (str_to_precedence.count(str))
+				{
+					OperationPrecedence op = str_to_precedence.at(str);
+					if (op > lowop)
+					{
+						lowop = op;
+					}
+				}
 				break;
+			}
+		default:
+			std::string str{first};
+			if (str_to_precedence.count(str))
+			{
+				OperationPrecedence op = str_to_precedence.at(str);
+				if (op > lowop)
+				{
+					lowop = op;
+				}
 			}
 		}
 	}
@@ -182,6 +201,8 @@ void Scanner::scan(std::ifstream& ifst)
 				continue;
 			case(';'): // End of statement
 			{
+				lowest_ops.push_back(lowop);
+				lowop = OperationPrecedence::NONE;
 				makeEndline();
 				++syntactic_linenum;
 				continue;
@@ -205,16 +226,60 @@ void Scanner::scan(std::ifstream& ifst)
 			}
 		}
 		
-
+		//Update Scanner's properties
 		line = "";
+		
+
 	} while (!ifst.eof());
+	lowest_ops.push_back(lowop);
+	lowop = OperationPrecedence::NONE;
 
 #ifdef LOUD_SCANNER
-	std::cout << "SCANNER_DEBUG: CONTENTS OF TOKENS:\n";
+	std::cout << "SCANNER_DEBUG: Contents of Tokens:\n";
 	for (int i = 0; i < tokens.size(); ++i)
 	{
 		std::cout << tokens[i]->dump() << std::endl;
 	}
+
+	std::cout << "OperatorPrecedence per syntax line:\n";
+	for (int i = 0; i < lowest_ops.size(); ++i)
+	{
+		std::string str;
+		switch (lowest_ops[i])
+		{
+		case(OperationPrecedence::NONE):
+			str = "NONE";
+			break;
+		case(OperationPrecedence::Power):
+			str = "Power";
+			break;
+		case(OperationPrecedence::Unary):
+			str = "Unary";
+			break;
+		case(OperationPrecedence::Factor):
+			str = "Factor";
+			break;
+		case(OperationPrecedence::Term):
+			str = "Term";
+			break;
+		case(OperationPrecedence::Concat):
+			str = "Concat";
+			break;
+		case(OperationPrecedence::Bitwise):
+			str = "Bitwise";
+			break;
+		case(OperationPrecedence::Comparison):
+			str = "Comparison";
+			break;
+		case(OperationPrecedence::Logical):
+			str = "Logical";
+			break;
+		default:
+			str = "?????";
+		}
+		std::cout << "LINE: " << i << " OP: " << str << std::endl;
+	}
+
 #endif
 }
 
