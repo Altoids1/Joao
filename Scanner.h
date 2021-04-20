@@ -24,6 +24,7 @@ public:
 		LiteralToken
 	};
 	uint32_t line;
+	uint32_t syntactic_line;
 	Token()
 	{
 #ifdef LOUD_DEFAULT_CONSTRUCT
@@ -31,8 +32,9 @@ public:
 #endif
 		//Weird.
 	}
-	Token(uint32_t l)
+	Token(uint32_t l, uint32_t sl)
 		:line(l)
+		,syntactic_line(sl)
 	{
 
 	}
@@ -48,9 +50,10 @@ public:
 class EndLineToken final : public Token
 {
 public:
-	EndLineToken(uint32_t l)
+	EndLineToken(uint32_t l, uint32_t sl)
 	{
 		line = l;
+		syntactic_line = sl;
 	}
 	NAME_CONST_METHODS(EndLineToken);
 };
@@ -63,15 +66,17 @@ public:
 		int as_int;
 	}num;
 	bool is_double;
-	NumberToken(uint32_t& l, double d)
+	NumberToken(uint32_t& l, uint32_t sl, double d)
 	{
 		line = l;
+		syntactic_line = sl;
 		num.as_double = d;
 		is_double = true;
 	}
-	NumberToken(uint32_t& l, int i)
+	NumberToken(uint32_t& l, uint32_t sl,  int i)
 	{
 		line = l;
+		syntactic_line = sl;
 		num.as_int = i;
 		is_double = false;
 	}
@@ -88,16 +93,18 @@ class SymbolToken final : public Token
 	char symbol[2];
 public:
 	char len;
-	SymbolToken(uint32_t& l, char symb)
+	SymbolToken(uint32_t& l, uint32_t sl, char symb)
 	{
 		line = l;
+		syntactic_line = sl;
 		symbol[0] = symb;
 		symbol[1] = '\0';
 		len = 1;
 	}
-	SymbolToken(uint32_t& l, char symb, char symb2)
+	SymbolToken(uint32_t& l, uint32_t sl, char symb, char symb2)
 	{
 		line = l;
+		syntactic_line = sl;
 		symbol[0] = symb;
 		symbol[1] = symb2;
 		if (symb2 == '\0')
@@ -131,9 +138,10 @@ class WordToken final : public Token
 {
 public:
 	std::string word;
-	WordToken(uint32_t& l, std::string w)
+	WordToken(uint32_t& l, uint32_t sl, std::string w)
 	{
 		line = l;
+		syntactic_line = sl;
 		word = w;
 	}
 
@@ -148,9 +156,10 @@ class StringToken final : public Token
 {
 public:
 	std::string word;
-	StringToken(uint32_t& l, std::string w)
+	StringToken(uint32_t& l, uint32_t sl, std::string w)
 	{
 		line = l;
+		syntactic_line = sl;
 		word = w;
 	}
 	virtual std::string dump() override
@@ -170,9 +179,11 @@ public:
 		Paren
 	}t_pOp;
 	bool is_start = false; // FALSE if it's an end pairlet, TRUE if it's the start of a pair
-	PairSymbolToken(uint32_t l, char c)
+	PairSymbolToken(uint32_t l, uint32_t sl, char c)
 	{
 		line = l;
+		syntactic_line = sl;
+
 		switch (c)
 		{
 		case('{'):
@@ -234,9 +245,10 @@ public:
 		Break
 	}t_key;
 
-	KeywordToken(uint32_t linenum, Key k)
+	KeywordToken(uint32_t linenum, uint32_t sl, Key k)
 	{
 		line = linenum;
+		syntactic_line = sl;
 		t_key = k;
 	}
 
@@ -251,9 +263,10 @@ public:
 		False,
 		True,
 	}t_literal;
-	LiteralToken(uint32_t linenum, Literal k)
+	LiteralToken(uint32_t linenum, uint32_t sl, Literal k)
 	{
 		line = linenum;
+		syntactic_line = sl;
 		t_literal = k;
 	}
 
@@ -263,6 +276,8 @@ public:
 class Scanner
 {
 	uint32_t linenum = 0;
+	uint32_t syntactic_linenum = 0;
+
 	std::string line;
 	std::vector<Token*> tokens;
 
@@ -321,7 +336,7 @@ class Scanner
 	}
 	void makeEndline() // This is its own function to allow for the read___() functions to quickly call it when they accidentally tread onto a semicolon while deciphering a token.
 	{
-		Token* t = new EndLineToken(linenum);
+		Token* t = new EndLineToken(linenum,syntactic_linenum);
 		append(t);
 	}
 	void makeNumber(bool is_double, std::string& str, int base = 10)
@@ -330,13 +345,13 @@ class Scanner
 		{
 			double d = std::stod(str); // Because of how stringent we were with assembling this string, we can pretty confidently do this w/o sanity-checking;
 			//stod() will pretty much for-sure give us something sensible.
-			NumberToken* nt = new NumberToken(linenum, d);
+			NumberToken* nt = new NumberToken(linenum, syntactic_linenum, d);
 			append(nt);
 		}
 		else
 		{
 			int i = std::stoi(str, nullptr, base); //^^^ Ditto for stoi().
-			NumberToken* nt = new NumberToken(linenum, i);
+			NumberToken* nt = new NumberToken(linenum, syntactic_linenum, i);
 			append(nt);
 		}
 	}
@@ -345,7 +360,7 @@ class Scanner
 		//first check if this is a keyword
 		if (keywordhash.count(str))
 		{
-			KeywordToken* kt = new KeywordToken(linenum, keywordhash.at(str));
+			KeywordToken* kt = new KeywordToken(linenum, syntactic_linenum, keywordhash.at(str));
 			append(kt);
 			return;
 		}
@@ -353,14 +368,14 @@ class Scanner
 
 		if (literalhash.count(str))
 		{
-			LiteralToken* lt = new LiteralToken(linenum, literalhash.at(str));
+			LiteralToken* lt = new LiteralToken(linenum, syntactic_linenum, literalhash.at(str));
 			append(lt);
 			return;
 		}
 
 
 		//otherwise, do the normal business
-		WordToken* wt = new WordToken(linenum, str);
+		WordToken* wt = new WordToken(linenum, syntactic_linenum, str);
 		append(wt);
 	}
 	int readString(int);

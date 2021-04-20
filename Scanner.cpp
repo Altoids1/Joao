@@ -48,7 +48,7 @@ int Scanner::readString(int it)
 		}
 		case('"')://Delimiter found, returning...
 		{
-			Token* t = new StringToken(linenum,str);
+			Token* t = new StringToken(linenum, syntactic_linenum,str);
 			append(t);
 			return it;
 		}
@@ -101,7 +101,7 @@ int Scanner::readNumber(int it)
 
 int Scanner::readPairSymbol(int it)
 {
-	Token* t = new PairSymbolToken(linenum, line[it]);
+	Token* t = new PairSymbolToken(linenum, syntactic_linenum, line[it]);
 	append(t);
 	return it;
 }
@@ -127,7 +127,7 @@ int Scanner::readSymbol(int it)
 		}
 	}
 
-	Token* t = new SymbolToken(linenum, first, second);
+	Token* t = new SymbolToken(linenum, syntactic_linenum, first, second);
 
 	append(t);
 	return it;
@@ -183,6 +183,7 @@ void Scanner::scan(std::ifstream& ifst)
 			case(';'): // End of statement
 			{
 				makeEndline();
+				++syntactic_linenum;
 				continue;
 			}
 			DIGITS:
