@@ -201,10 +201,8 @@ void Scanner::scan(std::ifstream& ifst)
 				continue;
 			case(';'): // End of statement
 			{
-				lowest_ops.push_back(lowop);
-				lowop = OperationPrecedence::NONE;
+				
 				makeEndline();
-				++syntactic_linenum;
 				continue;
 			}
 			DIGITS:
@@ -238,45 +236,13 @@ void Scanner::scan(std::ifstream& ifst)
 	std::cout << "SCANNER_DEBUG: Contents of Tokens:\n";
 	for (int i = 0; i < tokens.size(); ++i)
 	{
-		std::cout << tokens[i]->dump() << std::endl;
+		std::cout << "TOKEN#: "<< i << "\t" << tokens[i]->dump() << std::endl;
 	}
 
 	std::cout << "OperatorPrecedence per syntax line:\n";
 	for (int i = 0; i < lowest_ops.size(); ++i)
 	{
-		std::string str;
-		switch (lowest_ops[i])
-		{
-		case(OperationPrecedence::NONE):
-			str = "NONE";
-			break;
-		case(OperationPrecedence::Power):
-			str = "Power";
-			break;
-		case(OperationPrecedence::Unary):
-			str = "Unary";
-			break;
-		case(OperationPrecedence::Factor):
-			str = "Factor";
-			break;
-		case(OperationPrecedence::Term):
-			str = "Term";
-			break;
-		case(OperationPrecedence::Concat):
-			str = "Concat";
-			break;
-		case(OperationPrecedence::Bitwise):
-			str = "Bitwise";
-			break;
-		case(OperationPrecedence::Comparison):
-			str = "Comparison";
-			break;
-		case(OperationPrecedence::Logical):
-			str = "Logical";
-			break;
-		default:
-			str = "?????";
-		}
+		std::string str = precedence_tostring(lowest_ops[i]);
 		std::cout << "LINE: " << i << " OP: " << str << std::endl;
 	}
 

@@ -275,7 +275,7 @@ public:
 
 class Scanner
 {
-	enum class OperationPrecedence { // First is done first, last is done last
+	enum class OperationPrecedence : uint8_t { // First is done first, last is done last
 		NONE, // Used by the Scanner to report that no operation takes place within an expression.
 		Power, // ^
 		Unary, // - ! #
@@ -384,6 +384,11 @@ class Scanner
 	{
 		Token* t = new EndLineToken(linenum,syntactic_linenum);
 		append(t);
+		
+		//Order-of-operation optimization stuffs
+		lowest_ops.push_back(lowop);
+		lowop = OperationPrecedence::NONE;
+		++syntactic_linenum;
 	}
 	void makeNumber(bool is_double, std::string& str, int base = 10)
 	{
@@ -429,6 +434,33 @@ class Scanner
 	int readPairSymbol(int);
 	int readSymbol(int);
 	int readWord(int);
+
+	static std::string precedence_tostring(OperationPrecedence op)
+	{
+		switch (op)
+		{
+		case(OperationPrecedence::NONE):
+			return "NONE";
+		case(OperationPrecedence::Power):
+			return "Power";
+		case(OperationPrecedence::Unary):
+			return "Unary";
+		case(OperationPrecedence::Factor):
+			return "Factor";
+		case(OperationPrecedence::Term):
+			return "Term";
+		case(OperationPrecedence::Concat):
+			return "Concat";
+		case(OperationPrecedence::Bitwise):
+			return "Bitwise";
+		case(OperationPrecedence::Comparison):
+			return "Comparison";
+		case(OperationPrecedence::Logical):
+			return "Logical";
+		default:
+			return "?????";
+		}
+	}
 public:
 	void scan(std::ifstream&);
 

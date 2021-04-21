@@ -76,7 +76,7 @@ void Program::construct_natives()
 }
 
 
-Program Parser::parse() // This is w/o question the hardest part of this to write.
+Program Parser::parse() // This Parser is w/o question the hardest part of this to write.
 {
 	assert(tokens.size() > 0);
 
@@ -148,13 +148,9 @@ Program Parser::parse() // This is w/o question the hardest part of this to writ
 	return t_program;
 }
 
-ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
+ASTNode* Parser::readlvalue(Token* t) // Read an Expression where we know for certain that there's no damned binary operator within it.
 {
-	//Okay, god, we're really getting close to actually being able to *resolve* something.
-
 	ASTNode* lvalue = nullptr;
-
-
 	//First things first, lets find the "lvalue" of this expression, the thing on the left
 	switch (t->class_enum())
 	{
@@ -204,7 +200,7 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 		break;
 	}
 	case(Token::cEnum::WordToken):
-		lvalue = new Identifier(readIdentifierStr(true));
+		lvalue = new Identifier(readIdentifierStr(true,t));
 		break;
 	case(Token::cEnum::EndLineToken):
 		ParserError(t, "Endline found when expression was expected!");
@@ -218,17 +214,14 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 		SymbolToken* st = static_cast<SymbolToken*>(t);
 		if (st->get_symbol()[0] == '/' || st->get_symbol()[0] == '.')
 		{
-			lvalue = new Identifier(readIdentifierStr(false));
+			lvalue = new Identifier(readIdentifierStr(false,t));
 			break;
 		}
 
 		//Then try the latter
-		ParserError(t, "Unary operators are not implemented!");
+		ParserError(t, "Unexpected Unary Operation!");
 		break;
 	}
-	case(Token::cEnum::PairSymbolToken):
-		ParserError(t, "Pairlet operators are not implemented for expressions!");
-		break;
 	default:
 		ParserError(t, "Unexpected Token when reading Expression! " + t->class_name());
 		break;
@@ -239,62 +232,115 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 		ParserError(t, "Failed to comprehend lvalue of Expression!");
 	}
 
-	//Now lets see if there's a binary operator and, if so, construct a BinaryExpression() to return.
-
 	++tokenheader;
-	Token* t2 = tokens[tokenheader];
+	return lvalue;
+}
 
-	BinaryExpression::bOps bippitybop = BinaryExpression::bOps::NoOp;
-	/*if (t2->class_enum() == Token::cEnum::EndLineToken)
+ASTNode* Parser::readbOp(Token* t, Scanner::OperationPrecedence op, int lasttoken)
+{
+	int curheader = tokenheader;
+
+	if (op == Scanner::OperationPrecedence::NONE) // If we're at the bottom, evaluate a primary
 	{
-		if (!expecting_semicolon)
+		switch (t->class_enum())
 		{
-			ParserError(t2, "Unexpected semicolon in expression!");
-		}
-		return lvalue;
-	}
-	else */if (t2->class_enum() == Token::cEnum::SymbolToken)
-	{
-		SymbolToken st = *static_cast<SymbolToken*>(t2);
-
-		char* c = st.get_symbol();
-
-		switch (st.len)
-		{
-		case(1):
-			bippitybop = readbOpOneChar(c,&st);
-			break;
-		case(2):
-			bippitybop = readbOpTwoChar(c,&st);
-			break;
-		case(3):
-		case(4):
-			ParserError(t2, "Binary operations longer than two characters are not implemented!");
+		case(Token::cEnum::PairSymbolToken):
+			ParserError(t,"Pairing within expressions is not implemented!");
 			break;
 		default:
-			ParserError(t2, "SymbolToken with malformed len property detected!");
+			return readlvalue(t);
 		}
 	}
 
-	if (bippitybop == BinaryExpression::bOps::NoOp) // No operation found, simply return.
+
+	ASTNode* lhs = nullptr;
+
+	//Now lets try to read the binary operation in question
+	BinaryExpression::bOps bippitybop = BinaryExpression::bOps::NoOp;
+	
+	int localheader = tokenheader;
+	for (; localheader < lasttoken; ++localheader)
 	{
-		return lvalue;
-	}
-	++tokenheader;//We're past the binop symbol.
-	//We're in "exp binop exp" land now, baby.
+		Token* t2 = tokens[localheader];
+		switch (t2->class_enum())
+		{
+		case(Token::cEnum::EndLineToken):
+			goto READBOP_LEAVE_BOPSEARCH;
+		case(Token::cEnum::KeywordToken):
+			ParserError(tokens[tokenheader], "Unexpected keyword in Expression!");
+			continue;
+		case(Token::cEnum::SymbolToken):
+		{
+			SymbolToken st = *static_cast<SymbolToken*>(t2);
 
-	ASTNode* rvalue = readExp(tokens[tokenheader]);
-	if (!rvalue)
+			BinaryExpression::bOps boopitybeep;
+
+			if (st.len == 1)
+			{
+				boopitybeep = readbOpOneChar(st.get_symbol(), t2);
+			}
+			else
+			{
+				boopitybeep = readbOpTwoChar(st.get_symbol(), t2);
+			}
+
+			if (bOp_to_precedence.at(boopitybeep) == op) // WE GOT A HIT!
+			{
+				
+				//ALL THIS ASSUMES LEFT-ASSOCIATIVITY, AS IN ((1 + 2) + 3) + 4
+
+				if (!lhs)
+				{
+					lhs = readbOp(t, static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), localheader);
+				}
+
+				tokenheader = localheader + 1;
+				Token* nxt_token = tokens[tokenheader];
+
+				ASTNode* right = readbOp(nxt_token, static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), tokens.size()-1);
+				
+				lhs = new BinaryExpression(boopitybeep, lhs, right);
+				
+				continue;
+			}
+
+			//we don't got a hit. :(
+			continue;
+		}
+		default:
+			continue;
+		}
+	}
+	READBOP_LEAVE_BOPSEARCH:
+	if (tokenheader == tokens.size() - 1)
 	{
-		ParserError(tokens[tokenheader], "BinaryExpression missing rvalue!");
-		//by default have it be.. like, null, I guess.
-		rvalue = new Literal(Value());
+		ParserError(tokens.back(), "Reached end of program w/o resolving Expression!");
 	}
 
-	return new BinaryExpression(bippitybop, lvalue, rvalue);
+	//If we're here then it seems the operation(s) we're looking for doesn't exist
+	//So lets just return... whatever it is in the lower stacks
 
-	ParserError(t2, "BinaryExpressions are not implemented!");
-	return lvalue;
+	ASTNode* result = readbOp(t, static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), lasttoken);
+	std::cout << "Started at " << std::to_string(curheader) << ", tokenheader now set at " << std::to_string(tokenheader) << "! (" << Scanner::precedence_tostring(op) << ")\n";
+	return result;
+	
+}
+
+ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
+{
+	//Okay, god, we're really getting close to actually being able to *resolve* something.
+
+	Scanner::OperationPrecedence lowop = lowest_ops[t->syntactic_line];
+
+	if (lowop == Scanner::OperationPrecedence::NONE) // If we know for a fact that no binary operation takes place on this syntactic line
+	{
+		++tokenheader;
+		return readlvalue(t); // Just return the lvalue, simple as.
+	}
+
+	//we know (or at least kinda think) that there's a binop afoot.
+	
+	return readbOp(t, lowop, tokens.size()-1);
 }
 
 std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.
@@ -370,6 +416,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 
 		}
 		case(Token::cEnum::SymbolToken):
+		{
 			/*
 			If the Grammar serves me right, this is either a varstat or a functioncall.
 
@@ -380,7 +427,17 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			/x = 3; -- global scope asignment (glob/x = 3 also valid, and more explicit since you're saying you're setting a Value and not just getting a type)
 			*/
 
-			ParserError(t, "Non-local scope assignments are not implemented! " + t->class_name());
+			SymbolToken st = *static_cast<SymbolToken*>(t);
+
+			if (st.get_symbol()[0] == '/' && st.len == 1)
+			{
+				ParserError(t, "Non-local scope assignments are not implemented! " + t->class_name());
+			}
+			else
+			{
+				ParserError(t, "Unexpected or unimplemented symbol found when traversing Block!");
+			}
+		}
 		case(Token::cEnum::WordToken):
 		{
 			//CASE 1. local/property assign
@@ -395,6 +452,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 
 			ASTs.push_back(new AssignmentStatement(id, rvalue, aesop));
 
+			--tokenheader; // Decrement so that the impending increment puts us in the correct place.
 			continue;
 		}
 		case(Token::cEnum::StringToken):
