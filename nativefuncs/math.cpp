@@ -246,6 +246,9 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 	});
+
+	//FIXME: Add random number generator functions here!
+
 	NATIVE_FUNC("sin")
 	{
 		Value arg = args[0];
@@ -291,7 +294,16 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 	});
+	NATIVE_FUNC("ult")
+	{
+		Value lhs = args[0];
+		Value rhs = args[1];
 
+		if(lhs.t_vType != Value::vType::Integer || rhs.t_vType != Value::vType::Integer)
+			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+
+		return Value(static_cast<uint32_t>(lhs.t_value.as_int) < static_cast<uint32_t>(rhs.t_value.as_int));
+	});
 }
 
 #undef NATIVE_FUNC
