@@ -28,6 +28,9 @@ public:
 		myinterp = &interp;
 	}
 	void construct_natives();
+	void construct_math_library();
+	void construct_string_library();
+	void construct_table_library();
 
 	// I wanna point out that this is distinct from Interpreter's version of this function; it's a raw call to a function's name, directory data and all, while Interpreter's resolves scope first.
 	Function* get_func(std::string name)

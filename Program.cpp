@@ -25,50 +25,9 @@ void Program::construct_natives()
 		return Value(7);
 	});
 
-	//MATHEMATICS
-	definedFunctions["sqrt"] = &NativeFunction("sqrt", [](std::vector<Value> args)
-	{
-		Value arg = args[0];
-		switch (arg.t_vType)
-		{
-		case(Value::vType::Double):
-			return Value(sqrt(arg.t_value.as_double));
-		case(Value::vType::Integer):
-			return Value(sqrt(arg.t_value.as_int));
-		case(Value::vType::Bool):
-			return Value(sqrt(arg.t_value.as_bool));
-		default:
-			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-		}
-	});
-	definedFunctions["sin"] = &NativeFunction("sin", [](std::vector<Value> args)
-	{
-		Value arg = args[0];
-		switch (arg.t_vType)
-		{
-		case(Value::vType::Double):
-			return Value(sin(arg.t_value.as_double));
-		case(Value::vType::Integer):
-			return Value(sin(arg.t_value.as_int));
-		case(Value::vType::Bool):
-			return Value(sin(arg.t_value.as_bool));
-		default:
-			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-		}
-	});
-	definedFunctions["cos"] = &NativeFunction("cos", [](std::vector<Value> args)
-	{
-		Value arg = args[0];
-		switch (arg.t_vType)
-		{
-		case(Value::vType::Double):
-			return Value(cos(arg.t_value.as_double));
-		case(Value::vType::Integer):
-			return Value(cos(arg.t_value.as_int));
-		case(Value::vType::Bool):
-			return Value(cos(arg.t_value.as_bool));
-		default:
-			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-		}
-	});
+
+
+	construct_math_library();
+	construct_string_library();
+	construct_table_library();
 }
