@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AST.h"
-#include "Parser.h"
+#include "Program.h"
 #include "Scope.h"
 
 class Interpreter

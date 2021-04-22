@@ -1,5 +1,6 @@
 #include "Forward.h"
 #include "AST.h"
+#include "Object.h"
 #include "Interpreter.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
