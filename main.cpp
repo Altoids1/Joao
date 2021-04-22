@@ -120,6 +120,10 @@ int main(int argc, char** argv)
 	Interpreter interpreter;
 	parsed.set_interp(interpreter);
 
+#ifdef LOUD_AST
+	parsed.dump();
+#endif
+
 	Value v = interpreter.execute(parsed);
 
 	std::cout << "Execution took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";

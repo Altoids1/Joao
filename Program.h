@@ -20,7 +20,7 @@ public:
 	}
 	Program(Function* f)
 	{
-		definedFunctions["main"] = f;
+		definedFunctions["/main"] = f;
 		construct_natives();
 	}
 	void set_interp(Interpreter& interp)
@@ -31,6 +31,11 @@ public:
 	void construct_math_library();
 	void construct_string_library();
 	void construct_table_library();
+
+	void dump()
+	{
+		std::cout << definedFunctions["/main"]->dump(0);
+	}
 
 	// I wanna point out that this is distinct from Interpreter's version of this function; it's a raw call to a function's name, directory data and all, while Interpreter's resolves scope first.
 	Function* get_func(std::string name)

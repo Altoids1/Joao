@@ -10,8 +10,9 @@
 #include <list>
 
 //Debug flags
-#define LOUD_SCANNER // Uncomment if you want Scanner to be verbose about what it is doing.
+//#define LOUD_SCANNER // Uncomment if you want Scanner to be verbose about what it is doing.
 //#define LOUD_DEFAULT_CONSTRUCT // Uncomment if you want Token to scream every time it's default-constructed.
+#define LOUD_AST // Dumps the AST before executing.
 
 //Forwarded Objects
 class Object;
