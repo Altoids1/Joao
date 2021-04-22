@@ -77,6 +77,8 @@ class ASTNode // ASTNodes are abstract symbols which together form a "flow chart
 public:
 	virtual const std::string class_name() const { return "ASTNode"; }
 	virtual Value resolve(Interpreter&); // Collapses this symbol into a real dang thing or process that the interpreter can do.
+
+	virtual std::string dump(int indent) { return std::string(indent, ' ') + "ASTNode\n"; } // Used for debugging
 };
 
 class Literal : public ASTNode { // A node which denotes a plain ol' literal.
@@ -89,6 +91,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
+	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Literal: " + heldval.to_string() + "\n"; }
 };
 
 
@@ -112,6 +115,7 @@ public:
 		return t_name;
 	}
 	virtual const std::string class_name() const override { return "Identifier"; }
+	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name + "\n"; }
 };
 
 class AssignmentStatement : public Expression
@@ -135,6 +139,16 @@ public:
 		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}
 	virtual Value resolve(Interpreter&) override;
+	virtual std::string dump(int indent)
+	{ 
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "AssignmentStatement, Operation: Assign\n";
+
+		str += id->dump(indent + 1);
+		str += rhs->dump(indent + 1);
+
+		return str;
+	}
 };
 
 class UnaryExpression : public Expression
@@ -200,6 +214,28 @@ public:
 		
 	}
 	virtual Value resolve(Interpreter&) override;
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string sop;
+		switch (t_op)
+		{
+		case(bOps::Add):
+			sop = "Add";
+		case(bOps::Multiply):
+			sop = "Multiply";
+		case(bOps::Exponent):
+			sop = "Exponent";
+		default:
+			sop = "????";
+		}
+		std::string str = ind + "BinaryStatement, Operation: " + sop + "\n";
+		
+		str += t_lhs->dump(indent + 1);
+		str += t_rhs->dump(indent + 1);
+
+		return str;
+	}
 };
 
 class ReturnStatement : public Expression {
@@ -222,6 +258,15 @@ public:
 	virtual Value resolve(Interpreter& interp) override
 	{
 		return held_expr->resolve(interp);
+	}
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "ReturnStatement:\n";
+
+		str += held_expr->dump(indent + 1);
+
+		return str;
 	}
 };
 
@@ -287,6 +332,17 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "Function"; }
+	virtual std::string dump(int indent)
+	{
+		//std::string ind = std::string(indent, ' ');
+		std::string str = "Function, name: " + t_name + "\n";
+		for (int i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
+
+		return str;
+	}
 };
 
 class NativeFunction final : public Function
