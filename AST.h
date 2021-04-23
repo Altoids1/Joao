@@ -67,6 +67,23 @@ public:
 		t_value.as_int = errcode;
 	}
 
+	explicit operator bool() const { // Q-q-quadruple keyword!!
+
+		switch (t_vType)
+		{
+		case(vType::Null):
+			return false;
+		case(vType::Bool):
+			return t_value.as_bool;
+		case(vType::Integer):
+			return t_value.as_int;
+		case(vType::Double):
+			return t_value.as_double;
+		default: // If it's a more complicated vType
+			return true; // Just return true.
+		}
+	}
+
 	std::string to_string();
 	std::string typestring();
 };
