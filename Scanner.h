@@ -323,7 +323,8 @@ class Scanner
 		UnterminatedString,
 		UnknownCharacter,
 		MalformedNumber,
-		MalformedString
+		MalformedString,
+		MalformedLongComment
 	};
 
 	uint32_t linenum = 0;
@@ -356,9 +357,6 @@ class Scanner
 
 		switch (what)
 		{
-		case(ScanError::Unknown):
-			std::cout << "SCANNER_ERROR: UNKNOWN!"; // This is an error at printing an error. So meta!
-			exit(1);
 		case(ScanError::UnterminatedString):
 			msg =  "SCANNER_ERROR: Unterminated String!";
 			break;
@@ -371,6 +369,19 @@ class Scanner
 		case(ScanError::MalformedString):
 			msg = "SCANNER_ERROR: Malformed String!";
 			break;
+		case(ScanError::MalformedLongComment):
+			msg = "SCANNER_ERROR: Long comments cannot begin on lines containing functional code!";
+			/*
+			Picky? Yes.
+
+			Good for code structure? Definitely; I don't like the idea of having to read random fucking longcomments in the middle of code,
+			just makes the Parser slower to accomodate horrendous style.
+			*/
+			break;
+		default:
+		case(ScanError::Unknown):
+			std::cout << "SCANNER_ERROR: UNKNOWN!"; // This is an error at printing an error. So meta!
+			exit(1);
 		}
 
 		std::cout << msg << std::endl << line << std::endl << squiggly << std::endl;
@@ -432,9 +443,9 @@ class Scanner
 	int readString(int);
 	int readNumber(int);
 	int readPairSymbol(int);
-	int readSymbol(int);
+	int readSymbol(int,std::ifstream&);
 	int readWord(int);
-  int readComment(int);
+	int readComment(int,std::ifstream&);
 	static std::string precedence_tostring(OperationPrecedence op)
 	{
 		switch (op)

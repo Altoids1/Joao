@@ -106,7 +106,7 @@ int Scanner::readPairSymbol(int it)
 	return it;
 }
 
-int Scanner::readSymbol(int it)
+int Scanner::readSymbol(int it, std::ifstream& ifst)
 {
 	char first = line[it];
 	char second = '\0';
@@ -123,7 +123,7 @@ int Scanner::readSymbol(int it)
 				second = c; //woag it's a double symbol
 				if (c == '#') // If ##, meaning a linecomment
 				{
-					return readComment(it);
+					return readComment(it+2,ifst);
 				}
 				++it;
 				std::string str{ first, second };
@@ -184,9 +184,28 @@ int Scanner::readWord(int it)
 	return it;
 }
 
-int Scanner::readComment(int it)
+int Scanner::readComment(int it,std::ifstream& ifst)
 {
-	return line.length(); // Skip to end of line
+
+	if(it > line.length() || line[it] != '#') // If this is a linecomment
+		return line.length(); // Skip to end of line
+
+	//Else, we are now in the readlongcomment zone
+
+	if (it != 2)
+		ScannerError(it, ScanError::MalformedLongComment);
+
+	do
+	{
+		std::getline(ifst, line);
+
+		if (line.substr(0, 3) == "###") // Found the closing longcomment
+		{
+			break;
+		}
+
+	} while (!ifst.eof());
+	return line.length();
 }
 
 void Scanner::scan(std::ifstream& ifst)
@@ -218,7 +237,7 @@ void Scanner::scan(std::ifstream& ifst)
 				i = readNumber(i);
 				continue;
 			SYMBOL:
-				i = readSymbol(i);
+				i = readSymbol(i, ifst); // the 2nd argument is strange but bear with me here
 				continue;
 			PAIRSYMBOL:
 				i = readPairSymbol(i);
