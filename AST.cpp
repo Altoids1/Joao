@@ -91,13 +91,14 @@ Value Identifier::resolve(Interpreter& interp)
 Value AssignmentStatement::resolve(Interpreter& interp)
 {
 	Value rhs_val = rhs->resolve(interp);
+	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 
 	if (t_op != aOps::Assign)
 	{
 		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
 	}
 
-	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
+	
 	//exit(1);
 
 	interp.set_var(id->get_str(), rhs_val, this);
@@ -389,19 +390,20 @@ void Function::give_args(std::vector<Value>& args, Interpreter& interp)
 }
 Value Function::resolve(Interpreter & interp)
 {
-	interp.push_stack(t_name);
+	interp.push_stack(Directory::lastword(t_name));
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.
 		Expression* ptr = *it;
 		if (ptr->class_name() == "ReturnStatement")
 		{
-			ReturnStatement rt = *((ReturnStatement*)ptr); // Is this safe?
+			ReturnStatement rt = *(static_cast<ReturnStatement*>(ptr));
 
 			if (rt.has_expr) // If this actually has something to return
 			{
-				interp.pop_stack();
-				return rt.resolve(interp); // Do that
+				Value ret = rt.resolve(interp); // Resolve it first
+				interp.pop_stack(); // THEN pop the stack
+				return ret; // THEN return it
 			}
 			break;// otherwise use the default returnValue
 		}
@@ -463,7 +465,7 @@ Value IfBlock::resolve(Interpreter& interp)
 	}
 		
 
-	interp.push_stack();
+	interp.push_stack("if");
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.
@@ -496,7 +498,7 @@ Value IfBlock::resolve(Interpreter& interp)
 
 Value ForBlock::resolve(Interpreter& interp)
 {
-	interp.push_stack(); // Has to happen here since initializer takes place in the for-loops var stack
+	interp.push_stack("for"); // Has to happen here since initializer takes place in the for-loops var stack
 	if (initializer)
 		initializer->resolve(interp);
 	while (condition && condition->resolve(interp))

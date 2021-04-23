@@ -50,9 +50,12 @@ public:
 
 	_Ty* get(std::string name)
 	{
+		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 		for (auto it = stack.begin(); it != stack.end(); ++it)
 		{
 			Scopelet sc = **it;
+			//std::cout << "Looking at scope " << sc.scopename << "...\n";
+
 			if (sc.table.count(name))
 				return sc.table.at(name);
 		}
@@ -71,17 +74,20 @@ public:
 	{
 		_Ty* tuh = new _Ty(t);
 
-		stack.front()->table[name] = tuh;
+		(stack.front()->table[name]) = tuh;
 	}
 
 	void push(std::string name = "") // Add a new stack layer
 	{
+		//std::cout << "Creating new scope layer called " << name << "...\n";
 		Scopelet* newsc = new Scopelet(name);
 		stack.push_front(newsc);
+		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 	}
 
 	void pop() // Delete the newest stack layer
 	{
+		//std::cout << "Stack popped!\n";
 		if (top_scope == stack.front()) // Attempting to delete the base stack
 		{
 			std::cout << "WEIRD_ERROR: Attempted to delete backmost stack of a Scope!";

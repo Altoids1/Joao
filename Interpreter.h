@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Directory.h"
 #include "AST.h"
 #include "Program.h"
 #include "Scope.h"

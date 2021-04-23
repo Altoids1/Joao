@@ -370,7 +370,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			case(KeywordToken::Key::Return):
 			{
 				++tokenheader; // Consume this return token
-				ReturnStatement* rs = new ReturnStatement(readExp(tokenheader,tokens.size()-1));
+				ReturnStatement* rs = new ReturnStatement(readExp(tokenheader, static_cast<int>(tokens.size())-1)); // the static_cast here is just to silence dumb compiler warnings
 				ASTs.push_back(rs);
 				consume_semicolon();
 				continue;
@@ -425,7 +425,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			AssignmentStatement::aOps aesop = readaOp();
 
 			
-			ASTNode* rvalue = readExp(tokenheader,tokens.size()-1);
+			ASTNode* rvalue = readExp(tokenheader, static_cast<int>(tokens.size()) -1); // the static_cast here is just to silence dumb compiler warnings
 
 			consume_semicolon();
 
