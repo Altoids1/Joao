@@ -389,7 +389,7 @@ void Function::give_args(std::vector<Value>& args, Interpreter& interp)
 }
 Value Function::resolve(Interpreter & interp)
 {
-	interp.push_stack();
+	interp.push_stack(t_name);
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.

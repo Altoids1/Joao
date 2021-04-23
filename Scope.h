@@ -8,6 +8,7 @@ class Scope {
 	1. This can be used by the Parser to keep track of the Object or Function tree system, to be later collapsed into Program::definedFunctions and Program::definedObjTypes, if it wants
 	2. This can be used by the Interpreter to keep track of scoped variables (so, Values), allowing for their access and dismissal as it enters and exits various Scopes.
 	*/
+
 	struct Scopelet
 	{
 		std::unordered_map < std::string, _Ty*> table;
@@ -76,7 +77,7 @@ public:
 	void push(std::string name = "") // Add a new stack layer
 	{
 		Scopelet* newsc = new Scopelet(name);
-
+		stack.push_front(newsc);
 	}
 
 	void pop() // Delete the newest stack layer
