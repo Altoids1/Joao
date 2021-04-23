@@ -429,6 +429,7 @@ class Scanner
 	int readPairSymbol(int);
 	int readSymbol(int);
 	int readWord(int);
+	int readComment(int);
 public:
 	void scan(std::ifstream&);
 

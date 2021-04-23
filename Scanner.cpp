@@ -8,8 +8,8 @@
 //PairSymbols are things like [ and ], { and }, etc.; things that must come in pairs.
 #define PAIRSYMBOL case '{':case '}':case '[':case ']':case '(':case ')'
 
-#define SYMBOL case '+':case '-':case '*':case '/':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '>':case '<':case '=':case '!':case '%'
-#define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '=':case '>':case '<'
+#define SYMBOL case '+':case '-':case '*':case '/':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '>':case '<':case '=':case '!':case '%':case '#'
+#define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '=':case '>':case '<':case '#'
 
 //Defines used to mark what is a valid Word (incl. valid variable names)
 #define ascii_UPPER case 'A':case 'B':case 'C':case 'D':case 'E':case 'F':case 'G':case 'H':case 'I':case 'J':case 'K':case 'L':case 'M':case 'N':case 'O':case 'P':case 'Q':case 'R':case 'S':case 'T':case 'U':case 'V':case 'W':case 'X':case 'Y':case 'Z'
@@ -121,6 +121,10 @@ int Scanner::readSymbol(int it)
 			if (c == first)// and it genuinely doubles
 			{
 				second = c; //woag it's a double symbol
+				if (c == '#') // If ##, meaning a linecomment
+				{
+					return readComment(it);
+				}
 				++it;
 				std::string str{ first, second };
 				if (str_to_precedence.count(str))
@@ -178,6 +182,11 @@ int Scanner::readWord(int it)
 	}
 	makeWord(str);
 	return it;
+}
+
+int Scanner::readComment(int it)
+{
+	return line.length(); // Skip to end of line
 }
 
 void Scanner::scan(std::ifstream& ifst)
