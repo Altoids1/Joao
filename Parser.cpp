@@ -164,12 +164,14 @@ ASTNode* Parser::readlvalue(Token* t) // Read an Expression where we know for ce
 	return lvalue;
 }
 
-ASTNode* Parser::readbOp(Token* t, Scanner::OperationPrecedence op, int lasttoken)
+// Reads, from here to there, scanning for BinaryExpressions of its OperationPrecedence and lower
+ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there) 
 {
-	int curheader = tokenheader;
+	//std::cout << "Starting to search for operation " << Scanner::precedence_tostring(op) << "...\n";
 
 	if (op == Scanner::OperationPrecedence::NONE) // If we're at the bottom, evaluate a primary
 	{
+		Token* t = tokens[here];
 		switch (t->class_enum())
 		{
 		case(Token::cEnum::PairSymbolToken):
@@ -183,19 +185,19 @@ ASTNode* Parser::readbOp(Token* t, Scanner::OperationPrecedence op, int lasttoke
 
 	ASTNode* lhs = nullptr;
 
+	int where = here;
+
 	//Now lets try to read the binary operation in question
-	BinaryExpression::bOps bippitybop = BinaryExpression::bOps::NoOp;
-	
-	int localheader = tokenheader;
-	for (; localheader < lasttoken; ++localheader)
+	for (; where < there; ++where)
 	{
-		Token* t2 = tokens[localheader];
+		Token* t2 = tokens[where];
 		switch (t2->class_enum())
 		{
 		case(Token::cEnum::EndLineToken):
+			++where;
 			goto READBOP_LEAVE_BOPSEARCH;
 		case(Token::cEnum::KeywordToken):
-			ParserError(tokens[tokenheader], "Unexpected keyword in Expression!");
+			ParserError(tokens[where], "Unexpected keyword in Expression!");
 			continue;
 		case(Token::cEnum::SymbolToken):
 		{
@@ -219,13 +221,10 @@ ASTNode* Parser::readbOp(Token* t, Scanner::OperationPrecedence op, int lasttoke
 
 				if (!lhs)
 				{
-					lhs = readbOp(t, static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), localheader);
+					lhs = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), here, where-1);
 				}
 
-				tokenheader = localheader + 1;
-				Token* nxt_token = tokens[tokenheader];
-
-				ASTNode* right = readbOp(nxt_token, static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), tokens.size()-1);
+				ASTNode* right = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), where+1, there);
 				
 				lhs = new BinaryExpression(boopitybeep, lhs, right);
 				
@@ -239,18 +238,22 @@ ASTNode* Parser::readbOp(Token* t, Scanner::OperationPrecedence op, int lasttoke
 			continue;
 		}
 	}
-	READBOP_LEAVE_BOPSEARCH:
-	if (tokenheader == tokens.size() - 1)
-	{
-		ParserError(tokens.back(), "Reached end of program w/o resolving Expression!");
-	}
+READBOP_LEAVE_BOPSEARCH:
+	//std::cout << "Exiting search for " << Scanner::precedence_tostring(op) << " at token " << where << "...\n";
+	tokenheader = where; // FIXME: I don't even really know what exactly there is to fix here, just know that readBinExp does some funky bullshit with the tokenheader that may cause it to malpoint in anything readBinExp calls
+	if (lhs)
+		return lhs;
+
+	//ParserError(tokens[here], "readBinExp failed to read binary expression!");
+
 
 	//If we're here then it seems the operation(s) we're looking for doesn't exist
 	//So lets just return... whatever it is in the lower stacks
+	lhs = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), here, there);
 
-	ASTNode* result = readbOp(t, static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), lasttoken);
-	std::cout << "Started at " << std::to_string(curheader) << ", tokenheader now set at " << std::to_string(tokenheader) << "! (" << Scanner::precedence_tostring(op) << ")\n";
-	return result;
+
+	
+	return lhs;
 	
 }
 
@@ -268,7 +271,7 @@ ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
 
 	//we know (or at least kinda think) that there's a binop afoot.
 	
-	return readbOp(t, lowop, tokens.size()-1);
+	return readBinExp(lowop, tokenheader, tokens.size()-1);
 }
 
 std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.

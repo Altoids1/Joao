@@ -251,7 +251,7 @@ class Parser
 	}
 
 	ASTNode* readlvalue(Token*);
-	ASTNode* readbOp(Token*, Scanner::OperationPrecedence,int);
+	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
 	ASTNode* readExp(Token*, bool);
 
 	AssignmentStatement::aOps readaOp()
