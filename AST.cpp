@@ -399,12 +399,21 @@ Value Function::resolve(Interpreter & interp)
 			ReturnStatement rt = *((ReturnStatement*)ptr); // Is this safe?
 
 			if (rt.has_expr) // If this actually has something to return
+			{
+				interp.pop_stack();
 				return rt.resolve(interp); // Do that
+			}
 			break;// otherwise use the default returnValue
 		}
 		else
 		{
-			ptr->resolve(interp); // I dunno.
+			Value vuh = ptr->resolve(interp); // I dunno.
+			if (interp.FORCE_RETURN)
+			{
+				interp.FORCE_RETURN = false;
+				interp.pop_stack();
+				return vuh;
+			}
 		}
 	}
 	interp.pop_stack();
@@ -442,4 +451,86 @@ Value NativeFunction::resolve(Interpreter& interp)
 		}
 	}
 	return result; // Woag.
+}
+
+Value IfBlock::resolve(Interpreter& interp)
+{
+	if (condition && !condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
+	{
+		if (Elseif) // If we have an Elseif to point to
+			return Elseif->resolve(interp); // Return that
+		return Value(); // Otherwise return Null, I guess.
+	}
+		
+
+	interp.push_stack();
+	for (auto it = statements.begin(); it != statements.end(); ++it)
+	{
+		//it is a pointer to a pointer to an Expression.
+		Expression* ptr = *it;
+		if (ptr->class_name() == "ReturnStatement")
+		{
+			ReturnStatement rt = *((ReturnStatement*)ptr); // Is this safe?
+
+			interp.FORCE_RETURN = true;
+			if (rt.has_expr) // If this actually has something to return
+			{
+				interp.pop_stack();
+				return rt.resolve(interp); // Do that
+			}
+			return Value();
+		}
+		else
+		{
+			Value vuh = ptr->resolve(interp); // I dunno.
+			if (interp.FORCE_RETURN)
+			{
+				interp.pop_stack();
+				return vuh;
+			}
+		}
+	}
+	interp.pop_stack();
+	return Value();
+}
+
+Value ForBlock::resolve(Interpreter& interp)
+{
+	interp.push_stack(); // Has to happen here since initializer takes place in the for-loops var stack
+	if (initializer)
+		initializer->resolve(interp);
+	while (condition && condition->resolve(interp))
+	{
+		for (auto it = statements.begin(); it != statements.end(); ++it)
+		{
+			//it is a pointer to a pointer to an Expression.
+			Expression* ptr = *it;
+			if (ptr->class_name() == "ReturnStatement")
+			{
+				ReturnStatement rt = *((ReturnStatement*)ptr); // Is this safe?
+
+				interp.FORCE_RETURN = true;
+				if (rt.has_expr) // If this actually has something to return
+				{
+					interp.pop_stack();
+					return rt.resolve(interp); // Do that
+				}
+				interp.pop_stack();
+				return Value();
+			}
+			else
+			{
+				Value vuh = ptr->resolve(interp); // I dunno.
+				if (interp.FORCE_RETURN)
+				{
+					interp.pop_stack();
+					return vuh;
+				}
+			}
+		}
+
+		increment->resolve(interp);
+	}
+	interp.pop_stack();
+	return Value();
 }
