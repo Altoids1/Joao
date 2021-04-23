@@ -230,6 +230,10 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 				
 				continue;
 			}
+			else if (bOp_to_precedence.at(boopitybeep) > op)
+			{
+				goto READBOP_LEAVE_BOPSEARCH;
+			}
 
 			//we don't got a hit. :(
 			continue;
