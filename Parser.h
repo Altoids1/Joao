@@ -250,12 +250,15 @@ class Parser
 		return BinaryExpression::bOps::NoOp;
 	}
 
-	ASTNode* readlvalue(Token*);
+	ASTNode* readlvalue(int,int);
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
-	ASTNode* readExp(Token*, bool);
+	ASTNode* readExp(int,int);
 
 	AssignmentStatement::aOps readaOp()
 	{
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readaOp starting at " << std::to_string(tokenheader) << std::endl;
+#endif
 		Token* t = tokens[tokenheader];
 
 		if (t->class_enum() != Token::cEnum::SymbolToken)
@@ -284,26 +287,53 @@ class Parser
 		ParserError(t, "Two-char assignment operations are not implemented!");
 
 		++tokenheader;
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readaOp setting tokenheader to " << std::to_string(tokenheader) << std::endl;
+#endif
 		return AssignmentStatement::aOps::NoOp;
 	}
 
-	std::string readIdentifierStr(bool is_word, Token* t = nullptr) // false if token is pointing at symbol
+	std::string readIdentifierStr(bool is_word, int here, int there) // false if token is pointing at symbol
 	{
-		t = (t ? t : tokens[tokenheader]);
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readIdentifierStr starting at " << std::to_string(here) << std::endl;
+#endif
+		Token* t = tokens[here];
 
 		if (!is_word)
 		{
-			ParserError(tokens[tokenheader], "Non-local identifiers are not implemented!");
+			ParserError(t, "Non-local identifiers are not implemented!");
 			return "";
 		}
 		assert(t->class_enum() == Token::cEnum::WordToken);
 
 		WordToken wt = *static_cast<WordToken*>(t);
-
+		tokenheader = here + 1;
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readIdentifierStr setting tokenheader to " << std::to_string(tokenheader) << std::endl;
+#endif
 		return wt.word;
 	}
 
 	std::vector<Expression*> readBlock(BlockType);
+
+	// If no args, assumes tokenheader is pointing where it should
+	void consume_semicolon(Token* t = nullptr) 
+	{
+		if (!t)
+		{
+			t = tokens[tokenheader];
+			++tokenheader;
+		}
+
+		switch (t->class_enum()) // This could be an if-statement but I've been switching like this everywhere to the point it feels like poor style to not do it here
+		{
+		case(Token::cEnum::EndLineToken):
+			return;
+		default:
+			ParserError(t, "Unexpected Token while attempting to consume EndLineToken!");
+		}
+	}
 	
 protected:
 	void ParserError()

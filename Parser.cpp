@@ -76,8 +76,13 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 	return t_program;
 }
 
-ASTNode* Parser::readlvalue(Token* t) // Read an Expression where we know for certain that there's no damned binary operator within it.
+ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we know for certain that there's no damned binary operator within it.
 {
+#ifdef LOUD_TOKENHEADER
+	std::cout << "readlvalue starting at " << std::to_string(here) << std::endl;
+#endif
+	Token* t = tokens[here];
+
 	ASTNode* lvalue = nullptr;
 	//First things first, lets find the "lvalue" of this expression, the thing on the left
 	switch (t->class_enum())
@@ -106,6 +111,10 @@ ASTNode* Parser::readlvalue(Token* t) // Read an Expression where we know for ce
 			ParserError(t, "Unknown LiteralToken type!");
 			break;
 		}
+		tokenheader = here + 1;
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readlvalue setting tokenheader to " << std::to_string(tokenheader) << std::endl;
+#endif
 		break;
 	}
 	case(Token::cEnum::NumberToken):
@@ -119,16 +128,24 @@ ASTNode* Parser::readlvalue(Token* t) // Read an Expression where we know for ce
 		{
 			lvalue = new Literal(Value(nt.num.as_int));
 		}
+		tokenheader = here + 1;
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readlvalue setting tokenheader to " << std::to_string(tokenheader) << std::endl;
+#endif
 		break;
 	}
 	case(Token::cEnum::StringToken):
 	{
 		StringToken st = *static_cast<StringToken*>(t);
 		lvalue = new Literal(Value(st.word));
+		tokenheader = here + 1;
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readlvalue setting tokenheader to " << std::to_string(tokenheader) << std::endl;
+#endif
 		break;
 	}
 	case(Token::cEnum::WordToken):
-		lvalue = new Identifier(readIdentifierStr(true,t));
+		lvalue = new Identifier(readIdentifierStr(true,here,here));
 		break;
 	case(Token::cEnum::EndLineToken):
 		ParserError(t, "Endline found when expression was expected!");
@@ -142,7 +159,7 @@ ASTNode* Parser::readlvalue(Token* t) // Read an Expression where we know for ce
 		SymbolToken* st = static_cast<SymbolToken*>(t);
 		if (st->get_symbol()[0] == '/' || st->get_symbol()[0] == '.')
 		{
-			lvalue = new Identifier(readIdentifierStr(false,t));
+			lvalue = new Identifier(readIdentifierStr(false,here,here));
 			break;
 		}
 
@@ -160,13 +177,16 @@ ASTNode* Parser::readlvalue(Token* t) // Read an Expression where we know for ce
 		ParserError(t, "Failed to comprehend lvalue of Expression!");
 	}
 
-	++tokenheader;
+	
 	return lvalue;
 }
 
 // Reads, from here to there, scanning for BinaryExpressions of its OperationPrecedence and lower
 ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there) 
 {
+#ifdef LOUD_TOKENHEADER
+	std::cout << "readBinExp(" << Scanner::precedence_tostring(op) << ") starting at " << std::to_string(here) << std::endl;
+#endif
 	//std::cout << "Starting to search for operation " << Scanner::precedence_tostring(op) << "...\n";
 
 	if (op == Scanner::OperationPrecedence::NONE) // If we're at the bottom, evaluate a primary
@@ -178,7 +198,7 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 			ParserError(t,"Pairing within expressions is not implemented!");
 			break;
 		default:
-			return readlvalue(t);
+			return readlvalue(here,here); // Hear-hear!
 		}
 	}
 
@@ -188,13 +208,13 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 	int where = here;
 
 	//Now lets try to read the binary operation in question
-	for (; where < there; ++where)
+	for (; where <= there; ++where)
 	{
 		Token* t2 = tokens[where];
 		switch (t2->class_enum())
 		{
 		case(Token::cEnum::EndLineToken):
-			++where;
+			//++where; // For... reasons, BinExp must leave pointing to the semicolon it found, if it did find one
 			goto READBOP_LEAVE_BOPSEARCH;
 		case(Token::cEnum::KeywordToken):
 			ParserError(tokens[where], "Unexpected keyword in Expression!");
@@ -244,6 +264,9 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 	}
 READBOP_LEAVE_BOPSEARCH:
 	//std::cout << "Exiting search for " << Scanner::precedence_tostring(op) << " at token " << where << "...\n";
+#ifdef LOUD_TOKENHEADER
+	std::cout << "readBinExp(" << Scanner::precedence_tostring(op) << ") setting tokenheader to " << std::to_string(where) << std::endl;
+#endif
 	tokenheader = where; // FIXME: I don't even really know what exactly there is to fix here, just know that readBinExp does some funky bullshit with the tokenheader that may cause it to malpoint in anything readBinExp calls
 	if (lhs)
 		return lhs;
@@ -261,21 +284,38 @@ READBOP_LEAVE_BOPSEARCH:
 	
 }
 
-ASTNode* Parser::readExp(Token* t, bool expecting_semicolon = true)
+ASTNode* Parser::readExp(int here, int there)
 {
+#ifdef LOUD_TOKENHEADER
+	std::cout << "Expression starts at " << std::to_string(tokenheader) << std::endl;
+#endif
 	//Okay, god, we're really getting close to actually being able to *resolve* something.
+
+	Token* t = tokens[here];
 
 	Scanner::OperationPrecedence lowop = lowest_ops[t->syntactic_line];
 
 	if (lowop == Scanner::OperationPrecedence::NONE) // If we know for a fact that no binary operation takes place on this syntactic line
 	{
-		++tokenheader;
-		return readlvalue(t); // Just return the lvalue, simple as.
+		//++tokenheader;
+#ifdef LOUD_TOKENHEADER
+		ASTNode* ans = readlvalue(here, there);
+		std::cout << "Expression leaves at " << std::to_string(tokenheader) << std::endl;
+		return ans;
+#else
+		return readlvalue(here, there);
+#endif
 	}
 
 	//we know (or at least kinda think) that there's a binop afoot.
+#ifdef LOUD_TOKENHEADER
+	ASTNode* ans = readBinExp(lowop, here, there);
+	std::cout << "Expression leaves at " << std::to_string(tokenheader) << std::endl;
+	return ans;
+#else
+	return readBinExp(lowop, here, there);
+#endif
 	
-	return readBinExp(lowop, tokenheader, tokens.size()-1);
 }
 
 std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.
@@ -330,8 +370,9 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			case(KeywordToken::Key::Return):
 			{
 				++tokenheader; // Consume this return token
-				ReturnStatement* rs = new ReturnStatement(readExp(tokens[tokenheader], true));
+				ReturnStatement* rs = new ReturnStatement(readExp(tokenheader,tokens.size()-1));
 				ASTs.push_back(rs);
+				consume_semicolon();
 				continue;
 			}
 			default:
@@ -379,11 +420,14 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 
 			WordToken wt = *static_cast<WordToken*>(t);
 
-			Identifier* id = new Identifier(readIdentifierStr(true));
-			++tokenheader;
+			Identifier* id = new Identifier(readIdentifierStr(true,tokenheader,tokenheader));
+
 			AssignmentStatement::aOps aesop = readaOp();
 
-			ASTNode* rvalue = readExp(tokens[tokenheader], false);
+			
+			ASTNode* rvalue = readExp(tokenheader,tokens.size()-1);
+
+			consume_semicolon();
 
 			ASTs.push_back(new AssignmentStatement(id, rvalue, aesop));
 
