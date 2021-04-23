@@ -42,6 +42,39 @@ class Parser
 		unop
 	};
 	std::list<GrammarState> grammarstack;
+	std::vector<Scanner::OperationPrecedence> lowest_ops;
+
+	const std::unordered_map<BinaryExpression::bOps, Scanner::OperationPrecedence> bOp_to_precedence =
+	{
+		{BinaryExpression::bOps::Add,Scanner::OperationPrecedence::Term},
+		{BinaryExpression::bOps::Subtract,Scanner::OperationPrecedence::Term},
+		{BinaryExpression::bOps::Multiply,Scanner::OperationPrecedence::Factor},
+		{BinaryExpression::bOps::Divide,Scanner::OperationPrecedence::Factor},
+		//
+		{BinaryExpression::bOps::FloorDivide,Scanner::OperationPrecedence::Factor},
+		{BinaryExpression::bOps::Exponent,Scanner::OperationPrecedence::Factor},
+		{BinaryExpression::bOps::Modulo,Scanner::OperationPrecedence::Factor},
+		//
+		{BinaryExpression::bOps::BitwiseAnd,Scanner::OperationPrecedence::Bitwise},
+		{BinaryExpression::bOps::BitwiseXor,Scanner::OperationPrecedence::Bitwise},
+		{BinaryExpression::bOps::BitwiseOr,Scanner::OperationPrecedence::Bitwise},
+		//
+		{BinaryExpression::bOps::ShiftLeft,Scanner::OperationPrecedence::Bitwise},
+		{BinaryExpression::bOps::ShiftRight,Scanner::OperationPrecedence::Bitwise},
+		//
+		{BinaryExpression::bOps::Concatenate,Scanner::OperationPrecedence::Concat},
+		//
+		{BinaryExpression::bOps::LessThan,Scanner::OperationPrecedence::Comparison},
+		{BinaryExpression::bOps::LessEquals,Scanner::OperationPrecedence::Comparison},
+		{BinaryExpression::bOps::Greater,Scanner::OperationPrecedence::Comparison},
+		{BinaryExpression::bOps::GreaterEquals,Scanner::OperationPrecedence::Comparison},
+		{BinaryExpression::bOps::Equals,Scanner::OperationPrecedence::Comparison},
+		{BinaryExpression::bOps::NotEquals,Scanner::OperationPrecedence::Comparison},
+		//
+		{BinaryExpression::bOps::LogicalAnd,Scanner::OperationPrecedence::Logical},
+		{BinaryExpression::bOps::LogicalOr,Scanner::OperationPrecedence::Logical},
+		{BinaryExpression::bOps::LogicalXor,Scanner::OperationPrecedence::Logical}
+	};
 
 	enum class BlockType {
 		Unknown, // ???
@@ -217,6 +250,8 @@ class Parser
 		return BinaryExpression::bOps::NoOp;
 	}
 
+	ASTNode* readlvalue(Token*);
+	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
 	ASTNode* readExp(Token*, bool);
 
 	AssignmentStatement::aOps readaOp()
@@ -252,15 +287,18 @@ class Parser
 		return AssignmentStatement::aOps::NoOp;
 	}
 
-	std::string readIdentifierStr(bool is_word) // false if token is pointing at symbol
+	std::string readIdentifierStr(bool is_word, Token* t = nullptr) // false if token is pointing at symbol
 	{
+		t = (t ? t : tokens[tokenheader]);
+
 		if (!is_word)
 		{
 			ParserError(tokens[tokenheader], "Non-local identifiers are not implemented!");
 			return "";
 		}
+		assert(t->class_enum() == Token::cEnum::WordToken);
 
-		WordToken wt = *static_cast<WordToken*>(tokens[tokenheader]);
+		WordToken wt = *static_cast<WordToken*>(t);
 
 		return wt.word;
 	}
@@ -289,6 +327,7 @@ protected:
 public:
 	Parser(Scanner&t)
 		:tokens(t.tokens)
+		,lowest_ops(t.lowest_ops)
 	{
 		grammarstack.push_front(GrammarState::program);
 	}
