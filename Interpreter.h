@@ -10,6 +10,8 @@ class Interpreter
 	std::string objscopestr;
 	Scope<Value> varscope = Scope<Value>("GLOB");
 public:
+	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.
+
 	Interpreter();
 	Value execute(Program&);
 	Function* get_func(std::string, ASTNode*);

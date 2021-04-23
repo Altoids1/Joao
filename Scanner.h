@@ -434,7 +434,7 @@ class Scanner
 	int readPairSymbol(int);
 	int readSymbol(int);
 	int readWord(int);
-
+  int readComment(int);
 	static std::string precedence_tostring(OperationPrecedence op)
 	{
 		switch (op)
@@ -461,6 +461,7 @@ class Scanner
 			return "?????";
 		}
 	}
+	
 public:
 	void scan(std::ifstream&);
 

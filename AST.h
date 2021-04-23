@@ -67,6 +67,23 @@ public:
 		t_value.as_int = errcode;
 	}
 
+	explicit operator bool() const { // Q-q-quadruple keyword!!
+
+		switch (t_vType)
+		{
+		case(vType::Null):
+			return false;
+		case(vType::Bool):
+			return t_value.as_bool;
+		case(vType::Integer):
+			return t_value.as_int;
+		case(vType::Double):
+			return t_value.as_double;
+		default: // If it's a more complicated vType
+			return true; // Just return true.
+		}
+	}
+
 	std::string to_string();
 	std::string typestring();
 };
@@ -222,10 +239,24 @@ public:
 		{
 		case(bOps::Add):
 			sop = "Add";
+			break;
+		case(bOps::Subtract):
+			sop = "Subtract";
+			break;
 		case(bOps::Multiply):
 			sop = "Multiply";
+			break;
+		case(bOps::Divide):
+			sop = "Divide";
+			break;
+		//
 		case(bOps::Exponent):
 			sop = "Exponent";
+			break;
+		//
+		case(bOps::Concatenate):
+			sop = "Concatenate";
+			break;
 		default:
 			sop = "????";
 		}
@@ -371,3 +402,54 @@ public:
 	virtual const std::string class_name() const override { return "NativeFunction"; }
 };
 
+class IfBlock final : public ASTNode
+{
+	Expression* condition = nullptr;
+	std::vector<Expression*> statements;
+	IfBlock* Elseif = nullptr;
+public:
+	IfBlock(std::vector<Expression*>& st)
+		:statements(st)
+	{
+
+	}
+	IfBlock(Expression* cond, std::vector<Expression*>& st)
+		:statements(st),
+		condition(cond)
+	{
+
+	}
+
+	void append_else(IfBlock* elif)
+	{
+		Elseif = elif;
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "IfBlock"; }
+};
+
+class ForBlock final : public ASTNode
+{
+	Expression* initializer = nullptr;
+	Expression* condition = nullptr;
+	Expression* increment = nullptr;
+	std::vector<Expression*> statements;
+public:
+	ForBlock(std::vector<Expression*>& st)
+		:statements(st)
+	{
+
+	}
+	ForBlock(Expression* init, Expression* cond, Expression* inc, std::vector<Expression*>& st)
+		:statements(st),
+		condition(cond),
+		initializer(init),
+		increment(inc)
+	{
+
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "ForBlock"; }
+};
