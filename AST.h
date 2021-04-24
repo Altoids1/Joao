@@ -402,22 +402,28 @@ public:
 	virtual const std::string class_name() const override { return "NativeFunction"; }
 };
 
-class IfBlock final : public ASTNode
+
+class Block : public Expression
+{
+protected:
+	std::vector<Expression*> statements;
+
+	Value iterate_statements(Interpreter&);
+};
+
+class IfBlock final : public Block
 {
 	Expression* condition = nullptr;
-	std::vector<Expression*> statements;
 	IfBlock* Elseif = nullptr;
 public:
 	IfBlock(std::vector<Expression*>& st)
-		:statements(st)
 	{
-
+		statements = st;
 	}
 	IfBlock(Expression* cond, std::vector<Expression*>& st)
-		:statements(st),
-		condition(cond)
+		:condition(cond)
 	{
-
+		statements = st;
 	}
 
 	void append_else(IfBlock* elif)
@@ -429,27 +435,43 @@ public:
 	virtual const std::string class_name() const override { return "IfBlock"; }
 };
 
-class ForBlock final : public ASTNode
+class ForBlock final : public Block
 {
 	Expression* initializer = nullptr;
 	Expression* condition = nullptr;
 	Expression* increment = nullptr;
-	std::vector<Expression*> statements;
+	
 public:
 	ForBlock(std::vector<Expression*>& st)
-		:statements(st)
 	{
-
+		statements = st;
 	}
 	ForBlock(Expression* init, Expression* cond, Expression* inc, std::vector<Expression*>& st)
-		:statements(st),
-		condition(cond),
+		:condition(cond),
 		initializer(init),
 		increment(inc)
 	{
-
+		statements = st;
 	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ForBlock"; }
+};
+
+class WhileBlock final : public Block
+{
+	Expression* condition = nullptr;
+public:
+	WhileBlock(std::vector<Expression*>& st)
+	{
+		statements = st;
+	}
+	WhileBlock(Expression* cond, std::vector<Expression*>& st)
+		:condition(cond)
+	{
+		statements = st;
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "WhileBlock"; }
 };

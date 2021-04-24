@@ -455,17 +455,8 @@ Value NativeFunction::resolve(Interpreter& interp)
 	return result; // Woag.
 }
 
-Value IfBlock::resolve(Interpreter& interp)
+Value Block::iterate_statements(Interpreter& interp)
 {
-	if (condition && !condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
-	{
-		if (Elseif) // If we have an Elseif to point to
-			return Elseif->resolve(interp); // Return that
-		return Value(); // Otherwise return Null, I guess.
-	}
-		
-
-	interp.push_stack("if");
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.
@@ -480,6 +471,7 @@ Value IfBlock::resolve(Interpreter& interp)
 				interp.pop_stack();
 				return rt.resolve(interp); // Do that
 			}
+			interp.pop_stack();
 			return Value();
 		}
 		else
@@ -492,7 +484,26 @@ Value IfBlock::resolve(Interpreter& interp)
 			}
 		}
 	}
-	interp.pop_stack();
+	return Value();
+}
+
+Value IfBlock::resolve(Interpreter& interp)
+{
+	if (condition && !condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
+	{
+		if (Elseif) // If we have an Elseif to point to
+			return Elseif->resolve(interp); // Return that
+		return Value(); // Otherwise return Null, I guess.
+	}
+		
+
+	interp.push_stack("if");
+	Value blockret = iterate_statements(interp);
+	
+	if (interp.FORCE_RETURN)
+		return blockret;
+	else
+		interp.pop_stack();
 	return Value();
 }
 
@@ -503,35 +514,25 @@ Value ForBlock::resolve(Interpreter& interp)
 		initializer->resolve(interp);
 	while (condition && condition->resolve(interp))
 	{
-		for (auto it = statements.begin(); it != statements.end(); ++it)
-		{
-			//it is a pointer to a pointer to an Expression.
-			Expression* ptr = *it;
-			if (ptr->class_name() == "ReturnStatement")
-			{
-				ReturnStatement rt = *((ReturnStatement*)ptr); // Is this safe?
-
-				interp.FORCE_RETURN = true;
-				if (rt.has_expr) // If this actually has something to return
-				{
-					interp.pop_stack();
-					return rt.resolve(interp); // Do that
-				}
-				interp.pop_stack();
-				return Value();
-			}
-			else
-			{
-				Value vuh = ptr->resolve(interp); // I dunno.
-				if (interp.FORCE_RETURN)
-				{
-					interp.pop_stack();
-					return vuh;
-				}
-			}
-		}
-
+		Value blockret = iterate_statements(interp);
+		if (interp.FORCE_RETURN)
+			return blockret;
 		increment->resolve(interp);
+	}
+	interp.pop_stack();
+	return Value();
+}
+
+Value WhileBlock::resolve(Interpreter& interp)
+{
+	interp.push_stack("while");
+	if(!condition) // if condition not defined
+		interp.RuntimeError(*this, "Missing condition in WhileBlock!");
+	while (condition->resolve(interp))
+	{
+		Value blockret = iterate_statements(interp);
+		if (interp.FORCE_RETURN)
+			return blockret;
 	}
 	interp.pop_stack();
 	return Value();
