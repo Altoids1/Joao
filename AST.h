@@ -476,13 +476,13 @@ public:
 
 class WhileBlock final : public Block
 {
-	Expression* condition = nullptr;
+	ASTNode* condition = nullptr;
 public:
 	WhileBlock(std::vector<Expression*>& st)
 	{
 		statements = st;
 	}
-	WhileBlock(Expression* cond, std::vector<Expression*>& st)
+	WhileBlock(ASTNode* cond, std::vector<Expression*>& st)
 		:condition(cond)
 	{
 		statements = st;

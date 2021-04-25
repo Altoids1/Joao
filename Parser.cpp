@@ -403,14 +403,28 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			}
 			case(KeywordToken::Key::Elseif):
 			case(KeywordToken::Key::Else):
-				ParserError(t, "If statements are not implemented!");
+				ParserError(t, "Elseif & Else statements are not implemented!");
 				continue;
 			case(KeywordToken::Key::Break):
 				ParserError(t, "Break statements are not implemented!");
 				continue;
 			case(KeywordToken::Key::While):
+			{				
+				++tokenheader;
+				consume_paren(true); // (
+				ASTNode* cond = readExp(tokenheader, tokens.size() - 1, true);
+				consume_paren(false); // )
+
+				std::vector<Expression*> while_block = readBlock(BlockType::If);
+
+				ASTs.push_back(new WhileBlock(cond, while_block));
+
+				--tokenheader;
+				continue;
+
 				ParserError(t, "While-loops are not implemented!");
 				continue;
+			}
 			case(KeywordToken::Key::Return):
 			{
 				++tokenheader; // Consume this return token
