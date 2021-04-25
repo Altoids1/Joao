@@ -374,8 +374,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 				semicolon = find_first_semicolon(tokenheader, tokens.size() - 1);
 				ASTNode* cond = readExp(tokenheader, semicolon);
 				tokenheader = semicolon + 1;
-				semicolon = find_first_semicolon(tokenheader, tokens.size() - 1);
-				ASTNode* inc = readExp(tokenheader, semicolon, true);
+				ASTNode* inc = readExp(tokenheader, tokens.size() - 1, true);
 				consume_paren(false); // )
 
 				std::vector<Expression*> for_block = readBlock(BlockType::For); // { ...block... }
@@ -389,6 +388,19 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 				continue;
 			}
 			case(KeywordToken::Key::If):
+			{
+				++tokenheader;
+				consume_paren(true); // (
+				ASTNode* cond = readExp(tokenheader, tokens.size() - 1, true);
+				consume_paren(false); // )
+
+				std::vector<Expression*> if_block = readBlock(BlockType::If);
+
+				ASTs.push_back(new IfBlock(cond, if_block));
+
+				--tokenheader;
+				continue;
+			}
 			case(KeywordToken::Key::Elseif):
 			case(KeywordToken::Key::Else):
 				ParserError(t, "If statements are not implemented!");

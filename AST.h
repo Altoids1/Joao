@@ -413,14 +413,14 @@ protected:
 
 class IfBlock final : public Block
 {
-	Expression* condition = nullptr;
+	ASTNode* condition = nullptr;
 	IfBlock* Elseif = nullptr;
 public:
 	IfBlock(std::vector<Expression*>& st)
 	{
 		statements = st;
 	}
-	IfBlock(Expression* cond, std::vector<Expression*>& st)
+	IfBlock(ASTNode* cond, std::vector<Expression*>& st)
 		:condition(cond)
 	{
 		statements = st;
