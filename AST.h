@@ -437,16 +437,16 @@ public:
 
 class ForBlock final : public Block
 {
-	Expression* initializer = nullptr;
-	Expression* condition = nullptr;
-	Expression* increment = nullptr;
+	ASTNode* initializer = nullptr;
+	ASTNode* condition = nullptr;
+	ASTNode* increment = nullptr;
 	
 public:
 	ForBlock(std::vector<Expression*>& st)
 	{
 		statements = st;
 	}
-	ForBlock(Expression* init, Expression* cond, Expression* inc, std::vector<Expression*>& st)
+	ForBlock(ASTNode* init, ASTNode* cond, ASTNode* inc, std::vector<Expression*>& st)
 		:condition(cond),
 		initializer(init),
 		increment(inc)
@@ -456,6 +456,22 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ForBlock"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "ForBlock\n";
+		
+		str += ind + "-Init:\n" + initializer->dump(indent + 2);
+		str += ind + "-Cond:\n" + condition->dump(indent + 2);
+		str += ind + "-Inc:\n" + increment->dump(indent + 2);
+
+		for (int i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
+
+		return str;
+	}
 };
 
 class WhileBlock final : public Block

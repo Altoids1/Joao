@@ -148,7 +148,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 		lvalue = new Identifier(readIdentifierStr(true,here,here));
 		break;
 	case(Token::cEnum::EndLineToken):
-		ParserError(t, "Endline found when expression was expected!");
+		ParserError(t, "Endline found when lvalue was expected!");
 		break;
 	case(Token::cEnum::SymbolToken):
 	{
@@ -182,7 +182,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 }
 
 // Reads, from here to there, scanning for BinaryExpressions of its OperationPrecedence and lower
-ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there) 
+ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there, bool expect_close_paren = false) 
 {
 #ifdef LOUD_TOKENHEADER
 	std::cout << "readBinExp(" << Scanner::precedence_tostring(op) << ") starting at " << std::to_string(here) << std::endl;
@@ -213,6 +213,17 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 		Token* t2 = tokens[where];
 		switch (t2->class_enum())
 		{
+		case(Token::cEnum::PairSymbolToken):
+		{
+			PairSymbolToken pst = *static_cast<PairSymbolToken*>(t2);
+			if (expect_close_paren && !pst.is_start && pst.t_pOp == PairSymbolToken::pairOp::Paren)
+			{ // This is here to handle the (rare) circumstance of a closeparen having the same effect as a semicolon, such as in the third statement of a for-loop construction
+				goto READBOP_LEAVE_BOPSEARCH;
+			}
+			
+			ParserError(t2, "Unexpected or unimplemented Pairsymbol in BinaryExpression!");
+			continue;
+		}
 		case(Token::cEnum::EndLineToken):
 			//++where; // For... reasons, BinExp must leave pointing to the semicolon it found, if it did find one
 			goto READBOP_LEAVE_BOPSEARCH;
@@ -241,10 +252,10 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 
 				if (!lhs)
 				{
-					lhs = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), here, where-1);
+					lhs = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), here, where-1, expect_close_paren);
 				}
 
-				ASTNode* right = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), where+1, there);
+				ASTNode* right = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), where+1, there, expect_close_paren);
 				
 				lhs = new BinaryExpression(boopitybeep, lhs, right);
 				
@@ -276,7 +287,7 @@ READBOP_LEAVE_BOPSEARCH:
 
 	//If we're here then it seems the operation(s) we're looking for doesn't exist
 	//So lets just return... whatever it is in the lower stacks
-	lhs = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), here, there);
+	lhs = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), here, there, expect_close_paren);
 
 
 	
@@ -284,7 +295,7 @@ READBOP_LEAVE_BOPSEARCH:
 	
 }
 
-ASTNode* Parser::readExp(int here, int there)
+ASTNode* Parser::readExp(int here, int there, bool expect_close_paren = false)
 {
 #ifdef LOUD_TOKENHEADER
 	std::cout << "Expression starts at " << std::to_string(tokenheader) << std::endl;
@@ -313,7 +324,7 @@ ASTNode* Parser::readExp(int here, int there)
 	std::cout << "Expression leaves at " << std::to_string(tokenheader) << std::endl;
 	return ans;
 #else
-	return readBinExp(lowop, here, there);
+	return readBinExp(lowop, here, there, true);
 #endif
 	
 }
@@ -354,8 +365,29 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			switch (kt.t_key)
 			{
 			case(KeywordToken::Key::For):
-				ParserError(t, "For-loops are not implemented!");
+			{
+				++tokenheader; // Move the header past the for keyword
+				consume_paren(true); // (
+				size_t semicolon = find_first_semicolon(tokenheader, tokens.size() - 1);
+				ASTNode* init = readExp(tokenheader, semicolon);
+				tokenheader = semicolon + 1;
+				semicolon = find_first_semicolon(tokenheader, tokens.size() - 1);
+				ASTNode* cond = readExp(tokenheader, semicolon);
+				tokenheader = semicolon + 1;
+				semicolon = find_first_semicolon(tokenheader, tokens.size() - 1);
+				ASTNode* inc = readExp(tokenheader, semicolon, true);
+				consume_paren(false); // )
+
+				std::vector<Expression*> for_block = readBlock(BlockType::For); // { ...block... }
+
+				ASTs.push_back(new ForBlock(init, cond, inc, for_block));
+
+				--tokenheader; // decrement to counteract imminent increment
+				
+
+				//ParserError(t, "For-loops are not implemented!");
 				continue;
+			}
 			case(KeywordToken::Key::If):
 			case(KeywordToken::Key::Elseif):
 			case(KeywordToken::Key::Else):
@@ -447,6 +479,8 @@ BLOCK_RETURN_ASTS:
 	{
 		ParserError(t, "Block created with no Expressions inside!");
 	}
+
+	std::cout << "Exiting block with header pointed at " << std::to_string(tokenheader) << ".\n";
 
 	return ASTs;
 }

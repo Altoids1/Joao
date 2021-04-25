@@ -251,8 +251,8 @@ class Parser
 	}
 
 	ASTNode* readlvalue(int,int);
-	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
-	ASTNode* readExp(int,int);
+	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int,bool);
+	ASTNode* readExp(int,int,bool);
 
 	AssignmentStatement::aOps readaOp()
 	{
@@ -333,6 +333,43 @@ class Parser
 		default:
 			ParserError(t, "Unexpected Token while attempting to consume EndLineToken!");
 		}
+	}
+
+	void consume_paren(bool open, Token* t = nullptr)
+	{
+		if (!t)
+		{
+			t = tokens[tokenheader];
+			++tokenheader;
+		}
+
+		switch (t->class_enum()) // This could be an if-statement but I've been switching like this everywhere to the point it feels like poor style to not do it here
+		{
+		case(Token::cEnum::PairSymbolToken):
+		{
+			PairSymbolToken pst = *static_cast<PairSymbolToken*>(t);
+			if (pst.is_start != open || pst.t_pOp != PairSymbolToken::pairOp::Paren)
+			{
+				ParserError(t, "Unexpected PairSymbolToken while attempting to consume open Paren!");
+			}
+			return;
+		}
+		default:
+			ParserError(t, "Unexpected Token while attempting to consume open Paren!");
+		}
+	}
+
+	size_t find_first_semicolon(int here, int there)
+	{
+		for (int where = here; where <= there; ++where)
+		{
+			Token* t = tokens[where];
+
+			if (t->class_enum() == Token::cEnum::EndLineToken)
+				return where;
+		}
+		ParserError(tokens[here], "Failed to find expected semicolon!");
+		return tokens.size() - 1;
 	}
 	
 protected:
