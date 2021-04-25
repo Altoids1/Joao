@@ -415,14 +415,13 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 				ASTNode* cond = readExp(tokenheader, tokens.size() - 1, true);
 				consume_paren(false); // )
 
-				std::vector<Expression*> while_block = readBlock(BlockType::If);
+				std::vector<Expression*> while_block = readBlock(BlockType::While);
 
 				ASTs.push_back(new WhileBlock(cond, while_block));
 
 				--tokenheader;
-				continue;
 
-				ParserError(t, "While-loops are not implemented!");
+				//ParserError(t, "While-loops are not implemented!");
 				continue;
 			}
 			case(KeywordToken::Key::Return):

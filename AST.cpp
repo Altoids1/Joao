@@ -468,8 +468,9 @@ Value Block::iterate_statements(Interpreter& interp)
 			interp.FORCE_RETURN = true;
 			if (rt.has_expr) // If this actually has something to return
 			{
-				interp.pop_stack();
-				return rt.resolve(interp); // Do that
+				Value ret = rt.resolve(interp); // Get the return		
+				interp.pop_stack(); // THEN pop the stack
+				return ret; // THEN return the value.
 			}
 			interp.pop_stack();
 			return Value();
