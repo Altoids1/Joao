@@ -3,19 +3,27 @@
 #include "Forward.h"
 #include "AST.h"
 
-class Object {
-
-public:
-	std::string object_type; // A string denoting the directory position of this object.
-	
+class Object 
+{
 	std::unordered_map<std::string, Value> properties; // A general container for all Value-type properties of this object. Functions are stored in the Program's ObjectTree.
 	std::unordered_map<std::string, Value>* base_properties; //A pointer to our ObjectType's property hashtable, to look up default values when needed
-	std::unordered_map<std::string, Function>* base_funcs; // Pointer to object's base functions.
+	std::unordered_map<std::string, Function*>* base_funcs; // Pointer to object's base functions.
+public:
+	std::string object_type; // A string denoting the directory position of this object.
+	Value get_property(Interpreter&, std::string);
+	void set_property(Interpreter&, std::string, Value);
+	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
 
-	Value get_property(std::string name, Interpreter& interp)
+	//Attempts to queue this object for garbage collection. TODO: Make garbage collection for objects exist.
+	void qdel();
+
+	Object(std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
+		:base_properties(puh),
+		base_funcs(fuh)
 	{
 
 	}
+
 	std::string dump()
 	{
 		std::string st = object_type + "/{";
@@ -27,6 +35,8 @@ public:
 
 		return st + "}";
 	}
+	
+	friend class ObjectType;
 };
 
 class ObjectType // Stores the default methods and properties of this type of Object.
@@ -34,18 +44,19 @@ class ObjectType // Stores the default methods and properties of this type of Ob
 //it either has the property, or it doesn't, or it has the function, or it does not.
 {
 	std::string object_type;
-	std::unordered_map<std::string, Function> typefuncs;
+	std::unordered_map<std::string, Function*> typefuncs;
 	std::unordered_map<std::string, Value> typeproperties;
 public:
 
-	Object makeObject(Interpreter& interp)
+	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
+	Object* makeObject(Interpreter& interp, std::vector<Value> &args)
 	{
-		Object o;
-		o.base_properties = &typeproperties;
-		o.base_funcs = &typefuncs;
-		if (typefuncs.count("__CONSTRUCTOR"))
+		Object* o = new Object(&typeproperties, &typefuncs);
+		if (typefuncs.count("#constructor"))
 		{
-			//typefuncs["__CONSTRUCTOR"].execute(); //TODO: Arguments for functions
+			Function* fuh = typefuncs["#constructor"]; //fuh.
+			fuh->give_args(args, interp);
+			fuh->resolve(interp);
 		}
 		return o;
 	}
