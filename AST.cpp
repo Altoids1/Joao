@@ -423,6 +423,12 @@ Value Function::resolve(Interpreter & interp)
 			{
 				Value ret = rt.resolve(interp); // Resolve it first
 				interp.pop_stack(); // THEN pop the stack
+
+				if (interp.BREAK_COUNTER)
+				{
+					interp.RuntimeError(this, "Break statement integer too large!");
+				}
+
 				return ret; // THEN return it
 			}
 			break;// otherwise use the default returnValue
@@ -434,11 +440,19 @@ Value Function::resolve(Interpreter & interp)
 			{
 				interp.FORCE_RETURN = false;
 				interp.pop_stack();
+				if (interp.BREAK_COUNTER)
+				{
+					interp.RuntimeError(this, "Break statement integer too large!");
+				}
 				return vuh;
 			}
 		}
 	}
 	interp.pop_stack();
+	if (interp.BREAK_COUNTER)
+	{
+		interp.RuntimeError(this, "Break statement integer too large!");
+	}
 	return returnValue;
 }
 
