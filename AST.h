@@ -433,6 +433,20 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "IfBlock"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "IfBlock\n";
+
+		str += ind + "?Cond:\n" + condition->dump(indent + 2);
+
+		for (int i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
+
+		return str;
+	}
 };
 
 class ForBlock final : public Block
@@ -461,9 +475,9 @@ public:
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ForBlock\n";
 		
-		str += ind + "-Init:\n" + initializer->dump(indent + 2);
-		str += ind + "-Cond:\n" + condition->dump(indent + 2);
-		str += ind + "-Inc:\n" + increment->dump(indent + 2);
+		str += ind + "=Init:\n" + initializer->dump(indent + 2);
+		str += ind + "?Cond:\n" + condition->dump(indent + 2);
+		str += ind + "+Inc:\n" + increment->dump(indent + 2);
 
 		for (int i = 0; i < statements.size(); ++i)
 		{
@@ -490,4 +504,18 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "WhileBlock"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "WhileBlock\n";
+
+		str += ind + "?Cond:\n" + condition->dump(indent + 2);
+
+		for (int i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
+
+		return str;
+	}
 };
