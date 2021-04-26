@@ -364,7 +364,8 @@ class Scanner
 		{"if",KeywordToken::Key::If},
 		{"while",KeywordToken::Key::While},
 		{"for",KeywordToken::Key::For},
-		{"return",KeywordToken::Key::Return}
+		{"return",KeywordToken::Key::Return},
+		{"break",KeywordToken::Key::Break}
 	};
 	const std::unordered_map<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},

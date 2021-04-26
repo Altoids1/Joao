@@ -483,7 +483,7 @@ Value Block::iterate_statements(Interpreter& interp)
 		Expression* ptr = *it;
 		if (ptr->class_name() == "ReturnStatement")
 		{
-			ReturnStatement rt = *((ReturnStatement*)ptr); // Is this safe?
+			ReturnStatement rt = *static_cast<ReturnStatement*>(ptr);
 
 			interp.FORCE_RETURN = true;
 			if (rt.has_expr) // If this actually has something to return
@@ -492,6 +492,12 @@ Value Block::iterate_statements(Interpreter& interp)
 				interp.pop_stack(); // THEN pop the stack
 				return ret; // THEN return the value.
 			}
+			interp.pop_stack();
+			return Value();
+		}
+		else if (ptr->class_name() == "BreakStatement")
+		{
+			ptr->resolve(interp);
 			interp.pop_stack();
 			return Value();
 		}
@@ -538,6 +544,11 @@ Value ForBlock::resolve(Interpreter& interp)
 	while (condition && condition->resolve(interp))
 	{
 		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			return blockret;
+		}
 		if (interp.FORCE_RETURN)
 			return blockret;
 		increment->resolve(interp);
@@ -560,6 +571,11 @@ Value WhileBlock::resolve(Interpreter& interp)
 	while (condition->resolve(interp))
 	{
 		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1;
+			return blockret;
+		}
 		if (interp.FORCE_RETURN)
 		{
 			//std::cout << "Whileloop got to FORCE_RETURN!\n";
@@ -567,5 +583,11 @@ Value WhileBlock::resolve(Interpreter& interp)
 		}
 	}
 	interp.pop_stack();
+	return Value();
+}
+
+Value BreakStatement::resolve(Interpreter& interp)
+{
+	interp.BREAK_COUNTER = breaknum;
 	return Value();
 }

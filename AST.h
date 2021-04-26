@@ -546,3 +546,24 @@ public:
 		return str;
 	}
 };
+
+
+class BreakStatement final : public Expression
+{
+	int breaknum;
+public:
+	BreakStatement(int br = 1)
+		:breaknum(br)
+	{
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "BreakStatement"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "Break " + std::to_string(breaknum) + ";\n";
+
+		return str;
+	}
+};

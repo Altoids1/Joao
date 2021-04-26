@@ -438,8 +438,40 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				ParserError(t, "Elseif & Else statements are not implemented!");
 				continue;
 			case(KeywordToken::Key::Break):
-				ParserError(t, "Break statements are not implemented!");
+			{
+				if (bt == BlockType::Function)
+					ParserError(t, "Unexpected Break statement in Function block!");
+				++where; tokenheader = where; // Consume break token
+				Token* t2 = tokens[where];
+
+				int brk = 1;
+
+				switch (t2->class_enum())
+				{
+				case(Token::cEnum::NumberToken):
+				{
+					NumberToken* nt = static_cast<NumberToken*>(t);
+					if(nt->is_double)
+						ParserError(t, "Unexpected double literal after Break keyword; 'break' may only take expressionless integer literals as input!");
+					brk = nt->num.as_int;
+					++where; tokenheader = where; // Consume Number token
+					consume_semicolon();
+					break;
+				}//Rolls over into EndLineToken case
+				case(Token::cEnum::EndLineToken):
+					consume_semicolon();
+					break;
+				default:
+					ParserError(t, "Unexpected Token after Break keyword; 'break' may only take expressionless integer literals as input!");
+					continue;
+				}
+
+				ASTs.push_back(new BreakStatement(brk));
+
+				where = tokenheader - 1;
+				//ParserError(t, "Break statements are not implemented!");
 				continue;
+			}
 			case(KeywordToken::Key::While):
 			{				
 				++where; tokenheader = where;

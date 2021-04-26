@@ -11,6 +11,7 @@ class Interpreter
 	std::string objscopestr;
 	Scope<Value> varscope = Scope<Value>("GLOB"); // Holds globalscope and blockscope.
 public:
+	int BREAK_COUNTER = 0; // An integer flag used to break (perhaps several levels) out of one or several blocks (which are not Function blocks)
 	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.
 
 	Interpreter();
