@@ -511,12 +511,7 @@ Value IfBlock::resolve(Interpreter& interp)
 			return Elseif->resolve(interp); // Return that
 		return Value(); // Otherwise return Null, I guess.
 	}
-
-	if (condition->resolve(interp))
-	{
-		std::cout << "Wuh?\n";
-	}
-
+	
 	interp.push_stack("if");
 	Value blockret = iterate_statements(interp);
 	

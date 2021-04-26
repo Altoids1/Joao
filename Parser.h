@@ -325,9 +325,9 @@ class Parser
 		return wt.word;
 	}
 
-	std::vector<Expression*> readBlock(BlockType);
+	std::vector<Expression*> readBlock(BlockType,int,int); // I hate that this has to be a here-there but it's pretty much necessary
 
-	// If no args, assumes tokenheader is pointing where it should
+	// If no args, assumes tokenheader is pointing where it should. Increments tokenheader when given no args.
 	void consume_semicolon(Token* t = nullptr) 
 	{
 		if (!t)

@@ -42,7 +42,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 				tokenheader += 2; // jumps over the implied '()', hackish!
 				grammarstack.push_front(GrammarState::block);
 
-				std::vector<Expression*> bluh = readBlock(BlockType::Function);
+				std::vector<Expression*> bluh = readBlock(BlockType::Function,tokenheader, tokens.size()-1);
 				--tokenheader;
 
 				Function* func = new Function(dir_name, bluh);
@@ -65,7 +65,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 		//Right now, it's the Interpreter's duty to comprehend how things scope out. We're just here to parse things, not run them.
 		{
 			ParserError(tokens[tokenheader], "Parsing block in an unknown context!");
-			readBlock(BlockType::Unknown); // Has to be a function so as to allow itself to call itself recursively.
+			readBlock(BlockType::Unknown, tokenheader, tokens.size() - 1); // Has to be a function so as to allow itself to call itself recursively.
 			--tokenheader;
 			continue;
 		}
@@ -360,12 +360,12 @@ LocalAssignmentStatement* Parser::readLocalAssignment(LocalTypeToken::Type ty, i
 	return new LocalAssignmentStatement(id, rvalue, aesop);
 }
 
-std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.
+std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) // Tokenheader state should point to the opening brace of this block.
 {
 	//Blocks are composed of a starting brace, following by statements, and are ended by an end brace.
 
 	//Starting brace checks
-	Token* t = tokens[tokenheader];
+	Token* t = tokens[here];
 	if (t->class_enum() != Token::cEnum::PairSymbolToken)
 	{
 		ParserError(t, "Unexpected character where open-brace was expected!");
@@ -379,16 +379,17 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 
 	//In AST land, blocks are a list of expressions associated with a particular scope.
 	std::vector<Expression*> ASTs;
-	++tokenheader;
+	//++tokenheader;
 	//I wanna point out that block is the only grammar object that has stats, so we can unroll the description of stats into this for-and-switch.
-	for (; tokenheader < tokens.size(); ++tokenheader)
+	int where = here+1;
+	for (; where <= there; ++where)
 	{
-		t = tokens[tokenheader];
+		t = tokens[where];
 		switch (t->class_enum())
 		{
 			//this switch kinda goes from most obvious implementation to least obvious, heh
 		case(Token::cEnum::EndLineToken):
-			ParserError(t, "Unexpected semicolon in global scope!"); // Yes I'm *that* picky, piss off
+			ParserError(t, "Unexpected semicolon in block!"); // Yes I'm *that* picky, piss off
 			continue;
 		case(Token::cEnum::KeywordToken):
 		{
@@ -397,22 +398,22 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			{
 			case(KeywordToken::Key::For):
 			{
-				++tokenheader; // Move the header past the for keyword
+				++where; tokenheader = where;// Move the header past the for keyword
 				consume_paren(true); // (
-				size_t semicolon = find_first_semicolon(tokenheader, tokens.size() - 1);
-				ASTNode* init = readExp(tokenheader, semicolon);
-				tokenheader = semicolon + 1;
-				semicolon = find_first_semicolon(tokenheader, tokens.size() - 1);
-				ASTNode* cond = readExp(tokenheader, semicolon);
-				tokenheader = semicolon + 1;
-				ASTNode* inc = readExp(tokenheader, tokens.size() - 1, true);
+				size_t semicolon = find_first_semicolon(tokenheader, there);
+				ASTNode* init = readExp(where, semicolon);
+				where = semicolon + 1;
+				semicolon = find_first_semicolon(where, there);
+				ASTNode* cond = readExp(where, semicolon);
+				where = semicolon + 1;
+				ASTNode* inc = readExp(where, there, true);
 				consume_paren(false); // )
 
-				std::vector<Expression*> for_block = readBlock(BlockType::For); // { ...block... }
+				std::vector<Expression*> for_block = readBlock(BlockType::For,tokenheader,there); // { ...block... }
 
 				ASTs.push_back(new ForBlock(init, cond, inc, for_block));
 
-				--tokenheader; // decrement to counteract imminent increment
+				where = tokenheader - 1; // decrement to counteract imminent increment
 				
 
 				//ParserError(t, "For-loops are not implemented!");
@@ -420,16 +421,16 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			}
 			case(KeywordToken::Key::If):
 			{
-				++tokenheader;
+				++where; tokenheader = where;
 				consume_paren(true); // (
-				ASTNode* cond = readExp(tokenheader, tokens.size() - 1, true);
+				ASTNode* cond = readExp(tokenheader, there, true);
 				consume_paren(false); // )
 
-				std::vector<Expression*> if_block = readBlock(BlockType::If);
+				std::vector<Expression*> if_block = readBlock(BlockType::If,tokenheader,there);
 
 				ASTs.push_back(new IfBlock(cond, if_block));
 
-				--tokenheader;
+				where = tokenheader - 1;
 				continue;
 			}
 			case(KeywordToken::Key::Elseif):
@@ -441,26 +442,28 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 				continue;
 			case(KeywordToken::Key::While):
 			{				
-				++tokenheader;
+				++where; tokenheader = where;
 				consume_paren(true); // (
-				ASTNode* cond = readExp(tokenheader, tokens.size() - 1, true);
+				ASTNode* cond = readExp(tokenheader, there, true);
 				consume_paren(false); // )
 
-				std::vector<Expression*> while_block = readBlock(BlockType::While);
+				std::vector<Expression*> while_block = readBlock(BlockType::While,tokenheader,there);
 
 				ASTs.push_back(new WhileBlock(cond, while_block));
 
-				--tokenheader;
+				where = tokenheader - 1;
 
 				//ParserError(t, "While-loops are not implemented!");
 				continue;
 			}
 			case(KeywordToken::Key::Return):
 			{
-				++tokenheader; // Consume this return token
-				ReturnStatement* rs = new ReturnStatement(readExp(tokenheader, static_cast<int>(tokens.size())-1)); // the static_cast here is just to silence dumb compiler warnings
+				++where; tokenheader = where; // Consume this return token
+				ReturnStatement* rs = new ReturnStatement(readExp(where, there-1));
 				ASTs.push_back(rs);
 				consume_semicolon();
+
+				where = tokenheader - 1;
 				continue;
 			}
 			default:
@@ -474,7 +477,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			if (pt.t_pOp == PairSymbolToken::pairOp::Brace && !pt.is_start)
 			{
 				//This pretty much has to be the end of the block; lets return our vector of shit.
-				++tokenheader;
+				tokenheader = where + 1;
 				goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
 			}
 
@@ -507,7 +510,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 		{
 			//CASE 1. local/property assign
 
-			Identifier* id = new Identifier(readIdentifierStr(true,tokenheader,tokenheader));
+			Identifier* id = new Identifier(readIdentifierStr(true,where,where));
 
 			AssignmentStatement::aOps aesop = readaOp();
 
@@ -518,17 +521,17 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 
 			ASTs.push_back(new AssignmentStatement(id, rvalue, aesop));
 
-			--tokenheader; // Decrement so that the impending increment puts us in the correct place.
+			where = tokenheader-1; // Decrement so that the impending increment puts us in the correct place.
 			continue;
 		}
 		case(Token::cEnum::LocalTypeToken): // So this implies we're about to read in an initialization.
 		{
 			//std::cout << "Before: " << std::to_string(tokenheader) << std::endl ;
-			LocalAssignmentStatement* localassign = readLocalAssignment(static_cast<LocalTypeToken*>(t)->t_type, tokenheader, tokens.size() - 1);
+			LocalAssignmentStatement* localassign = readLocalAssignment(static_cast<LocalTypeToken*>(t)->t_type, where, there);
 			consume_semicolon();
 			if(localassign) // if not nullptr
 				ASTs.push_back(localassign);
-			--tokenheader; // decrement to counteract imminent increment
+			where = tokenheader - 1; // decrement to counteract imminent increment
 			//std::cout << "After: " << std::to_string(tokenheader) << std::endl;
 			continue;
 		}
@@ -540,6 +543,8 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			ParserError(t, "Unknown Token type found when traversing block!");
 		}
 	}
+	ParserError(t, "Unable to find ending brace of block!");
+
 BLOCK_RETURN_ASTS:
 	if (ASTs.size() == 0)
 	{
