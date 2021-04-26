@@ -77,6 +77,25 @@ public:
 		(stack.front()->table[name]) = tuh;
 	}
 
+	bool Override(std::string name, _Ty& t)
+	{
+		for (auto it = stack.begin(); it != stack.end(); ++it)
+		{
+			Scopelet* sc = *it;
+			//std::cout << "Looking at scope " << sc.scopename << "...\n";
+
+			if (sc->table.count(name))
+			{
+				//FIXME: This might be a memory leak.
+				_Ty* tuh = new _Ty(t);
+				sc->table.erase(name);
+				sc->table[name] = tuh;
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void push(std::string name = "") // Add a new stack layer
 	{
 		//std::cout << "Creating new scope layer called " << name << "...\n";
@@ -87,7 +106,7 @@ public:
 
 	void pop() // Delete the newest stack layer
 	{
-		//std::cout << "Stack popped!\n";
+		//std::cout << "Stack layer " << stack.front()->scopename << " popped!\n";
 		if (top_scope == stack.front()) // Attempting to delete the base stack
 		{
 			std::cout << "WEIRD_ERROR: Attempted to delete backmost stack of a Scope!";

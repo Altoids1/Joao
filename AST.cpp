@@ -98,8 +98,20 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
 	}
 
-	
-	//exit(1);
+	interp.override_var(id->get_str(), rhs_val, this);
+
+	return rhs_val;
+}
+
+Value LocalAssignmentStatement::resolve(Interpreter& interp)
+{
+	Value rhs_val = rhs->resolve(interp);
+	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
+
+	if (t_op != aOps::Assign)
+	{
+		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+	}
 
 	interp.set_var(id->get_str(), rhs_val, this);
 
@@ -490,13 +502,20 @@ Value Block::iterate_statements(Interpreter& interp)
 
 Value IfBlock::resolve(Interpreter& interp)
 {
-	if (condition && !condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
+	if (!condition)
+		return Value();
+
+	if (!condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
 	{
 		if (Elseif) // If we have an Elseif to point to
 			return Elseif->resolve(interp); // Return that
 		return Value(); // Otherwise return Null, I guess.
 	}
-		
+
+	if (condition->resolve(interp))
+	{
+		std::cout << "Wuh?\n";
+	}
 
 	interp.push_stack("if");
 	Value blockret = iterate_statements(interp);
@@ -529,11 +548,20 @@ Value WhileBlock::resolve(Interpreter& interp)
 	interp.push_stack("while");
 	if(!condition) // if condition not defined
 		interp.RuntimeError(*this, "Missing condition in WhileBlock!");
+	/*
+	if (!(condition->resolve(interp)))
+	{
+		std::cout << "THIS! SENTENCE! IS! FALSE!dontthinkaboutitdontthinkaboutitdontthinkaboutitdontthinkaboutitdontthinkaboutit...\n"; // Have to inform the computer to not think about the paradox
+	}
+	*/
 	while (condition->resolve(interp))
 	{
 		Value blockret = iterate_statements(interp);
 		if (interp.FORCE_RETURN)
+		{
+			//std::cout << "Whileloop got to FORCE_RETURN!\n";
 			return blockret;
+		}
 	}
 	interp.pop_stack();
 	return Value();

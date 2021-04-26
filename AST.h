@@ -68,7 +68,7 @@ public:
 	}
 
 	explicit operator bool() const { // Q-q-quadruple keyword!!
-
+		//std::cout << "Casting to bool...\n";
 		switch (t_vType)
 		{
 		case(vType::Null):
@@ -137,6 +137,7 @@ public:
 
 class AssignmentStatement : public Expression
 {
+protected:
 	Identifier* id;
 	ASTNode* rhs;
 public:
@@ -160,6 +161,28 @@ public:
 	{ 
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "AssignmentStatement, Operation: Assign\n";
+
+		str += id->dump(indent + 1);
+		str += rhs->dump(indent + 1);
+
+		return str;
+	}
+};
+
+class LocalAssignmentStatement final : public AssignmentStatement // "Value x = 3;", which has a distinct ASTNode type from "x = 3;"
+{
+public:
+	LocalAssignmentStatement(Identifier* i, ASTNode* r, aOps o = aOps::Assign)
+		:AssignmentStatement(i,r,o)
+	{
+		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "LocalAssignmentStatement, Type: Value, Operation: Assign\n";
 
 		str += id->dump(indent + 1);
 		str += rhs->dump(indent + 1);
@@ -256,6 +279,10 @@ public:
 		//
 		case(bOps::Concatenate):
 			sop = "Concatenate";
+			break;
+		//
+		case(bOps::Equals):
+			sop = "Equals";
 			break;
 		default:
 			sop = "????";

@@ -254,17 +254,25 @@ class Parser
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int,bool);
 	ASTNode* readExp(int,int,bool);
 
-	AssignmentStatement::aOps readaOp()
+	//Reads a strongly-expected LocalAssignment (of form, "Value x = 3" or whatever). Does not consume a semicolon.
+	LocalAssignmentStatement* readLocalAssignment(LocalTypeToken::Type, int, int);
+
+	AssignmentStatement::aOps readaOp(int here = 0)
 	{
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readaOp starting at " << std::to_string(tokenheader) << std::endl;
 #endif
-		Token* t = tokens[tokenheader];
+		Token* t;
+		if (here)
+			t = tokens[here];
+		else
+			t = tokens[tokenheader];
 
 		if (t->class_enum() != Token::cEnum::SymbolToken)
 		{
 			ParserError(t, "Unexpected Token when aOp was expected!");
-			++tokenheader;
+			if(!here)
+				++tokenheader;
 			return AssignmentStatement::aOps::NoOp;
 		}
 		SymbolToken st = *static_cast<SymbolToken*>(t);
@@ -275,7 +283,8 @@ class Parser
 		{
 			if (c[0] == '=')
 			{
-				++tokenheader;
+				if(!here)
+					++tokenheader;
 				return AssignmentStatement::aOps::Assign;
 			}
 			else
@@ -286,7 +295,8 @@ class Parser
 
 		ParserError(t, "Two-char assignment operations are not implemented!");
 
-		++tokenheader;
+		if(!here)
+			++tokenheader;
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readaOp setting tokenheader to " << std::to_string(tokenheader) << std::endl;
 #endif

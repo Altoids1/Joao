@@ -22,7 +22,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 
 	varstat ::= var assignop exp
 
-	var ::=  Name |'./' Name | '/' Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name
+	var ::= (('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name) |'./' Name | '/' Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name
 
 	namelist ::= Name {‘,’ Name}
 

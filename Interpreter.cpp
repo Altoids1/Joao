@@ -28,6 +28,16 @@ void Interpreter::set_var(std::string varname, Value val, ASTNode* setter)
 	varscope.set(varname, val);
 }
 
+void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
+{
+	//std::cout << "Overriding variable " + varname + " to value " + std::to_string(val.t_value.as_int) + "\n";
+	if (!varscope.Override(varname, val))
+	{
+		RuntimeError(setter, "Unable to override blockscope variable with new value!");
+	}
+	return;
+}
+
 Value Interpreter::get_var(std::string varname, ASTNode *getter)
 {
 	Value* vptr = varscope.get(varname);

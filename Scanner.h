@@ -21,7 +21,8 @@ public:
 		StringToken,
 		PairSymbolToken,
 		KeywordToken,
-		LiteralToken
+		LiteralToken,
+		LocalTypeToken
 	};
 	uint32_t line;
 	uint32_t syntactic_line;
@@ -255,6 +256,29 @@ public:
 	NAME_CONST_METHODS(KeywordToken);
 };
 
+class LocalTypeToken : public Token 
+{
+public:
+	enum class Type {
+		Value,
+		Number,
+		Object,
+		Boolean,
+		String,
+		Local
+	}t_type;
+
+	LocalTypeToken(uint32_t l, uint32_t sl, LocalTypeToken::Type ty)
+		:t_type(ty)
+	{
+		line = l;
+		syntactic_line = sl;
+	}
+
+
+	NAME_CONST_METHODS(LocalTypeToken);
+};
+
 class LiteralToken : public Token
 {
 public:
@@ -347,6 +371,16 @@ class Scanner
 		{"false",LiteralToken::Literal::False},
 		{"true",LiteralToken::Literal::True}
 	};
+
+	const std::unordered_map<std::string, LocalTypeToken::Type> typehash = {
+		{"Value",LocalTypeToken::Type::Value},
+		{"Number",LocalTypeToken::Type::Number},
+		{"Object",LocalTypeToken::Type::Object},
+		{"String",LocalTypeToken::Type::String},
+		{"Boolean",LocalTypeToken::Type::Boolean},
+		{"local",LocalTypeToken::Type::Local}
+	};
+
 	void ScannerError(unsigned int column_num = 0, ScanError what = ScanError::Unknown)
 	{
 		std::string msg = "";
@@ -432,6 +466,15 @@ class Scanner
 		{
 			LiteralToken* lt = new LiteralToken(linenum, syntactic_linenum, literalhash.at(str));
 			append(lt);
+			return;
+		}
+
+		//then check if this is a Type keyword (like 'Value' or 'Number')
+
+		if (typehash.count(str))
+		{
+			LocalTypeToken* ltt = new LocalTypeToken(linenum, syntactic_linenum, typehash.at(str));
+			append(ltt);
 			return;
 		}
 

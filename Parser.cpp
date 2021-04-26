@@ -186,6 +186,10 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 {
 #ifdef LOUD_TOKENHEADER
 	std::cout << "readBinExp(" << Scanner::precedence_tostring(op) << ") starting at " << std::to_string(here) << std::endl;
+	if (expect_close_paren)
+		std::cout << "I expect close paren!\n";
+	else
+		std::cout << "I don't expect close paren!\n";
 #endif
 	//std::cout << "Starting to search for operation " << Scanner::precedence_tostring(op) << "...\n";
 
@@ -298,7 +302,7 @@ READBOP_LEAVE_BOPSEARCH:
 ASTNode* Parser::readExp(int here, int there, bool expect_close_paren = false)
 {
 #ifdef LOUD_TOKENHEADER
-	std::cout << "Expression starts at " << std::to_string(tokenheader) << std::endl;
+	std::cout << "Expression starts at " << std::to_string(here) << std::endl;
 #endif
 	//Okay, god, we're really getting close to actually being able to *resolve* something.
 
@@ -320,13 +324,40 @@ ASTNode* Parser::readExp(int here, int there, bool expect_close_paren = false)
 
 	//we know (or at least kinda think) that there's a binop afoot.
 #ifdef LOUD_TOKENHEADER
-	ASTNode* ans = readBinExp(lowop, here, there);
+	ASTNode* ans = readBinExp(lowop, here, there, expect_close_paren);
 	std::cout << "Expression leaves at " << std::to_string(tokenheader) << std::endl;
 	return ans;
 #else
 	return readBinExp(lowop, here, there, true);
 #endif
 	
+}
+
+LocalAssignmentStatement* Parser::readLocalAssignment(LocalTypeToken::Type ty, int here, int there) // Value x = 3;
+{
+	Token* t = tokens[here];
+	if (t->class_enum() != Token::cEnum::LocalTypeToken)
+		ParserError(t, "Unexpected Token where LocalTypeToken was expected!");
+
+	switch (static_cast<LocalTypeToken*>(t)->t_type) // I feel like a lvl 10 Wizard when I write lines of C++ like this
+	{
+	case(LocalTypeToken::Type::Value):
+		break;
+	case(LocalTypeToken::Type::Local):
+		ParserError(t, "'local' is a reserved word; use 'Local' instead!");
+		return nullptr;
+	default:
+		ParserError(t, "Underimplemented LocalTypeToken detected!");
+		return nullptr;
+	}
+
+	Identifier* id = new Identifier(readIdentifierStr(true, here+1, here+1));
+
+	AssignmentStatement::aOps aesop = readaOp(here+2);
+
+	ASTNode* rvalue = readExp(here+3,there); // the static_cast here is just to silence dumb compiler warnings
+
+	return new LocalAssignmentStatement(id, rvalue, aesop);
 }
 
 std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state should point to the opening brace of this block.
@@ -454,10 +485,11 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			If the Grammar serves me right, this is either a varstat or a functioncall.
 
 			VARSTAT:
-			there's three ways of doing varstats: in the Local scope, Object Scope, or Global Scope.
-			x = 3; -- local (or property!) assignment
-			./x = 3; -- assignment of property in object scope (this/x = 3; is also valid and more explicit)
-			/x = 3; -- global scope asignment (glob/x = 3 also valid, and more explicit since you're saying you're setting a Value and not just getting a type)
+			there's four ways of doing varstats: in the Local scope, Object Scope, or Global Scope.
+				Value x = 3; ## Set local variable to 3
+				/x = 3; ## Set global variable to 3
+				./x = 3; ## Set property of object we're in called x to 3
+				x = 3; ## Ambiguous, sets lowest-scoped x available to 3
 			*/
 
 			SymbolToken st = *static_cast<SymbolToken*>(t);
@@ -475,8 +507,6 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 		{
 			//CASE 1. local/property assign
 
-			WordToken wt = *static_cast<WordToken*>(t);
-
 			Identifier* id = new Identifier(readIdentifierStr(true,tokenheader,tokenheader));
 
 			AssignmentStatement::aOps aesop = readaOp();
@@ -491,9 +521,20 @@ std::vector<Expression*> Parser::readBlock(BlockType bt) // Tokenheader state sh
 			--tokenheader; // Decrement so that the impending increment puts us in the correct place.
 			continue;
 		}
+		case(Token::cEnum::LocalTypeToken): // So this implies we're about to read in an initialization.
+		{
+			//std::cout << "Before: " << std::to_string(tokenheader) << std::endl ;
+			LocalAssignmentStatement* localassign = readLocalAssignment(static_cast<LocalTypeToken*>(t)->t_type, tokenheader, tokens.size() - 1);
+			consume_semicolon();
+			if(localassign) // if not nullptr
+				ASTs.push_back(localassign);
+			--tokenheader; // decrement to counteract imminent increment
+			//std::cout << "After: " << std::to_string(tokenheader) << std::endl;
+			continue;
+		}
 		case(Token::cEnum::StringToken):
 		case(Token::cEnum::NumberToken):
-			ParserError(t, "Misplaced literal detected when lvalue expected");
+			ParserError(t, "Misplaced literal detected while traversing block!");
 			break;
 		default:
 			ParserError(t, "Unknown Token type found when traversing block!");
@@ -505,7 +546,8 @@ BLOCK_RETURN_ASTS:
 		ParserError(t, "Block created with no Expressions inside!");
 	}
 
+#ifdef LOUD_TOKENHEADER
 	std::cout << "Exiting block with header pointed at " << std::to_string(tokenheader) << ".\n";
-
+#endif
 	return ASTs;
 }
