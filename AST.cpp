@@ -352,7 +352,15 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Integer, Value::vType::Integer)):
 		return Value((lhs.t_value.as_int || rhs.t_value.as_int) && !(lhs.t_value.as_int && rhs.t_value.as_int));
 
-
+	//BOOL & BOOL
+	case(BIN_ENUMS(bOps::Equals, Value::vType::Bool, Value::vType::Bool)):
+		return Value(lhs.t_value.as_bool == rhs.t_value.as_bool);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Bool)):
+		return Value(lhs.t_value.as_bool && rhs.t_value.as_bool);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Bool, Value::vType::Bool)):
+		return Value(lhs.t_value.as_bool || rhs.t_value.as_bool);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Bool)):
+		return Value((lhs.t_value.as_bool || rhs.t_value.as_bool) && !(lhs.t_value.as_bool && rhs.t_value.as_bool));
 
 	//STRING & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::String)):
