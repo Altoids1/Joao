@@ -401,7 +401,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				++where; tokenheader = where;// Move the header past the for keyword
 				consume_paren(true); // (
 				size_t semicolon = find_first_semicolon(tokenheader, there);
-				ASTNode* init = readExp(where, semicolon);
+				ASTNode* init = readExp(tokenheader, semicolon);
 				where = semicolon + 1;
 				semicolon = find_first_semicolon(where, there);
 				ASTNode* cond = readExp(where, semicolon);
