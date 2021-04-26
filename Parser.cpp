@@ -333,7 +333,7 @@ ASTNode* Parser::readExp(int here, int there, bool expect_close_paren = false)
 	
 }
 
-LocalAssignmentStatement* Parser::readLocalAssignment(LocalTypeToken::Type ty, int here, int there) // Value x = 3;
+LocalAssignmentStatement* Parser::readLocalAssignment(LocalType ty, int here, int there) // Value x = 3;
 {
 	Token* t = tokens[here];
 	if (t->class_enum() != Token::cEnum::LocalTypeToken)
@@ -341,9 +341,9 @@ LocalAssignmentStatement* Parser::readLocalAssignment(LocalTypeToken::Type ty, i
 
 	switch (static_cast<LocalTypeToken*>(t)->t_type) // I feel like a lvl 10 Wizard when I write lines of C++ like this
 	{
-	case(LocalTypeToken::Type::Value):
+	case(LocalType::Value):
 		break;
-	case(LocalTypeToken::Type::Local):
+	case(LocalType::Local):
 		ParserError(t, "'local' is a reserved word; use 'Local' instead!");
 		return nullptr;
 	default:

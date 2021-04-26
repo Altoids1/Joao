@@ -2,6 +2,8 @@
 
 #include "Forward.h"
 
+#include "SharedEnums.h"
+
 #define NAME_CONST_METHODS(the_thing) virtual cEnum class_enum() const override { return cEnum::##the_thing; } \
 						  virtual std::string class_name() const override { return #the_thing; }
 
@@ -259,16 +261,9 @@ public:
 class LocalTypeToken : public Token 
 {
 public:
-	enum class Type {
-		Value,
-		Number,
-		Object,
-		Boolean,
-		String,
-		Local
-	}t_type;
+	LocalType t_type;
 
-	LocalTypeToken(uint32_t l, uint32_t sl, LocalTypeToken::Type ty)
+	LocalTypeToken(uint32_t l, uint32_t sl, LocalType ty)
 		:t_type(ty)
 	{
 		line = l;
@@ -373,13 +368,13 @@ class Scanner
 		{"true",LiteralToken::Literal::True}
 	};
 
-	const std::unordered_map<std::string, LocalTypeToken::Type> typehash = {
-		{"Value",LocalTypeToken::Type::Value},
-		{"Number",LocalTypeToken::Type::Number},
-		{"Object",LocalTypeToken::Type::Object},
-		{"String",LocalTypeToken::Type::String},
-		{"Boolean",LocalTypeToken::Type::Boolean},
-		{"local",LocalTypeToken::Type::Local}
+	const std::unordered_map<std::string, LocalType> typehash = {
+		{"Value",LocalType::Value},
+		{"Number",LocalType::Number},
+		{"Object",LocalType::Object},
+		{"String",LocalType::String},
+		{"Boolean",LocalType::Boolean},
+		{"local",LocalType::Local}
 	};
 
 	void ScannerError(unsigned int column_num = 0, ScanError what = ScanError::Unknown)

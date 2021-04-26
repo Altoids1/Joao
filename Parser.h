@@ -255,7 +255,7 @@ class Parser
 	ASTNode* readExp(int,int,bool);
 
 	//Reads a strongly-expected LocalAssignment (of form, "Value x = 3" or whatever). Does not consume a semicolon.
-	LocalAssignmentStatement* readLocalAssignment(LocalTypeToken::Type, int, int);
+	LocalAssignmentStatement* readLocalAssignment(LocalType, int, int);
 
 	AssignmentStatement::aOps readaOp(int here = 0)
 	{

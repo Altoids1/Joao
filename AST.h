@@ -4,6 +4,7 @@
 #include <assert.h> 
 
 #include "Forward.h"
+#include "SharedEnums.h"
 
 class Value { // A general pseudo-typeless Value used to store data within the programming language.
 
@@ -171,6 +172,7 @@ public:
 
 class LocalAssignmentStatement final : public AssignmentStatement // "Value x = 3;", which has a distinct ASTNode type from "x = 3;"
 {
+	LocalType ty = LocalType::Value;
 public:
 	LocalAssignmentStatement(Identifier* i, ASTNode* r, aOps o = aOps::Assign)
 		:AssignmentStatement(i,r,o)
@@ -564,6 +566,38 @@ public:
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "Break " + std::to_string(breaknum) + ";\n";
 
+		return str;
+	}
+};
+
+class ClassDefinition final : public ASTNode
+{
+	std::vector<LocalAssignmentStatement*> statements;
+	std::string direct;
+public:
+	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*>& s)
+		:direct(d),
+		statements(s)
+	{
+
+	}
+	ClassDefinition(std::string d, std::vector<LocalAssignmentStatement*>& s)
+		:direct(d),
+		statements(s)
+	{
+
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "ClassDefinition"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "ClassDefinition " + direct + ";\n";
+		for (int i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
 		return str;
 	}
 };
