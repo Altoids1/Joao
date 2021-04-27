@@ -536,6 +536,12 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 					if(nt->is_double)
 						ParserError(t, "Unexpected double literal after Break keyword; 'break' may only take expressionless integer literals as input!");
 					brk = nt->num.as_int;
+
+					if (brk < 1) // No "break 0;" please, thanks
+					{
+						ParserError(t, "Non-positive integer given as argument to Break statement!");
+					}
+
 					++where; tokenheader = where; // Consume Number token
 					consume_semicolon();
 					break;
@@ -594,7 +600,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				tokenheader = where + 1;
 				goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
 			}
-
+			ParserError(t, "Unexpected PairSymbol while traversing block!");
 		}
 		case(Token::cEnum::SymbolToken):
 		{
