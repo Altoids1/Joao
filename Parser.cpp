@@ -44,7 +44,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			{
 				//TODO: IMPLEMENT PARAMETER DEFINITIONS
 				tokenheader += 2; // jumps over the implied '()', hackish!
-				grammarstack.push_front(GrammarState::block);
+				//grammarstack.push_front(GrammarState::block);
 
 				std::vector<Expression*> bluh = readBlock(BlockType::Function,tokenheader, tokens.size()-1);
 				--tokenheader;
