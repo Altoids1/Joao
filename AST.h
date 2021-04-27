@@ -582,13 +582,19 @@ public:
 
 	}
 	ClassDefinition(std::string d, std::vector<LocalAssignmentStatement*>& s)
+class ClassDefinition final : public ASTNode
+{
+	std::vector<LocalAssignmentStatement*> statements;
+public:
+	std::string direct;
+	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*> &s)
 		:direct(d),
 		statements(s)
 	{
 
 	}
 
-	virtual Value resolve(Interpreter&) override;
+	//virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ClassDefinition"; }
 	virtual std::string dump(int indent)
 	{

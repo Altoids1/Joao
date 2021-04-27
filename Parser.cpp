@@ -1,4 +1,6 @@
 #include "Parser.h"
+#include "Object.h"
+#include "Directory.h"
 
 #define SYMBOL_ENUMS(a,b) ((a << 9) | b)
 
@@ -7,6 +9,8 @@
 Program Parser::parse() // This Parser is w/o question the hardest part of this to write.
 {
 	assert(tokens.size() > 0);
+
+	std::vector<ClassDefinition*> classdef_list;
 
 	for (tokenheader = 0; tokenheader < tokens.size(); ++tokenheader)
 	{
@@ -53,7 +57,22 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			}
 			else if (pop == PairSymbolToken::pairOp::Brace) // THIS IS A CLASSDEF!
 			{
-				ParserError(t, "Classdefs are not implemented yet!");
+#ifdef LOUD_TOKENHEADER
+				std::cout << "Classdefinition began read at tokenheader " << std::to_string(tokenheader) << std::endl;
+#endif
+				std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, tokens.size() - 1);
+
+				classdef_list.push_back(new ClassDefinition(dir_name, lasses));
+
+#ifdef LOUD_TOKENHEADER
+				std::cout << "Classdefinition set tokenheader for globalscope to " << std::to_string(tokenheader) << std::endl;
+#endif
+
+				--tokenheader; // Handle imminent increment
+				
+				continue;
+
+				//ParserError(t, "Classdefs are not implemented yet!");
 			}
 			else
 			{
@@ -73,7 +92,74 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 
 	}
 
+	generate_object_tree(classdef_list);
+
 	return t_program;
+}
+
+void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
+{
+	/*
+	So in general we would like for the properties and methods of object types to be "cooked,"
+	insofar that you can get a handle on, an ObjectType during runtime and it'll have all the properties and methods pre-inherited from object types higher in the hierarchy.
+
+	Making though is a bit of a headache, since the user programmer can declare functions and classdefs anywhere within the script, in any order.
+	Further, a type may be poofed into existence by a singular function definition and nowhere else;
+	an object type which inherits from its parent in all ways spare that one function.
+
+	Here is my attempt at resolving the problem, written at three in the morning. Enjoy.
+	*/
+
+	//Step 1. Get a list of all classes that exist in some way
+	std::unordered_map<std::string, ObjectType*> list_of_types;
+	std::unordered_map<std::string, bool> list_of_funcs; // Not as used here, mostly for the ParserError
+
+	std::unordered_map<std::string, Function*> fdefs = t_program.definedFunctions;
+
+	for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
+	{
+		ClassDefinition* cdptr = *it;
+		std::string cdstr = cdptr->direct;
+
+		if (list_of_types.count(cdstr))
+		{
+			ParserError(nullptr, "Duplicate class definition detected!"); // FIXME: Allow for this (with suppressable warnings anyways)
+			continue;
+		}
+		list_of_types[cdstr] = nullptr; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
+	}
+	for (auto it = fdefs.begin(); it != fdefs.end(); ++it) // Ask all the functions
+	{
+		Function* fptr = it->second;
+
+		if (fptr->class_name() == "Function")
+			std::cout << "cool.";
+
+
+		std::string fstr = it->first;
+
+		if (list_of_funcs.count(fstr))
+		{
+			ParserError(nullptr, "Duplicate function definition detected!"); // FIXME: Allow for this (with suppressable warnings anyways)
+			continue;
+		}
+		list_of_funcs[fstr] = true;
+
+		std::string dir_f = Directory::DotDot(fstr);
+
+		if (dir_f == "" || dir_f == "/") // I don't trust std::string.empty()
+			continue;
+		
+		if (!list_of_types.count(dir_f)) // If our type doesn't exist
+			list_of_types[dir_f] = nullptr; // Make it so!
+	}
+
+	std::cout << "Here's my class tree:\n";
+	for (auto it = list_of_types.begin(); it != list_of_types.end(); ++it)
+	{
+		std::cout << it->first << std::endl;
+	}
+
 }
 
 ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we know for certain that there's no damned binary operator within it.
@@ -186,11 +272,13 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 {
 #ifdef LOUD_TOKENHEADER
 	std::cout << "readBinExp(" << Scanner::precedence_tostring(op) << ") starting at " << std::to_string(here) << std::endl;
+#endif
+	/*
 	if (expect_close_paren)
 		std::cout << "I expect close paren!\n";
 	else
 		std::cout << "I don't expect close paren!\n";
-#endif
+	*/
 	//std::cout << "Starting to search for operation " << Scanner::precedence_tostring(op) << "...\n";
 
 	if (op == Scanner::OperationPrecedence::NONE) // If we're at the bottom, evaluate a primary
@@ -333,6 +421,7 @@ ASTNode* Parser::readExp(int here, int there, bool expect_close_paren = false)
 	
 }
 
+//Here-there-update; updates through ReadExp().
 LocalAssignmentStatement* Parser::readLocalAssignment(LocalType ty, int here, int there) // Value x = 3;
 {
 	Token* t = tokens[here];
@@ -365,17 +454,10 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 	//Blocks are composed of a starting brace, following by statements, and are ended by an end brace.
 
 	//Starting brace checks
-	Token* t = tokens[here];
-	if (t->class_enum() != Token::cEnum::PairSymbolToken)
-	{
-		ParserError(t, "Unexpected character where open-brace was expected!");
-	}
-	PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
-	if (!pt.is_start || pt.t_pOp != PairSymbolToken::pairOp::Brace)
-	{
-		ParserError(t, "Unexpected character where open-brace was expected!");
-	}
 
+
+	Token* t = tokens[here];
+	consume_open_brace(here);
 
 	//In AST land, blocks are a list of expressions associated with a particular scope.
 	std::vector<Expression*> ASTs;
@@ -585,6 +667,60 @@ BLOCK_RETURN_ASTS:
 
 #ifdef LOUD_TOKENHEADER
 	std::cout << "Exiting block with header pointed at " << std::to_string(tokenheader) << ".\n";
+#endif
+	return ASTs;
+}
+
+std::vector<LocalAssignmentStatement*> Parser::readClassDef(std::string name, int here, int there)
+{
+	Token* t = tokens[here];
+	consume_open_brace(here);
+
+	std::vector<LocalAssignmentStatement*> ASTs;
+
+	//This grammar state is pretty simple: It's an endless list of LocalAssignStatement-compatible declarations that will later be read to form the object tree/hash.
+	int where = here + 1;
+	for (; where <= there; ++where)
+	{
+		t = tokens[where];
+		switch (t->class_enum())
+		// readLocalAssignment() does this check too, but doing it here lets me give a more specific ParserError. Parser errors aren't errors; they're merely failing with *style*!
+		{
+		case(Token::cEnum::LocalTypeToken):
+		{
+			LocalTypeToken* ltt_ptr = static_cast<LocalTypeToken*>(t);
+			LocalAssignmentStatement* lassy = readLocalAssignment(ltt_ptr->t_type, where, there);
+
+			ASTs.push_back(lassy);
+			consume_semicolon();
+			where = tokenheader - 1;
+			break;
+		}
+		case(Token::cEnum::PairSymbolToken):
+		{
+			PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
+			if (pt.t_pOp == PairSymbolToken::pairOp::Brace && !pt.is_start)
+			{
+				//This pretty much has to be the end of the block; lets return our vector of shit.
+				tokenheader = where + 1;
+				std::cout << "Hello!\n";
+				goto READ_CLASSDEF_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
+			}
+			break;
+		}
+		default:
+			ParserError(t, "Unexpected or underimplemented Token detected while traversing class definition!");
+		}
+	}
+	ParserError(t, "Unable to find ending brace of block!");
+
+READ_CLASSDEF_RETURN_ASTS:
+	if (ASTs.size() == 0)
+	{
+		ParserError(t, "Classdef created with no Expressions inside!");
+	}
+#ifdef LOUD_TOKENHEADER
+	std::cout << "Exiting Classdef with header pointed at " << std::to_string(tokenheader) << ".\n";
 #endif
 	return ASTs;
 }

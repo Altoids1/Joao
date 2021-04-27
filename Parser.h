@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AST.h"
-#include "Object.h"
+
 #include "Scanner.h"
 #include "Program.h"
 
@@ -254,6 +254,12 @@ class Parser
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int,bool);
 	ASTNode* readExp(int,int,bool);
 
+	//Here-there-update; does not update if no last bracket found
+	std::vector<Expression*> readBlock(BlockType, int, int); 
+
+	//Here-there-update; does not update if no last bracket found
+	std::vector<LocalAssignmentStatement*> readClassDef(std::string, int, int);
+
 	//Reads a strongly-expected LocalAssignment (of form, "Value x = 3" or whatever). Does not consume a semicolon.
 	LocalAssignmentStatement* readLocalAssignment(LocalType, int, int);
 
@@ -325,8 +331,6 @@ class Parser
 		return wt.word;
 	}
 
-	std::vector<Expression*> readBlock(BlockType,int,int); // I hate that this has to be a here-there but it's pretty much necessary
-
 	// If no args, assumes tokenheader is pointing where it should. Increments tokenheader when given no args.
 	void consume_semicolon(Token* t = nullptr) 
 	{
@@ -341,6 +345,7 @@ class Parser
 		case(Token::cEnum::EndLineToken):
 			return;
 		default:
+			//std::cout << "Stalling...le attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consum";
 			ParserError(t, "Unexpected Token while attempting to consume EndLineToken!");
 		}
 	}
@@ -366,6 +371,20 @@ class Parser
 		}
 		default:
 			ParserError(t, "Unexpected Token while attempting to consume open Paren!");
+		}
+	}
+
+	void consume_open_brace(int here)
+	{
+		Token* t = tokens[here];
+		if (t->class_enum() != Token::cEnum::PairSymbolToken)
+		{
+			ParserError(t, "Unexpected character where open-brace was expected!");
+		}
+		PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
+		if (!pt.is_start || pt.t_pOp != PairSymbolToken::pairOp::Brace)
+		{
+			ParserError(t, "Unexpected character where open-brace was expected!");
 		}
 	}
 
