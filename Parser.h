@@ -411,7 +411,10 @@ protected:
 	{
 		//This is just a basic setup while everything else is fleshed out.
 		std::cout << "PARSER_ERROR: " << what << "\n";
-		std::cout << t->dump();
+		if (t)
+			std::cout << t->dump();
+		else
+			std::cout << "ERROR_ERROR: No Token pointer provided to ParserError()!\n";
 		exit(1);
 	}
 	void ParserError(Token& t, std::string what)
