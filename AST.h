@@ -54,9 +54,9 @@ public:
 		t_vType = vType::String;
 		//std::cout << "Construction successful: " + *(t_value.as_string_ptr);
 	}
-	Value(Object& o)
+	Value(Object* o)
 	{
-		t_value.as_object_ptr = &o;
+		t_value.as_object_ptr = o;
 		t_vType = vType::Object;
 	}
 
@@ -89,14 +89,38 @@ public:
 	std::string typestring();
 };
 
+//Is either a directory lookup OR a pointer to an object and the name of the method or property being accessed.
+struct Handle
+{
+	std::string name;
+	Object* obj;
+	Handle(std::string n = "", Object* o = nullptr)
+		:name(n),
+		obj(o)
+	{
+
+	}
+};
+
 class ASTNode // ASTNodes are abstract symbols which together form a "flow chart" tree of symbols that the parser creates from the text that the interpreter then interprets.
 {
 
 public:
 	virtual const std::string class_name() const { return "ASTNode"; }
-	virtual Value resolve(Interpreter&); // Collapses this symbol into a real dang thing or process that the interpreter can do.
 
-	virtual std::string dump(int indent) { return std::string(indent, ' ') + "ASTNode\n"; } // Used for debugging
+	// Collapses this symbol into a real dang thing or process that the interpreter can do.
+	virtual Value resolve(Interpreter&); 
+
+	// Attempts to collapse this symbol in a constant and scope-less manner. Bool determines if it throws an error when this fails or not.
+	virtual Value const_resolve(Parser&, bool);
+
+	// Returns a Handle, typically used in the context of resolving a complex assignment, i.e. 'apple.taste.type = "succulent"'
+	virtual Handle handle(Interpreter&);
+
+	// Returns a Handle in a constant and scope-less manner. Will always throw an error if there's an error, which for most ASTNodes there would be.
+	virtual Handle const_handle(Parser&);
+
+	virtual std::string dump(int indent) { return std::string(indent, ' ') + class_name() + "\n"; } // Used for debugging
 };
 
 class Literal : public ASTNode { // A node which denotes a plain ol' literal.
@@ -109,6 +133,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
+	virtual Value const_resolve(Parser&, bool) override;
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Literal: " + heldval.to_string() + "\n"; }
 };
 
@@ -127,11 +152,15 @@ public:
 	{
 		//std::cout << "I've been created with name " + s + "!\n";
 	}
-	virtual Value resolve(Interpreter&) override;
 	std::string get_str()
 	{
 		return t_name;
 	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual Handle handle(Interpreter& interp) override { return Handle(t_name); }
+	virtual Handle const_handle(Parser& parse) override { return Handle(t_name); }
+	
 	virtual const std::string class_name() const override { return "Identifier"; }
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name + "\n"; }
 };
@@ -139,7 +168,7 @@ public:
 class AssignmentStatement : public Expression
 {
 protected:
-	Identifier* id;
+	ASTNode* id;
 	ASTNode* rhs;
 public:
 	enum class aOps : uint8_t {
@@ -150,7 +179,7 @@ public:
 		AssignMultiply, // *=
 		AssignDivide // /=
 	}t_op;
-	AssignmentStatement(Identifier* i, ASTNode* r, aOps o = aOps::Assign)
+	AssignmentStatement(ASTNode* i, ASTNode* r, aOps o = aOps::Assign)
 		:id(i),
 		rhs(r),
 		t_op(o)
@@ -181,6 +210,11 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
+	virtual Value const_resolve(Parser&, bool) override;
+
+	//A special-snowflake resolver for LocalAssignmentStatement which returns the key-value pair of the property it describes.
+	std::pair<std::string, Value> resolve_property(Parser&);
+
 	virtual std::string dump(int indent)
 	{
 		std::string ind = std::string(indent, ' ');
@@ -392,7 +426,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "Function"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		//std::string ind = std::string(indent, ' ');
 		std::string str = "Function, name: " + t_name + "\n";
@@ -429,6 +463,10 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "NativeFunction"; }
+	virtual std::string dump(int indent) override
+	{
+		return "NativeFunction, name: " + t_name + "\n";
+	}
 };
 
 
@@ -570,18 +608,25 @@ public:
 	}
 };
 
-class ClassDefinition final : public ASTNode
+class MemberAccess final : public ASTNode
 {
-	std::vector<LocalAssignmentStatement*> statements;
-	std::string direct;
+	ASTNode* front;
+	ASTNode* back;
 public:
-	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*>& s)
-		:direct(d),
-		statements(s)
+	MemberAccess(ASTNode* f, ASTNode* b)
+		:front(f)
+		 ,back(b)
 	{
 
 	}
-	ClassDefinition(std::string d, std::vector<LocalAssignmentStatement*>& s)
+
+	virtual Value resolve(Interpreter&) override;
+
+	virtual Handle handle(Interpreter&) override;
+
+	virtual const std::string class_name() const override { return "MemberAccess"; }
+};
+
 class ClassDefinition final : public ASTNode
 {
 	std::vector<LocalAssignmentStatement*> statements;
@@ -595,6 +640,9 @@ public:
 	}
 
 	//virtual Value resolve(Interpreter&) override;
+
+	std::unordered_map<std::string, Value> resolve_properties(Parser&);
+
 	virtual const std::string class_name() const override { return "ClassDefinition"; }
 	virtual std::string dump(int indent)
 	{
@@ -606,4 +654,22 @@ public:
 		}
 		return str;
 	}
+};
+
+class Construction : public ASTNode
+{
+
+	std::string type;
+	std::vector<ASTNode*> args;
+public:
+	Construction(std::string t, std::vector<ASTNode*> a)
+		:type(t)
+		,args(a)
+	{
+
+	}
+
+	virtual const std::string class_name() const override { return "Construction"; }
+
+	virtual Value resolve(Interpreter&) override;
 };

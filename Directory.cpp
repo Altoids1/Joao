@@ -1,7 +1,7 @@
 #include "Forward.h"
 #include "Directory.h"
 
-std::string Directory::DotDot(std::string dir) // Go up one directory from this directory
+std::string Directory::DotDot(std::string dir) // Go up one directory from this directory, i.e. "/apple/pear" -> "/apple"
 {
 	size_t lastslash = dir.find_last_of('/');
 	if (lastslash == std::string::npos)

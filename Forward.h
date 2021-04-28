@@ -20,3 +20,5 @@ class Object;
 class ObjectType;
 class Value;
 class Interpreter;
+class Parser;
+

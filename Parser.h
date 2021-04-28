@@ -402,6 +402,15 @@ class Parser
 	}
 	
 protected:
+	//Does the nitty-gritty of filling out the function and objecttype tables.
+	void generate_object_tree(std::vector<ClassDefinition*>&);
+public:
+	Parser(Scanner&t)
+		:tokens(t.tokens)
+		,lowest_ops(t.lowest_ops)
+	{
+		grammarstack.push_front(GrammarState::program);
+	}
 	void ParserError()
 	{
 		std::cout << "PARSER_ERROR: UNKNOWN!";
@@ -422,13 +431,6 @@ protected:
 		//This is just a basic setup while everything else is fleshed out.
 		std::cout << "PARSER_ERROR: " << what << "\n";
 		exit(1);
-	}
-public:
-	Parser(Scanner&t)
-		:tokens(t.tokens)
-		,lowest_ops(t.lowest_ops)
-	{
-		grammarstack.push_front(GrammarState::program);
 	}
 	Program parse();
 };

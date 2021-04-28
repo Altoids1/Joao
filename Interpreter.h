@@ -32,6 +32,9 @@ public:
 	Value get_var(std::string,ASTNode*);
 
 
+	//Construct an object and return it as a Value.
+	Value makeObject(std::string,std::vector<ASTNode*>&,ASTNode*);
+
 	void RuntimeError()
 	{
 		std::cout << "RUNTIME_ERROR: UNKNOWN!";

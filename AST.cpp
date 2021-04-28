@@ -2,6 +2,7 @@
 #include "AST.h"
 #include "Object.h"
 #include "Interpreter.h"
+#include "Parser.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
@@ -22,7 +23,6 @@ Value::~Value()
 	}
 	*/
 }
-
 
 std::string Value::to_string()
 {
@@ -72,9 +72,34 @@ Value ASTNode::resolve(Interpreter& interp)
 	return Value();
 }
 
+Value ASTNode::const_resolve(Parser& parse, bool loudfail)
+{
+	if (loudfail)
+	{
+		parse.ParserError(nullptr, "Attempted to const_resolve() an abstract ASTNode! (Type:" + class_name() + ")");
+	}
+	return Value();
+}
+
+Handle ASTNode::handle(Interpreter& interp)
+{
+	interp.RuntimeError(this, "Attempted to turn " + class_name() + " into a variable handle!");
+	return Handle();
+}
+
+Handle ASTNode::const_handle(Parser& parse)
+{
+	parse.ParserError(nullptr, "Attempted to const_handle() an abstract ASTNode! (Type:" + class_name() + ")");
+	return Handle();
+}
+
 
 //resolve()
 Value Literal::resolve(Interpreter& interp)
+{
+	return heldval;
+}
+Value Literal::const_resolve(Parser& parse, bool loudfail)
 {
 	return heldval;
 }
@@ -95,12 +120,30 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 	if (t_op != aOps::Assign)
 	{
-		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+		return rhs_val;
 	}
 
-	interp.override_var(id->get_str(), rhs_val, this);
+	if (id->class_name() == "Identifier")
+	{
+		Identifier* idfr = static_cast<Identifier*>(id);
+		interp.override_var(idfr->get_str(), rhs_val, this);
+	}
+	else if (id->class_name() == "MemberAccess")
+	{
+		Handle hndl = id->handle(interp);
 
-	return rhs_val;
+		if (!hndl.obj)
+			interp.RuntimeError(this, "MemberAccess failed to return object pointer!");
+		else
+			hndl.obj->set_property(interp, hndl.name, rhs_val);
+	}
+	else
+	{
+		interp.RuntimeError(this, "Unknown or underimplemented handle found at runtime!");
+	}
+
+	return rhs_val; // If anything.
 }
 
 Value LocalAssignmentStatement::resolve(Interpreter& interp)
@@ -113,9 +156,13 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
 	}
 
-	interp.set_var(id->get_str(), rhs_val, this);
+	interp.set_var(static_cast<Identifier*>(id)->get_str(), rhs_val, this);
 
 	return rhs_val;
+}
+Value LocalAssignmentStatement::const_resolve(Parser& parser, bool loudfail)
+{
+	return rhs->const_resolve(parser, loudfail);
 }
 
 Value UnaryExpression::resolve(Interpreter& interp)
@@ -154,6 +201,47 @@ Value UnaryExpression::resolve(Interpreter& interp)
 		interp.RuntimeError(*this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
 		return Value();
 	}
+}
+
+std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
+{
+	//step 1. get string
+	std::string suh = id->const_handle(parser).name;
+
+
+	//step 2. get value
+	Value ruh = rhs->const_resolve(parser, true);
+
+	switch (ty)
+	{
+	case(LocalType::Value):
+		break;
+	case(LocalType::Number):
+		if (ruh.t_vType == Value::vType::Integer || ruh.t_vType == Value::vType::Double)
+			break;
+		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
+		break;
+	case(LocalType::String):
+		if (ruh.t_vType == Value::vType::String)
+			break;
+		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
+		break;
+	case(LocalType::Boolean):
+		if (ruh.t_vType == Value::vType::Bool)
+			break;
+		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
+		break;
+	case(LocalType::Object):
+		if (ruh.t_vType == Value::vType::Object)
+			break;
+		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
+		break;
+	default:
+		parser.ParserError(nullptr, "Unknown or underimplemented LocalType enum detected!");
+	}
+
+	//step 3. profit!
+	return std::pair<std::string, Value>(suh,ruh);
 }
 
 Value BinaryExpression::resolve(Interpreter& interp)
@@ -604,4 +692,23 @@ Value BreakStatement::resolve(Interpreter& interp)
 {
 	interp.BREAK_COUNTER = breaknum;
 	return Value();
+}
+
+std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
+{
+	std::unordered_map<std::string, Value> svluh;
+
+	for (auto it = statements.begin(); it != statements.end(); ++it)
+	{
+		LocalAssignmentStatement* lassy = *it;
+
+		svluh.insert(lassy->resolve_property(parse));
+	}
+
+	return svluh;
+}
+
+Value Construction::resolve(Interpreter& interp)
+{
+	return interp.makeObject(type,args,this);
 }

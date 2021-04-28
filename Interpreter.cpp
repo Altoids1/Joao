@@ -1,6 +1,7 @@
 #include "Forward.h"
 #include "AST.h"
 #include "Interpreter.h"
+#include "Object.h"
 
 Interpreter::Interpreter()
 {
@@ -64,4 +65,19 @@ Function* Interpreter::get_func(std::string funkname, ASTNode *caller)
 	}
 	RuntimeError(*caller,"Failed to find function named " + funkname + "!");
 	return nullptr;
+}
+
+Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTNode* maker)
+{
+
+	if (!(prog->definedObjTypes.count(str)))
+		RuntimeError(maker, "Constructor attempts to instantiate unknown type!"); // FIXME: This should really be a Parsetime error
+	
+	std::vector<Value> eval_args;
+	for (size_t i = 0; i < args.size(); ++i)
+	{
+		eval_args.push_back(args[i]->resolve(*this));
+	}
+
+	return Value(prog->definedObjTypes[str]->makeObject(*this, eval_args));
 }
