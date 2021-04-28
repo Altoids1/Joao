@@ -1,5 +1,6 @@
 #include "Object.h"
 #include "Interpreter.h"
+#include "Parser.h"
 
 
 Value Object::get_property(Interpreter& interp, std::string name)
@@ -35,4 +36,25 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 	Function* fuh = base_funcs->at(name);
 	fuh->give_args(args, interp);
 	return fuh->resolve(interp);
+}
+
+
+void ObjectType::set_typeproperty(Parser& parse, std::string name, Value v)
+{
+	if (typeproperties.count(name))
+	{
+		parse.ParserError(nullptr, "Duplicate property of ObjectType detected!");
+	}
+
+	typeproperties[name] = v;
+}
+
+void ObjectType::set_typemethod(Parser& parse, std::string name, Function* f)
+{
+	if (typefuncs.count(name))
+	{
+		parse.ParserError(nullptr, "Duplicate method of ObjectType detected!");
+	}
+
+	typefuncs[name] = f;
 }

@@ -47,17 +47,34 @@ class ObjectType // Stores the default methods and properties of this type of Ob
 	std::unordered_map<std::string, Function*> typefuncs;
 	std::unordered_map<std::string, Value> typeproperties;
 public:
+	ObjectType(std::string n)
+		:object_type(n)
+	{
+
+	}
+	ObjectType(std::string n, std::unordered_map<std::string, Value> typep)
+		:object_type(n)
+		,typeproperties(typep)
+	{
+
+	}
 
 	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
 	Object* makeObject(Interpreter& interp, std::vector<Value> &args)
 	{
-		Object* o = new Object(&typeproperties, &typefuncs);
+		Object* o = new Object(&typeproperties, &typefuncs); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
 		if (typefuncs.count("#constructor"))
 		{
 			Function* fuh = typefuncs["#constructor"]; //fuh.
-			fuh->give_args(args, interp);
+			if(args.size())
+				fuh->give_args(args, interp);
 			fuh->resolve(interp);
 		}
 		return o;
 	}
+
+
+	//Passed Parser-by-reference as the Interpreter should never be calling this; ObjectTypes are static at runtime (for now, anyways!)
+	void set_typeproperty(Parser&,std::string, Value);
+	void set_typemethod(Parser&, std::string, Function*);
 };

@@ -123,18 +123,17 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 		if (list_of_types.count(cdstr))
 		{
-			ParserError(nullptr, "Duplicate class definition detected!"); // FIXME: Allow for this (with suppressable warnings anyways)
+			ParserError(nullptr, "Duplicate class definition detected!"); // FIXME: Allow for this (with perhaps suppressable warnings regardless)
 			continue;
 		}
-		list_of_types[cdstr] = nullptr; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
+
+		ObjectType* objtype = new ObjectType(cdstr, cdptr->resolve_properties(*this));
+
+		list_of_types[cdstr] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
 	}
 	for (auto it = fdefs.begin(); it != fdefs.end(); ++it) // Ask all the functions
 	{
 		Function* fptr = it->second;
-
-		if (fptr->class_name() == "Function")
-			std::cout << "cool.";
-
 
 		std::string fstr = it->first;
 
@@ -151,7 +150,16 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 			continue;
 		
 		if (!list_of_types.count(dir_f)) // If our type doesn't exist
-			list_of_types[dir_f] = nullptr; // Make it so!
+		{
+			ObjectType* objtype = new ObjectType(dir_f);
+			objtype->set_typemethod(*this, dir_f, fptr);
+			list_of_types[dir_f] = objtype; // Make it so!
+		}
+		else
+		{
+			list_of_types[dir_f]->set_typemethod(*this, dir_f, fptr);
+		}
+
 	}
 
 	std::cout << "Here's my class tree:\n";
@@ -160,6 +168,14 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 		std::cout << it->first << std::endl;
 	}
 
+	//2. Generate inheritences and stash them in the hashtables for easier retrieval
+		//FIXME
+	
+	//3. dump eet
+
+
+	t_program.definedObjTypes = list_of_types;
+	return;
 }
 
 ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we know for certain that there's no damned binary operator within it.
@@ -709,7 +725,7 @@ std::vector<LocalAssignmentStatement*> Parser::readClassDef(std::string name, in
 			{
 				//This pretty much has to be the end of the block; lets return our vector of shit.
 				tokenheader = where + 1;
-				std::cout << "Hello!\n";
+				//std::cout << "Hello!\n";
 				goto READ_CLASSDEF_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
 			}
 			break;
