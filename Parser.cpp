@@ -257,6 +257,18 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 		//This could be two things: a directory-scoped variable Identifier,
 		//or a Unary operator.
 
+		//FIXME: Later on, I am going to teach the Scanner how to give DirectoryTokens instead of constantly having to disambiguate symbol-word-symbol series like this.
+		//As a kludge to let me test the new object orientation, though, we shall for now implement New() directly into here, and have all unary operations not work. :blobderpy:
+
+		SymbolToken* st = static_cast<SymbolToken*>(t);
+
+		if(st->get_symbol()[0] != '/')
+			ParserError(t, "Unexpected or underimplemented unary or directory-access operation!");
+
+		lvalue = readConstruction(here, there);
+
+
+		/*
 		//check for the former
 		SymbolToken* st = static_cast<SymbolToken*>(t);
 		if (st->get_symbol()[0] == '/' || st->get_symbol()[0] == '.')
@@ -264,9 +276,10 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			lvalue = new Identifier(readIdentifierStr(false,here,here));
 			break;
 		}
+		*/
 
 		//Then try the latter
-		ParserError(t, "Unexpected Unary Operation!");
+		
 		break;
 	}
 	default:
@@ -745,4 +758,43 @@ READ_CLASSDEF_RETURN_ASTS:
 	std::cout << "Exiting Classdef with header pointed at " << std::to_string(tokenheader) << ".\n";
 #endif
 	return ASTs;
+}
+
+Construction* Parser::readConstruction(int here, int there)
+{
+	std::string dir = "";
+	
+	int where = here;
+	bool looking_for_slash = true;
+	for (; where <= there; ++where)
+	{
+		Token* t = tokens[where];
+		
+		switch (t->class_enum())
+		{
+		case(Token::cEnum::SymbolToken):
+		{
+			if (!looking_for_slash)
+				ParserError(t, "Unexpected symbol when reading New() statement!");
+
+			SymbolToken* st = static_cast<SymbolToken*>(t);
+			if (st->len != 1 || st->get_symbol()[0] != '/')
+			{
+				ParserError(t, "Unexpected symbol when reading New() statement!");
+			}
+
+			dir.push_back('/');
+			continue;
+		}
+		case(Token::cEnum::KeywordToken): // New, or not, I dunno, I'm a comment not a soothsayer
+		{
+			if (looking_for_slash)
+				ParserError(t, "Unexpected keyword when reading New() statement!");
+
+			
+		}
+
+		}
+	}
+
 }

@@ -694,6 +694,22 @@ Value BreakStatement::resolve(Interpreter& interp)
 	return Value();
 }
 
+Value MemberAccess::resolve(Interpreter& interp)
+{
+	Handle fr = front->handle(interp);
+	
+	Handle bk = back->handle(interp);
+
+	/*
+	if (fr.obj && !bk.obj)
+	{
+		return interp.get_prop(fr.obj, bk.name);
+	}
+	*/
+	interp.RuntimeError(this, "Unimplemented MemberAccess detected at runtime!");
+	return Value();
+}
+
 std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
 {
 	std::unordered_map<std::string, Value> svluh;

@@ -253,6 +253,7 @@ class Parser
 	ASTNode* readlvalue(int,int);
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int,bool);
 	ASTNode* readExp(int,int,bool);
+	Construction* readConstruction(int, int);
 
 	//Here-there-update; does not update if no last bracket found
 	std::vector<Expression*> readBlock(BlockType, int, int); 

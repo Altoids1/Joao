@@ -245,7 +245,8 @@ public:
 		While,
 		For,
 		Return,
-		Break
+		Break,
+		New
 	}t_key;
 
 	KeywordToken(uint32_t linenum, uint32_t sl, Key k)
@@ -360,7 +361,8 @@ class Scanner
 		{"while",KeywordToken::Key::While},
 		{"for",KeywordToken::Key::For},
 		{"return",KeywordToken::Key::Return},
-		{"break",KeywordToken::Key::Break}
+		{"break",KeywordToken::Key::Break},
+		{"New",KeywordToken::Key::New}
 	};
 	const std::unordered_map<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},
