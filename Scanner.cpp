@@ -8,8 +8,10 @@
 //PairSymbols are things like [ and ], { and }, etc.; things that must come in pairs.
 #define PAIRSYMBOL case '{':case '}':case '[':case ']':case '(':case ')'
 
-#define SYMBOL case '+':case '-':case '*':case '/':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '>':case '<':case '=':case '!':case '%':case '#'
-#define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '=':case '>':case '<':case '#'
+//SYMBOL on its own does not include '/' due to its special and oft-ambiguous nature. It is often still a symbol though, it's just that Scanner treats it special.
+#define SYMBOL case '+':case '-':case '*':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '>':case '<':case '=':case '!':case '%':case '#'
+
+#define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '=':case '>':case '<':case '#':case '/'
 
 //Defines used to mark what is a valid Word (incl. valid variable names)
 #define ascii_UPPER case 'A':case 'B':case 'C':case 'D':case 'E':case 'F':case 'G':case 'H':case 'I':case 'J':case 'K':case 'L':case 'M':case 'N':case 'O':case 'P':case 'Q':case 'R':case 'S':case 'T':case 'U':case 'V':case 'W':case 'X':case 'Y':case 'Z'
@@ -156,7 +158,7 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 	return it;
 }
 
-int Scanner::readWord(int it)
+std::string Scanner::getWord(int& it)
 {
 	std::string str = "";
 	for (; it < line.length(); ++it)
@@ -170,17 +172,20 @@ int Scanner::readWord(int it)
 			str.push_back(c);
 			continue;
 		TOKEN_SEPARATOR: // Oohp, we're done
-			makeWord(str);
-			return it;
+			return str;
 		case('"'): // Oy, you can't just be starting strings right after Word things!
 			ScannerError(it, ScanError::MalformedString);
-			return it;
+			return str;
 		default: // we're not smart enough to smell any other rubbish, just make the Word and leave if we get to this point.
-			makeWord(str);
-			return --it;
+			--it;
+			return str;
 		}
 	}
-	makeWord(str);
+}
+
+int Scanner::readWord(int it)
+{
+	makeWord(getWord(it));
 	return it;
 }
 
@@ -206,6 +211,90 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 
 	} while (!ifst.eof());
 	return line.length();
+}
+
+
+//Reads in a '/' character and disambiguates it between meaning a DirectoryToken, ConstructionToken, or a SymbolToken.
+int Scanner::readSlash(int it, std::ifstream& ifst)
+{
+/*
+Situations that prove that this is an operator: (easier)
+1. There's a space after it, or a tab or newline
+2. there's a second slash (indicating the floor division operator "//")
+
+Situations that prove this is a directory: (harder)
+1. The next token is a Word
+
+Situations that prove the programmer is an idiot:
+1. None of the above conditions end up being true
+*/
+	if (it + 1 == line.length())
+		return readSymbol(it, ifst);
+	switch (line[static_cast<size_t>(it + 1)])
+	{
+	case('/'):
+	TOKEN_SEPARATOR:
+		return readSymbol(it, ifst);
+	default:
+		break;
+	}
+
+	std::string dir = "/";
+	bool readword = true;
+	for (; it < line.length(); ++it, readword = !readword)
+	{
+		/*
+		If reading a word, we expect:
+		- A word
+		- "New"
+		If not reading a word, we expect:
+		- A '/'
+		- TOKEN_SEPARATOR
+		- Any symbol or pairsymbol, really
+		*/
+		if (readword)
+		{
+			std::string str = getWord(it); // Silently updates $it by reference
+			if (keywordhash.count(str) || typehash.count(str) || literalhash.count(str)) // Can't be a keyword
+			{
+				ScannerError(it, ScanError::MalformedDirectory);
+			}
+			if (str == "New") // Poor man's keyword
+			{
+				str.pop_back(); // Deletes the slash we got earlier
+				append(new ConstructionToken(linenum, syntactic_linenum, str));
+				return it;
+			}
+
+			dir.append(str);
+			continue;
+		}
+		else
+		{
+			switch (line[it])
+			{
+			case('/'):
+				dir.push_back('/');
+				continue;
+			TOKEN_SEPARATOR:
+			PAIRSYMBOL:
+			SYMBOL:
+				--it; // Marks that whoever called us ought to start reading at this char, the $it we're looking at right now
+				goto READSLASH_FINISH;
+				break;
+			default:
+				ScannerError(it, ScanError::MalformedDirectory);
+				break;
+			}
+		}
+	}
+	READSLASH_FINISH:
+	if (readword)
+		ScannerError(it, ScanError::MalformedDirectory);
+
+	Token* t = new DirectoryToken(linenum, syntactic_linenum, dir);
+	append(t);
+	return it;
 }
 
 void Scanner::scan(std::ifstream& ifst)
@@ -235,6 +324,9 @@ void Scanner::scan(std::ifstream& ifst)
 			}
 			DIGITS:
 				i = readNumber(i);
+				continue;
+			case('/'):
+				i = readSlash(i, ifst);
 				continue;
 			SYMBOL:
 				i = readSymbol(i, ifst); // the 2nd argument is strange but bear with me here

@@ -24,7 +24,9 @@ public:
 		PairSymbolToken,
 		KeywordToken,
 		LiteralToken,
-		LocalTypeToken
+		LocalTypeToken,
+		DirectoryToken,
+		ConstructionToken
 	};
 	uint32_t line;
 	uint32_t syntactic_line;
@@ -245,8 +247,7 @@ public:
 		While,
 		For,
 		Return,
-		Break,
-		New
+		Break
 	}t_key;
 
 	KeywordToken(uint32_t linenum, uint32_t sl, Key k)
@@ -292,6 +293,37 @@ public:
 
 	NAME_CONST_METHODS(LiteralToken);
 };
+
+//The Scanner actually vaguely knowing the language it scans for! Helps interpreter "/apple/green/rotten" as one big token, and disambiguates it in tokenspace from "/ apple / green / rotten"
+class DirectoryToken : public Token
+{
+public:
+	std::string dir;
+	DirectoryToken(uint32_t linenum, uint32_t sl, std::string k)
+	{
+		line = linenum;
+		syntactic_line = sl;
+		dir = k;
+	}
+
+	NAME_CONST_METHODS(DirectoryToken);
+};
+
+//Practically identical to a DirectoryToken in structure, just marks that it was /apple/rotten/New instead of /apple/rotten
+class ConstructionToken : public Token
+{
+public:
+	std::string dir;
+	ConstructionToken(uint32_t linenum, uint32_t sl, std::string k)
+	{
+		line = linenum;
+		syntactic_line = sl;
+		dir = k;
+	}
+
+	NAME_CONST_METHODS(ConstructionToken);
+};
+
 
 class Scanner
 {
@@ -344,7 +376,8 @@ class Scanner
 		UnknownCharacter,
 		MalformedNumber,
 		MalformedString,
-		MalformedLongComment
+		MalformedLongComment,
+		MalformedDirectory
 	};
 
 	uint32_t linenum = 0;
@@ -361,8 +394,7 @@ class Scanner
 		{"while",KeywordToken::Key::While},
 		{"for",KeywordToken::Key::For},
 		{"return",KeywordToken::Key::Return},
-		{"break",KeywordToken::Key::Break},
-		{"New",KeywordToken::Key::New}
+		{"break",KeywordToken::Key::Break}
 	};
 	const std::unordered_map<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},
@@ -410,6 +442,9 @@ class Scanner
 			just makes the Parser slower to accomodate horrendous style.
 			*/
 			break;
+		case(ScanError::MalformedDirectory):
+			msg = "SCANNER_ERROR: Malformed Directory!";
+			break;
 		default:
 		case(ScanError::Unknown):
 			std::cout << "SCANNER_ERROR: UNKNOWN!"; // This is an error at printing an error. So meta!
@@ -451,6 +486,9 @@ class Scanner
 	}
 	void makeWord(std::string str)
 	{
+		if (str.empty())
+			ScannerError();
+
 		//first check if this is a keyword
 		if (keywordhash.count(str))
 		{
@@ -481,12 +519,16 @@ class Scanner
 		WordToken* wt = new WordToken(linenum, syntactic_linenum, str);
 		append(wt);
 	}
+	std::string getWord(int&);
+
 	int readString(int);
 	int readNumber(int);
 	int readPairSymbol(int);
 	int readSymbol(int,std::ifstream&);
 	int readWord(int);
 	int readComment(int,std::ifstream&);
+	int readSlash(int,std::ifstream&);
+
 	static std::string precedence_tostring(OperationPrecedence op)
 	{
 		switch (op)
