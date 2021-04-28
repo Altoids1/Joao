@@ -34,7 +34,13 @@ public:
 
 	void dump()
 	{
-		std::cout << definedFunctions["/main"]->dump(0);
+		for (auto it = definedFunctions.begin(); it != definedFunctions.end(); ++it)
+		{
+			Function* fuh = it->second;
+
+			std::cout << fuh->dump(0);
+		}
+		
 	}
 
 	// I wanna point out that this is distinct from Interpreter's version of this function; it's a raw call to a function's name, directory data and all, while Interpreter's resolves scope first.

@@ -3,7 +3,7 @@
 void Program::construct_natives()
 {
 	//TEXT MANIPULATION
-	definedFunctions["print"] = &NativeFunction("print", [](std::vector<Value> args) // Lua-style print() function
+	definedFunctions["print"] = new NativeFunction("print", [](std::vector<Value> args) // Lua-style print() function
 	{
 		if (args.size())
 		{
@@ -16,11 +16,11 @@ void Program::construct_natives()
 		std::cout << "\n";
 		return Value();
 	});
-	definedFunctions["tostring"] = &NativeFunction("tostring", [](std::vector<Value> args)
+	definedFunctions["tostring"] = new NativeFunction("tostring", [](std::vector<Value> args)
 	{
 		return Value(args[0].to_string());
 	});
-	definedFunctions["tointeger"] = &NativeFunction("tointeger", [](std::vector<Value> args)
+	definedFunctions["tointeger"] = new NativeFunction("tointeger", [](std::vector<Value> args)
 	{
 		if(!args.size())
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
@@ -42,9 +42,9 @@ void Program::construct_natives()
 		}
 		return Value(args[0].to_string());
 	});
-	definedFunctions["void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud"] = &NativeFunction("void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud", [](std::vector<Value> args)
+	definedFunctions["void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud"] = new NativeFunction("void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud", [](std::vector<Value> args)
 	{
-		return Value(7);
+		return Value(7); // No I'm never removing this function fuck you
 	});
 
 

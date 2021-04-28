@@ -5,7 +5,7 @@
 #define MATH_E 2.71828182845904523536
 #define PI 3.14159265358979323846
 
-#define NATIVE_FUNC(name) definedFunctions[##name] = &NativeFunction(##name, [](std::vector<Value> args)
+#define NATIVE_FUNC(name) definedFunctions[##name] = static_cast<Function*>(new NativeFunction(##name, [](std::vector<Value> args)
 
 void Program::construct_math_library()
 {
@@ -25,7 +25,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("acos")
 	{
 		Value arg = args[0];
@@ -40,7 +40,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("asin")
 	{
 		Value arg = args[0];
@@ -55,7 +55,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("atan")
 	{
 		Value arg = args[0];
@@ -70,7 +70,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("ceil")
 	{
 		Value arg = args[0];
@@ -85,7 +85,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 
 	NATIVE_FUNC("cos")
 	{
@@ -101,7 +101,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("deg")
 	{
 		Value arg = args[0];
@@ -116,7 +116,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("exp")
 	{
 		Value arg = args[0];
@@ -135,7 +135,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("floor")
 	{
 		Value arg = args[0];
@@ -150,7 +150,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("max")//FIXME: Use BinaryOperation(bOp::Greater) instead of C++'s greater-than operator, for overloading and not-writing-things-in-many-places.
 	{
 		if (args.size() == 0)
@@ -190,7 +190,7 @@ void Program::construct_math_library()
 			}
 		}
 		return biggest;
-	});
+	}));
 	NATIVE_FUNC("min")//FIXME: Use BinaryOperation(bOp::LessThan) instead of C++'s less-than operator, for overloading and not-writing-things-in-many-places.
 	{
 		if (args.size() == 0)
@@ -230,7 +230,7 @@ void Program::construct_math_library()
 			}
 		}
 		return smallest;
-	});
+	}));
 	NATIVE_FUNC("rad")
 	{
 		Value arg = args[0];
@@ -245,7 +245,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 
 	//FIXME: Add random number generator functions here!
 
@@ -263,7 +263,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("sqrt")
 	{
 		Value arg = args[0];
@@ -278,7 +278,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("tan")
 	{
 		Value arg = args[0];
@@ -293,7 +293,7 @@ void Program::construct_math_library()
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
-	});
+	}));
 	NATIVE_FUNC("ult")
 	{
 		Value lhs = args[0];
@@ -303,7 +303,7 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
 		return Value(static_cast<uint32_t>(lhs.t_value.as_int) < static_cast<uint32_t>(rhs.t_value.as_int));
-	});
+	}));
 }
 
 #undef NATIVE_FUNC
