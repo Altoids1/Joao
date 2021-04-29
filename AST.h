@@ -670,6 +670,9 @@ public:
 	}
 
 	virtual const std::string class_name() const override { return "Construction"; }
-
+	virtual std::string dump(int indent) override
+	{
+		return std::string(indent, ' ') + "Construction, type: " + type + "\n";
+	}
 	virtual Value resolve(Interpreter&) override;
 };

@@ -21,11 +21,18 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 		{
 			//Expecting: a bunch of classdefs and funcdefs
 			//Both of these start with a directory that ends in a '/'Name, so lets read that in
-			std::string dir_name = read_dir_name(); // This, as a side effect, increments tokenheader up to pointing at the first thing that ain't this directory thing.
+			Token* t = tokens[tokenheader];
+			if (t->class_enum() != Token::cEnum::DirectoryToken)
+			{
+				ParserError(t, "Unexpected Token at global-scope definition when Directory was expected!");
+			}
 
+			std::string dir_name = static_cast<DirectoryToken*>(t)->dir;
+
+			++tokenheader;
 			//The next token has to be either a '(', which disambiguates us into being a funcdef,
 			//or a '{', which brings us towards being a classdef.
-			Token* t = tokens[tokenheader];
+			t = tokens[tokenheader];
 			if (t->class_enum() != Token::cEnum::PairSymbolToken)
 			{
 				ParserError(t, "Unexpected Token at global-scope definition!");
@@ -254,36 +261,22 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 		break;
 	case(Token::cEnum::SymbolToken):
 	{
-		//This could be two things: a directory-scoped variable Identifier,
-		//or a Unary operator.
-
-		//FIXME: Later on, I am going to teach the Scanner how to give DirectoryTokens instead of constantly having to disambiguate symbol-word-symbol series like this.
-		//As a kludge to let me test the new object orientation, though, we shall for now implement New() directly into here, and have all unary operations not work. :blobderpy:
+		//This can basically only be a unary operator.
 
 		SymbolToken* st = static_cast<SymbolToken*>(t);
 
-		if(st->get_symbol()[0] != '/')
-			ParserError(t, "Unexpected or underimplemented unary or directory-access operation!");
-
-		lvalue = readConstruction(here, there);
-
-
-		/*
-		//check for the former
-		SymbolToken* st = static_cast<SymbolToken*>(t);
-		if (st->get_symbol()[0] == '/' || st->get_symbol()[0] == '.')
-		{
-			lvalue = new Identifier(readIdentifierStr(false,here,here));
-			break;
-		}
-		*/
-
-		//Then try the latter
-		
+		ParserError(t, "Unexpected or underimplemented unary operation!");
+		break;
+	}
+	case(Token::cEnum::ConstructionToken):
+	{
+		ConstructionToken ct = *static_cast<ConstructionToken*>(t);
+		lvalue = new Construction(ct.dir, {}); // FIXME: Allow for constructors to take operands
+		tokenheader = here + 3; // Jump over the impending (). Hackish!
 		break;
 	}
 	default:
-		ParserError(t, "Unexpected Token when reading Expression! " + t->class_name());
+		ParserError(t, "Unexpected Token when reading lvalue! " + t->class_name());
 		break;
 	}
 
@@ -762,6 +755,7 @@ READ_CLASSDEF_RETURN_ASTS:
 
 Construction* Parser::readConstruction(int here, int there)
 {
+	return nullptr;
 	std::string dir = "";
 	
 	int where = here;

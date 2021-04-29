@@ -4,8 +4,8 @@
 std::string Directory::DotDot(std::string dir) // Go up one directory from this directory, i.e. "/apple/pear" -> "/apple"
 {
 	size_t lastslash = dir.find_last_of('/');
-	if (lastslash == std::string::npos)
-		return "";
+	if (lastslash == std::string::npos || lastslash == 0)
+		return "/";
 	return dir.erase(lastslash, std::string::npos);
 }
 

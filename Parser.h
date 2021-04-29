@@ -52,7 +52,7 @@ class Parser
 		{BinaryExpression::bOps::Divide,Scanner::OperationPrecedence::Factor},
 		//
 		{BinaryExpression::bOps::FloorDivide,Scanner::OperationPrecedence::Factor},
-		{BinaryExpression::bOps::Exponent,Scanner::OperationPrecedence::Factor},
+		{BinaryExpression::bOps::Exponent,Scanner::OperationPrecedence::Power},
 		{BinaryExpression::bOps::Modulo,Scanner::OperationPrecedence::Factor},
 		//
 		{BinaryExpression::bOps::BitwiseAnd,Scanner::OperationPrecedence::Bitwise},
@@ -86,62 +86,6 @@ class Parser
 
 	int tokenheader; // Which Token # are we on?
 	//This whole thing is one big Turing machine, reading a roll of tokens in sequence, so having a master counter is important to the iteration.
-
-	std::string read_dir_name()
-	{
-		std::string str = "";
-
-		bool looking_for_slash = true; // Part of the alternating flow control of, looking for a slash then a word then a slash then a word.
-		Token* t = &Token();
-		for (; tokenheader < tokens.size(); ++tokenheader)
-		{
-			t = tokens[tokenheader];
-			switch (t->class_enum())
-			{
-			case(Token::cEnum::SymbolToken):
-			{
-				if (!looking_for_slash)
-				{
-					ParserError(t, "Unexpected symbol found in directory path!");
-					return str;
-				}
-				SymbolToken st = *static_cast<SymbolToken*>(t); // Allah
-				char* symb = st.get_symbol();
-				if (symb[0] != '/' || symb[1] != '\0')
-				{
-					ParserError(t, "Unexpected symbol found in directory path! (Expecting '/', got something else)");
-				}
-				//So, slash found, I guess.
-				str.push_back('/');
-				//Consume it by flipping the "looking_for_slash bit" and continuing.
-				looking_for_slash = false;
-				continue;
-			}
-			case(Token::cEnum::WordToken):
-			{
-				if (looking_for_slash)
-				{
-					ParserError(t, "Unexpected word found in directory path!");
-					return str;
-				}
-
-				// I can't think of any other condition that'd make this bad input, so...
-				WordToken wt = *static_cast<WordToken*>(t);
-				str.append(wt.word);
-
-				looking_for_slash = true;
-				continue;
-			}
-			default: // Found something weird!
-				//We'll optimistically assume the weird new thing is supposed to be there and just return the directory string as we have it.
-				return str;
-			}
-		}
-		//... you can't end a program with, fucking, a directory-name thing.
-		ParserError(t, "Unfinished block near directory path!");
-
-		return str;
-	}
 
 	BinaryExpression::bOps readbOpOneChar (char* c, Token* t)
 	{

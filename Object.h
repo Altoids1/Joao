@@ -17,9 +17,10 @@ public:
 	//Attempts to queue this object for garbage collection. TODO: Make garbage collection for objects exist.
 	void qdel();
 
-	Object(std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
+	Object(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
 		:base_properties(puh),
-		base_funcs(fuh)
+		base_funcs(fuh),
+		object_type(objty)
 	{
 
 	}
@@ -62,7 +63,7 @@ public:
 	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
 	Object* makeObject(Interpreter& interp, std::vector<Value> &args)
 	{
-		Object* o = new Object(&typeproperties, &typefuncs); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
+		Object* o = new Object(object_type,&typeproperties, &typefuncs); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
 		if (typefuncs.count("#constructor"))
 		{
 			Function* fuh = typefuncs["#constructor"]; //fuh.

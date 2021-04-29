@@ -71,7 +71,7 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 {
 
 	if (!(prog->definedObjTypes.count(str)))
-		RuntimeError(maker, "Constructor attempts to instantiate unknown type!"); // FIXME: This should really be a Parsetime error
+		RuntimeError(maker, "Constructor attempts to instantiate unknown type! (" + str + ")"); // FIXME: This should really be a Parsetime error
 	
 	std::vector<Value> eval_args;
 	for (size_t i = 0; i < args.size(); ++i)
