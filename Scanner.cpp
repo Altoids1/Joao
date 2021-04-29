@@ -270,8 +270,8 @@ Situations that prove the programmer is an idiot:
 			}
 			if (str == "New") // Poor man's keyword
 			{
-				str.pop_back(); // Deletes the slash we got earlier
-				append(new ConstructionToken(linenum, syntactic_linenum, str));
+				dir.pop_back(); // Gets rid of the '/' we got earlier
+				append(new ConstructionToken(linenum, syntactic_linenum, dir));
 				--it;
 				return it;
 			}

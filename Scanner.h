@@ -323,7 +323,10 @@ public:
 		syntactic_line = sl;
 		dir = k;
 	}
-
+	virtual std::string dump() override
+	{
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" CONSTRUCTION: ") + dir;
+	}
 	NAME_CONST_METHODS(ConstructionToken);
 };
 
