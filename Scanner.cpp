@@ -160,6 +160,7 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 
 std::string Scanner::getWord(int& it)
 {
+	//std::cout << "Starting getWord at " << std::to_string(it) << std::endl;
 	std::string str = "";
 	for (; it < line.length(); ++it)
 	{
@@ -172,20 +173,24 @@ std::string Scanner::getWord(int& it)
 			str.push_back(c);
 			continue;
 		TOKEN_SEPARATOR: // Oohp, we're done
+			++it;
 			return str;
 		case('"'): // Oy, you can't just be starting strings right after Word things!
 			ScannerError(it, ScanError::MalformedString);
+			++it;
 			return str;
 		default: // we're not smart enough to smell any other rubbish, just make the Word and leave if we get to this point.
-			--it;
+			//std::cout << "Returning getWord with it at " << std::to_string(it) << std::endl;
 			return str;
 		}
 	}
+	return str;
 }
 
 int Scanner::readWord(int it)
 {
 	makeWord(getWord(it));
+	--it;
 	return it;
 }
 
@@ -240,6 +245,7 @@ Situations that prove the programmer is an idiot:
 	}
 
 	std::string dir = "/";
+	++it;
 	bool readword = true;
 	for (; it < line.length(); ++it, readword = !readword)
 	{
@@ -254,7 +260,10 @@ Situations that prove the programmer is an idiot:
 		*/
 		if (readword)
 		{
+			//std::cout << "Starting to read word of dir at " << std::to_string(it) << std::endl;
 			std::string str = getWord(it); // Silently updates $it by reference
+			//std::cout << "Word it got was " << str << std::endl;
+
 			if (keywordhash.count(str) || typehash.count(str) || literalhash.count(str)) // Can't be a keyword
 			{
 				ScannerError(it, ScanError::MalformedDirectory);
@@ -263,14 +272,21 @@ Situations that prove the programmer is an idiot:
 			{
 				str.pop_back(); // Deletes the slash we got earlier
 				append(new ConstructionToken(linenum, syntactic_linenum, str));
+				--it;
 				return it;
+			}
+			if (str == "")
+			{
+				ScannerError(it, ScanError::MalformedDirectory);
 			}
 
 			dir.append(str);
+			--it; // Decrement to help against incoming increment
 			continue;
 		}
 		else
 		{
+			//std::cout << "Starting to read slash of dir at " << std::to_string(it) << std::endl;
 			switch (line[it])
 			{
 			case('/'):
@@ -288,7 +304,12 @@ Situations that prove the programmer is an idiot:
 			}
 		}
 	}
-	READSLASH_FINISH:
+READSLASH_FINISH:
+	if (dir == "/")
+	{
+		Token* t = new SymbolToken(linenum, syntactic_linenum, '/');
+		return it;
+	}
 	if (readword)
 		ScannerError(it, ScanError::MalformedDirectory);
 
