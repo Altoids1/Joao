@@ -1,55 +1,65 @@
 Here is the complete syntax of João in extended BNF. As usual in extended BNF, {A} means 0 or more As, and [A] means an optional A. Brace characters are escaped with single-quotes.
 	
 	program ::= {classdef | funcdef}
-
-	block ::= {stat} [retstat]
-
-	stat ::=  ‘;’ | 
-		 varstat ';'| 
-		 functioncall ';'| 
-		 break';' | 
-		 while(exp)'{'block'}' | 
-		 if(exp)'{'block'}' {elseif(exp)'{'block'}'} [else'{'block'}']|
-		 for([varstat]';'[exp]';'[exp])'{'block'}' |
-
-	retstat ::= return exp ';'
-
-	directory ::= {'/'Name}
 	
-	classdef ::=  {directory}'/'Name'{'{varstat}'}'
+	classdef ::= directory '{' {varstat} '}'
 	
-	funcdef ::= {directory}'/'Name‘(’ [parlist] ‘){'block'}'
-
-	varstat ::= var assignop exp
-
-	var ::= (('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name) |'./' Name | '/' Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name
-
-	namelist ::= Name {‘,’ Name}
-
-	explist ::= exp {‘,’ exp}
-
-	exp ::=  null | false | true | Numeral | LiteralString | 
-		 prefixexp | tableconstructor | exp binop exp | unop exp 
-
-	prefixexp ::= var | functioncall | ‘(’ exp ‘)’
-
-	functioncall ::=  var args
-
-	args ::=  ‘(’ [explist] ‘)’
-
-	parlist ::= namelist [‘,’ ‘...’] | ‘...’
-
-	tableconstructor ::= ‘{’ [fieldlist] ‘}’
-
-	fieldlist ::= field {‘,’ field} [‘,’]
-
-	field ::= ‘[’ exp ‘]’ ‘=’ exp | Name ‘=’ exp | exp
+	funcdef ::= directory '(' [parlist] '){' block '}'
+	
+	directory ::= '/'{Name'/'} Name
+	
+	parlist ::= Name {','Name} [',']
+	
+	varstat :: var assignop (exp | directory '/New(' [explist] ')')  ';'
+	
+	block ::= {stat}
+	
+	stat ::=  ';' |
+		varstat ';' |
+		functioncall ';' |
+		'break' [PositiveInteger] ';' |
+		'while(' exp '){' block '}' |
+		'if(' exp '){' block '}' {'elseif(' exp '){' block '}'} ['else(' exp '){' block '}'] |
+		'for('[varstat | exp] ';' [exp] ';' [varstat | exp] '){' block '}
+	
+	var ::= (('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name) |
+		var_access
+	
+	var_access ::= scoped_access | var_access property | var_access element
+	
+	scoped_access ::= './' Name |
+		{'../'}'../' Name |
+		'/' Name |
+		Name
+	
+	property ::= {'.' Name }
+	
+	element ::= {'[' exp ']'}
+	
+	explist ::= exp {, exp}
+	
+	exp ::= comparison {('&&' | '||' | '^^') comparison}
+	
+	comparison ::= bitwise {(‘<’ | ‘<=’ | ‘>’ | ‘>=’ | ‘==’ | ‘!=’) bitwise}
+	
+	bitwise ::= concat {(‘^’ | ‘%’ | ‘&’ | ‘~’ | ‘|’ | ‘>>’ | ‘<<’) concat}
+	
+	concat ::= term {'..' term}
+	
+	term ::= factor {(‘+’ | ‘-’) factor}
+	
+	factor ::= unary {(‘*’ | ‘/’ | ‘//’) unary}
+	
+	unary ::= unop power
+	
+	power ::= {lvalue '^'} lvalue
+	
+	lvalue ::= 'null' | 'false' | 'true' | Numeral | LiteralString |
+			tableconstructor | var_access | '(' exp ')'
+	
+	tableconstructor ::= '{' [exp] {',' exp} '}' |
+		'{' [Name '=' exp] {',' [Name '=' exp] '}'
 	
 	assignop ::= '=' | '+=' | '-=' | '*=' | '/='
 
-	binop ::=  ‘+’ | ‘-’ | ‘*’ | ‘/’ | ‘//’ | ‘^’ | ‘%’ | 
-		 ‘&’ | ‘~’ | ‘|’ | ‘>>’ | ‘<<’ | ‘..’ | 
-		 ‘<’ | ‘<=’ | ‘>’ | ‘>=’ | ‘==’ | ‘!=’ | 
-		 '&&' | '||' | '~~'
-
-	unop ::= ‘-’ | '!' | ‘#’ | ‘~’ | '../' | './'
+	unop ::= ‘-’ | '!' | ‘#’ | ‘~’
