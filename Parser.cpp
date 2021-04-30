@@ -254,8 +254,10 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 #endif
 		break;
 	}
+	case(Token::cEnum::GrandparentToken):
+	case(Token::cEnum::ParentToken):
 	case(Token::cEnum::WordToken): //functioncall | var_access
-		lvalue = new Identifier(readIdentifierStr(true,here,here));
+		lvalue = new Identifier(readIdentifierStr(here,there));
 		break;
 	case(Token::cEnum::EndLineToken):
 		ParserError(t, "Endline found when lvalue was expected!");
@@ -482,7 +484,7 @@ LocalAssignmentStatement* Parser::readLocalAssignment(LocalType ty, int here, in
 		return nullptr;
 	}
 
-	Identifier* id = new Identifier(readIdentifierStr(true, here+1, here+1));
+	Identifier* id = new Identifier(readName(here+1));
 
 	AssignmentStatement::aOps aesop = readaOp(here+2);
 
@@ -660,23 +662,12 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				./x = 3; ## Set property of object we're in called x to 3
 				x = 3; ## Ambiguous, sets lowest-scoped x available to 3
 			*/
-
-			SymbolToken st = *static_cast<SymbolToken*>(t);
-
-			if (st.get_symbol()[0] == '/' && st.len == 1)
-			{
-				ParserError(t, "Non-local scope assignments are not implemented! " + t->class_name());
-			}
-			else
-			{
-				ParserError(t, "Unexpected or unimplemented symbol found when traversing Block!");
-			}
 		}
 		case(Token::cEnum::WordToken):
 		{
 			//CASE 1. local/property assign
 
-			Identifier* id = new Identifier(readIdentifierStr(true,where,where));
+			Identifier* id = new Identifier(readIdentifierStr(where, tokens.size() - 1));
 
 			AssignmentStatement::aOps aesop = readaOp();
 

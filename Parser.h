@@ -254,26 +254,37 @@ class Parser
 		return AssignmentStatement::aOps::NoOp;
 	}
 
-	std::string readIdentifierStr(bool is_word, int here, int there) // false if token is pointing at symbol
+	// Name | ./Name | {../}Name
+	std::string readIdentifierStr( int here, int there)
 	{
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readIdentifierStr starting at " << std::to_string(here) << std::endl;
 #endif
 		Token* t = tokens[here];
 
-		if (!is_word)
-		{
-			ParserError(t, "Non-local identifiers are not implemented!");
-			return "";
-		}
 		assert(t->class_enum() == Token::cEnum::WordToken);
 
 		WordToken wt = *static_cast<WordToken*>(t);
 		tokenheader = here + 1;
-#ifdef LOUD_TOKENHEADER
-		std::cout << "readIdentifierStr setting tokenheader to " << std::to_string(tokenheader) << std::endl;
-#endif
+
 		return wt.word;
+	}
+
+	std::string readName(int here)
+	{
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readName starting at " << std::to_string(here) << std::endl;
+#endif
+		Token* t = tokens[here];
+		if (t->class_enum() != Token::cEnum::WordToken)
+		{
+			ParserError(t, "Unexpected token WordToken was expected for Name!");
+		}
+		tokenheader = here + 1;
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readName setting tokenheader to " << std::to_string(tokenheader) << std::endl;
+#endif
+		return static_cast<WordToken*>(t)->word;
 	}
 
 	// If no args, assumes tokenheader is pointing where it should. Increments tokenheader when given no args.
