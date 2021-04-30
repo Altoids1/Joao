@@ -1,6 +1,21 @@
 #pragma once
 #include "Forward.h"
 
+template <typename _Tysc>
+struct Scopelet
+{
+	std::unordered_map < std::string, _Tysc*> table;
+	std::string scopename;
+	Scopelet()
+	{
+
+	}
+	Scopelet(std::string name)
+	{
+		scopename = name;
+	}
+};
+
 template <typename _Ty>
 class Scope {
 	/*
@@ -9,23 +24,12 @@ class Scope {
 	2. This can be used by the Interpreter to keep track of scoped variables (so, Values), allowing for their access and dismissal as it enters and exits various Scopes.
 	*/
 
-	struct Scopelet
-	{
-		std::unordered_map < std::string, _Ty*> table;
-		std::string scopename;
-		Scopelet(std::string name)
-		{
-			scopename = name;
-		}
-	};
+	std::forward_list<Scopelet<_Ty>*> stack;
 
+	Scopelet<_Ty>* top_scope = nullptr; //The backmost scoplet of the stack.
 
-	std::forward_list<Scopelet*> stack;
-
-	Scopelet* top_scope = nullptr; //The backmost scoplet of the stack.
-
-
-	void blank_table(Scope::Scopelet* sc)
+public:
+	static void blank_table(Scopelet<_Ty>* sc)
 	{
 		for (auto it = sc->table.begin(); it != sc->table.end(); ++it)
 		{
@@ -34,12 +38,9 @@ class Scope {
 		sc->table = {};
 	}
 
-public:
-
-
 	Scope(std::string sc)
 	{
-		Scopelet* base = new Scopelet(sc);
+		Scopelet<_Ty>* base = new Scopelet<_Ty>(sc);
 		top_scope = base;
 		stack.push_front(base);
 	}
@@ -53,7 +54,7 @@ public:
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 		for (auto it = stack.begin(); it != stack.end(); ++it)
 		{
-			Scopelet sc = **it;
+			Scopelet<_Ty> sc = **it;
 			//std::cout << "Looking at scope " << sc.scopename << "...\n";
 
 			if (sc.table.count(name))
@@ -81,7 +82,7 @@ public:
 	{
 		for (auto it = stack.begin(); it != stack.end(); ++it)
 		{
-			Scopelet* sc = *it;
+			Scopelet<_Ty>* sc = *it;
 			//std::cout << "Looking at scope " << sc.scopename << "...\n";
 
 			if (sc->table.count(name))
@@ -99,7 +100,7 @@ public:
 	void push(std::string name = "") // Add a new stack layer
 	{
 		//std::cout << "Creating new scope layer called " << name << "...\n";
-		Scopelet* newsc = new Scopelet(name);
+		Scopelet<_Ty>* newsc = new Scopelet<_Ty>(name);
 		stack.push_front(newsc);
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 	}
@@ -113,7 +114,7 @@ public:
 			return; // fails.
 		}
 
-		Scopelet* popped = stack.front();
+		Scopelet<_Ty>* popped = stack.front();
 
 		blank_table(popped);
 		delete popped;

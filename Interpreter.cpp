@@ -23,49 +23,145 @@ Value Interpreter::execute(Program& program)
 	return main->resolve(*this);
 }
 
-void Interpreter::set_var(std::string varname, Value val, ASTNode* setter)
+void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
 {
+	Scope<Value>* varscope = blockscope.top();
 	//std::cout << "Setting variable " + varname + " to value " + std::to_string(val.t_value.as_int) + "\n";
-	varscope.set(varname, val);
+	varscope->set(varname, val);
 }
 
 void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 {
-	//std::cout << "Overriding variable " + varname + " to value " + std::to_string(val.t_value.as_int) + "\n";
-	if (!varscope.Override(varname, val))
+	//First try blockscope
+	Scope<Value>* varscope = blockscope.top();
+	Value* vptr = varscope->get(varname);
+	if (vptr)
 	{
-		RuntimeError(setter, "Unable to override blockscope variable with new value!");
+		varscope->Override(varname, val);
+		return;
 	}
-	return;
+
+	//Then try objectscope
+	Object* objscope = objectscope.top();
+	if (objscope)
+	{
+		vptr = objscope->has_property(*this, varname);
+		if (vptr)
+		{
+			objscope->set_property(*this, varname, val);
+			return;
+		}
+	}
+
+	//Then try globalscope
+	if (globalscope.table.count(varname))
+	{
+		Value* vuh = new Value(val);
+		globalscope.table[varname] = vuh;
+		return;
+	}
+
+	//Give up. How the hell did we even fail to set it in globalscope?
+	RuntimeError(*setter, "Unable to override value of variable named " + varname + "!");
 }
 
 Value Interpreter::get_var(std::string varname, ASTNode *getter)
 {
-	Value* vptr = varscope.get(varname);
-	if (vptr == nullptr)
+	//First try blockscope
+	Scope<Value>* varscope = blockscope.top();
+	Value* vptr = varscope->get(varname);
+	if (vptr)
+		return Value(*vptr);
+
+	//Then try objectscope
+	Object* objscope = objectscope.top();
+	if(objscope)
 	{
-		RuntimeError(*getter,"Unable to access variable named " + varname + "!");
-		return Value();
+		vptr = objscope->has_property(*this, varname);
+		if (vptr)
+			return Value(*vptr);
 	}
-	return *vptr;
+
+	//Then try globalscope
+	if (globalscope.table.count(varname))
+	{
+		return globalscope.table.at(varname);
+	}
+
+	//Give up :(
+	RuntimeError(*getter,"Unable to access variable named " + varname + "!");
+	return Value();
 }
 
 Function* Interpreter::get_func(std::string funkname, ASTNode *caller)
 {
-
-	std::string objscope = objscopestr;
-	while (true)
+	//Try to find an objectscope function with this name
+	Object* obj = objectscope.top();
+	if (obj)
 	{
-		Function* f = prog->get_func(objscopestr + "/" + funkname); // Try the localest obj scope
-		if (f != nullptr) return f; // if we find it, cool
-		//else, go up a scope and try again!
-
-		if (objscope == "") break; // If we've already hit root, then just abort.
-		objscope = Directory::DotDot(objscope);
+		Function* method = obj->get_method(*this, funkname);
+		if (method)
+			return method;
 	}
+
+	//Try to find a global function with this name
+	if (prog->definedFunctions.count(funkname))
+	{
+		return prog->get_func(funkname);
+	}
+
 	RuntimeError(*caller,"Failed to find function named " + funkname + "!");
 	return nullptr;
 }
+
+Value Interpreter::get_property(std::string str, ASTNode* getter)
+{
+	Object* obj = objectscope.top();
+	if (obj)
+	{
+		return obj->get_property(*this,str);
+	}
+	RuntimeError(getter, "Failed to get property of Parent objectscope!");
+	return Value();
+}
+
+Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* getter)
+{
+	Object* obj = objectscope.top();
+	if(!obj)
+		RuntimeError(getter, "Cannot get grandparent property in classless objectscope!");
+
+	std::string dir = obj->object_type;
+
+	for (unsigned int i = 0; i < depth; ++i)
+	{
+		std::string dir = Directory::DotDot(dir);
+	}
+	if (dir == "/")
+	{
+		RuntimeError(getter, "Attempted to get grandparent of root directory!");
+		return Value();
+	}
+
+	if (!prog->definedObjTypes.count(dir))
+	{
+		RuntimeError(getter, "Failed to find objecttype of type " + dir + " during GrandparentAccess!"); // This'll be a weird error to get once inheritence is functional
+		return Value();
+	}
+
+	ObjectType* objt = prog->definedObjTypes.at(dir);
+	return objt->get_typeproperty(*this, str, getter);
+	
+	
+	if (obj)
+	{
+		return obj->get_property(*this, str);
+	}
+	RuntimeError(getter, "Failed to get property of Parent objectscope!");
+	return Value();
+}
+
+
 
 Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTNode* maker)
 {

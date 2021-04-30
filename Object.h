@@ -10,9 +10,14 @@ class Object
 	std::unordered_map<std::string, Function*>* base_funcs; // Pointer to object's base functions.
 public:
 	std::string object_type; // A string denoting the directory position of this object.
+
+	Value* has_property(Interpreter&, std::string);
+
 	Value get_property(Interpreter&, std::string);
 	void set_property(Interpreter&, std::string, Value);
 	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
+
+	Function* get_method(Interpreter&, std::string);
 
 	//Attempts to queue this object for garbage collection. TODO: Make garbage collection for objects exist.
 	void qdel();
@@ -72,6 +77,16 @@ public:
 			fuh->resolve(interp);
 		}
 		return o;
+	}
+
+	Value get_typeproperty(Interpreter& interp, std::string str, ASTNode* getter)
+	{
+		if(!typeproperties.count(str))
+		{ 
+			interp.RuntimeError(getter, "Failed to access property " + str + " of grandparent " + object_type + "!");
+			return Value();
+		}
+		return typeproperties.at(str);
 	}
 
 

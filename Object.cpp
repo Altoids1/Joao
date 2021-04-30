@@ -2,13 +2,22 @@
 #include "Interpreter.h"
 #include "Parser.h"
 
+Value* Object::has_property(Interpreter& interp, std::string name)
+{
+	if (properties.count(name))
+		return &(properties.at(name));
+	if (base_properties->count(name))
+		return &(base_properties->at(name));
 
+	return nullptr;
+}
 Value Object::get_property(Interpreter& interp, std::string name)
 {
 	if (properties.count(name))
 		return properties.at(name);
 	if (base_properties->count(name))
 		return base_properties->at(name);
+	
 	interp.RuntimeError(nullptr, "Unable to access property of object!");
 	return Value();
 }
@@ -36,6 +45,16 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 	Function* fuh = base_funcs->at(name);
 	fuh->give_args(args, interp);
 	return fuh->resolve(interp);
+}
+
+//If it fails, it simply returns a nullptr w/o throwing a Runtime. Part of scope resolution of function calls.
+Function* Object::get_method(Interpreter& interp, std::string name)
+{
+	if (base_funcs->count(name))
+	{
+		return base_funcs->at(name);
+	}
+	return nullptr;
 }
 
 

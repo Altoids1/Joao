@@ -8,6 +8,7 @@
 #include <vector>
 #include <forward_list>
 #include <list>
+#include <stack>
 
 //Debug flags
 #define LOUD_SCANNER // Uncomment if you want Scanner to be verbose about what it is doing.
