@@ -27,7 +27,9 @@ public:
 		LiteralToken,
 		LocalTypeToken,
 		DirectoryToken,
-		ConstructionToken
+		ConstructionToken,
+		ParentToken,
+		GrandparentToken
 	};
 	uint32_t line;
 	uint32_t syntactic_line;
@@ -331,6 +333,29 @@ public:
 	NAME_CONST_METHODS(ConstructionToken);
 };
 
+class ParentToken : public Token
+{
+
+public:
+	ParentToken(uint32_t l, uint32_t sl)
+		:Token(l,sl)
+	{
+
+	}
+	NAME_CONST_METHODS(ParentToken);
+};
+
+class GrandparentToken : public Token
+{
+public:
+	GrandparentToken(uint32_t l, uint32_t sl)
+		:Token(l, sl)
+	{
+
+	}
+	NAME_CONST_METHODS(GrandparentToken);
+};
+
 
 class Scanner
 {
@@ -384,7 +409,9 @@ class Scanner
 		MalformedNumber,
 		MalformedString,
 		MalformedLongComment,
-		MalformedDirectory
+		MalformedDirectory,
+		BadDaddy,
+		BadGrandpa
 	};
 
 	uint32_t linenum = 0;
@@ -451,6 +478,12 @@ class Scanner
 			break;
 		case(ScanError::MalformedDirectory):
 			msg = "SCANNER_ERROR: Malformed Directory!";
+			break;
+		case(ScanError::BadDaddy):
+			msg = "SCANNER_ERROR: Improper Parent Access!"; // don't you access your daddy like that
+			break;
+		case(ScanError::BadGrandpa):
+			msg = "SCANNER_ERROR: Improper Grandparent Access!";
 			break;
 		default:
 		case(ScanError::Unknown):

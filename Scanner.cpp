@@ -11,7 +11,7 @@
 //SYMBOL on its own does not include '/' due to its special and oft-ambiguous nature. It is often still a symbol though, it's just that Scanner treats it special.
 #define SYMBOL case '+':case '-':case '*':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '>':case '<':case '=':case '!':case '%':case '#'
 
-#define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '=':case '>':case '<':case '#':case '/'
+#define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '=':case '>':case '<':case '#':case '/':case '.'
 
 //Defines used to mark what is a valid Word (incl. valid variable names)
 #define ascii_UPPER case 'A':case 'B':case 'C':case 'D':case 'E':case 'F':case 'G':case 'H':case 'I':case 'J':case 'K':case 'L':case 'M':case 'N':case 'O':case 'P':case 'Q':case 'R':case 'S':case 'T':case 'U':case 'V':case 'W':case 'X':case 'Y':case 'Z'
@@ -120,7 +120,54 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 		switch (c)
 		{
 		DOUBLEABLE_SYMBOL: // if this is a doubleable symbol
-			if (c == first)// and it genuinely doubles
+			//Parent and grandparent access-operators
+			if (first == '.')
+			{
+				if (c == '/')
+				{
+					if (it + 2 < line.length())
+					{
+						//Charlie because it's the third one & it's a char. I'm very funny.
+						char charlie = line[it + 2];
+						switch (charlie)
+						{
+						ascii_lower:
+						ascii_UPPER:
+						ascii_other:
+							append(new ParentToken(linenum, syntactic_linenum));
+							return it + 1;
+						default:
+							ScannerError(it + 2, ScanError::BadDaddy);
+							break;
+						}
+					}
+					else
+					{
+						ScannerError(it + 1, ScanError::BadDaddy);
+					}
+				}
+				else if (c == '.')
+				{
+					if (it + 2 < line.length() && line[it+2] == '/' && it + 3 < line.length()) // If this all fails then it just assumes it's a concat op and rolls into the higher-scope if statement below
+					{
+						char dorothy = line[it + 3]; // We're peeking WAY fucking ahead aren't we
+						switch (dorothy)
+						{
+						ascii_lower:
+						ascii_UPPER:
+						ascii_other:
+						case('.'): //FIXME: Listen Jim, I'm a Scanner, not a smart & recursive algorithm doctor!
+							append(new GrandparentToken(linenum, syntactic_linenum));
+							return it + 2;
+						default:
+							ScannerError(it + 3, ScanError::BadGrandpa);
+							break;
+						}
+					}
+				}
+			}
+			//Double-char operators and things; '..' rolls over into here if finding '../' fails
+			if (c == first)
 			{
 				second = c; //woag it's a double symbol
 				if (c == '#') // If ##, meaning a linecomment
@@ -139,6 +186,7 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 				}
 				break;
 			}
+			
 		default:
 			std::string str{first};
 			if (str_to_precedence.count(str))
