@@ -3,6 +3,7 @@
 #include "Forward.h"
 
 #include "SharedEnums.h"
+#include "Directory.h"
 
 #define NAME_CONST_METHODS(the_thing) virtual cEnum class_enum() const override { return cEnum::##the_thing; } \
 						  virtual std::string class_name() const override { return #the_thing; }
@@ -457,7 +458,7 @@ class Scanner
 			exit(1);
 		}
 
-		std::cout << msg << std::endl << line << std::endl << squiggly << std::endl;
+		std::cout << msg << std::endl << string::replace_all(line,'\t',' ') << std::endl << squiggly << std::endl;
 		exit(1);
 	}
 	void append(Token* t)

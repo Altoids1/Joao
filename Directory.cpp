@@ -24,3 +24,14 @@ std::string Directory::lastword(std::string dir)
 
 	return dir.substr(lastslashpos + 1, std::string::npos);
 }
+
+std::string string::replace_all(std::string hay, char needle, char cooler_needle) // Needle vs. the cooler needle
+{
+	size_t pos = hay.find_first_of(needle);
+	while (pos != std::string::npos)
+	{
+		hay[pos] = cooler_needle;
+		pos = hay.find_first_of(needle);
+	}
+	return hay;
+}
