@@ -1,0 +1,27 @@
+/food
+{
+	Value taste = "Yummy";
+}
+
+
+/food/apple
+{
+	Value name = "Apple";
+	Value desc = "This is an apple. It smells of apple, and tastes of apple, unsurprisingly.";
+}
+
+/food/banana/stinky()
+{
+	return "Stinky!";
+}
+
+/main()
+{	
+
+	Value i = /food/apple/New();
+	##Value b = /food/banana/New() ##SOON.
+
+	return i;
+	
+	
+}

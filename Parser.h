@@ -195,8 +195,8 @@ class Parser
 	}
 
 	ASTNode* readlvalue(int,int);
-	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int,bool);
-	ASTNode* readExp(int,int,bool);
+	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
+	ASTNode* readExp(int,int);
 	Construction* readConstruction(int, int);
 
 	//Here-there-update; does not update if no last bracket found
@@ -344,6 +344,36 @@ class Parser
 		}
 		ParserError(tokens[here], "Failed to find expected semicolon!");
 		return tokens.size() - 1;
+	}
+
+	//Does not update tokenheader, and so is a "wanderer" sorta function. Finds the closing pairlet token of the type desired.
+	int find_closing_pairlet(PairSymbolToken::pairOp pop, int here)
+	{
+		int count = 1;
+
+		for (int where = here; where < tokens.size(); ++where)
+		{
+			Token* t = tokens[where];
+			if (t->class_enum() != Token::cEnum::PairSymbolToken)
+				continue;
+			PairSymbolToken* pst = static_cast<PairSymbolToken*>(t);
+			if (pst->t_pOp != pop)
+				continue;
+			if (pst->is_start) // We'll also now need to find the closer for this one
+			{
+				++count;
+			}
+			else
+			{
+				--count;
+				if (!count)
+				{
+					std::cout << "I return " << std::to_string(where);
+					return where;
+				}
+			}
+		}
+		ParserError(tokens[here-1], "Unable to find closing pairlet for this open pairlet!");
 	}
 	
 protected:
