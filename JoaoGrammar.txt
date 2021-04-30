@@ -2,7 +2,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	
 	program ::= {classdef | funcdef}
 	
-	classdef ::= directory '{' {varstat} '}'
+	classdef ::= directory '{' {varstat ';'} '}'
 	
 	funcdef ::= directory '(' [parlist] '){' block '}'
 	
@@ -10,7 +10,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	
 	parlist ::= Name {','Name} [',']
 	
-	varstat :: var assignop (exp | directory '/New(' [explist] ')')  ';'
+	varstat :: var assignop (exp | directory '/New(' [explist] ')')
 	
 	block ::= {stat}
 	
@@ -32,6 +32,8 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 		'/' Name |
 		Name
 	
+	functioncall ::= var_access '(' explist ')'
+	
 	property ::= {'.' Name }
 	
 	element ::= {'[' exp ']'}
@@ -42,20 +44,20 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	
 	comparison ::= bitwise {(‘<’ | ‘<=’ | ‘>’ | ‘>=’ | ‘==’ | ‘!=’) bitwise}
 	
-	bitwise ::= concat {(‘^’ | ‘%’ | ‘&’ | ‘~’ | ‘|’ | ‘>>’ | ‘<<’) concat}
+	bitwise ::= concat {(‘&’ | ‘~’ | ‘|’ | ‘>>’ | ‘<<’) concat}
 	
 	concat ::= term {'..' term}
 	
 	term ::= factor {(‘+’ | ‘-’) factor}
 	
-	factor ::= unary {(‘*’ | ‘/’ | ‘//’) unary}
+	factor ::= unary {(‘*’ | ‘/’ | ‘//’| ‘%’) unary}
 	
-	unary ::= unop power
+	unary ::= {unop} power
 	
 	power ::= {lvalue '^'} lvalue
 	
 	lvalue ::= 'null' | 'false' | 'true' | Numeral | LiteralString |
-			tableconstructor | var_access | '(' exp ')'
+			tableconstructor | var_access | functioncall | '(' exp ')' 
 	
 	tableconstructor ::= '{' [exp] {',' exp} '}' |
 		'{' [Name '=' exp] {',' [Name '=' exp] '}'
