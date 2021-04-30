@@ -43,7 +43,7 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 		interp.RuntimeError(nullptr, "Unable to access method of object!");
 
 	Function* fuh = base_funcs->at(name);
-	fuh->give_args(args, interp);
+	fuh->give_args(interp, args, this);
 	return fuh->resolve(interp);
 }
 
@@ -55,6 +55,18 @@ Function* Object::get_method(Interpreter& interp, std::string name)
 		return base_funcs->at(name);
 	}
 	return nullptr;
+}
+
+/* Object Type */
+
+Value ObjectType::get_typeproperty(Interpreter& interp, std::string str, ASTNode* getter)
+{
+	if (!typeproperties.count(str))
+	{
+		interp.RuntimeError(getter, "Failed to access property " + str + " of grandparent " + object_type + "!");
+		return Value();
+	}
+	return typeproperties.at(str);
 }
 
 

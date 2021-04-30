@@ -116,6 +116,8 @@ Value Identifier::resolve(Interpreter& interp)
 Value AssignmentStatement::resolve(Interpreter& interp)
 {
 	Value rhs_val = rhs->resolve(interp);
+
+
 	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 
 	if (t_op != aOps::Assign)
@@ -132,15 +134,55 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 	else if (id->class_name() == "MemberAccess")
 	{
 		Handle hndl = id->handle(interp);
+		Object* objptr;
+		switch (hndl.type)
+		{
+		case(Handle::HType::Obj):
+			objptr = hndl.data.obj;
+			break;
+		case(Handle::HType::Name):
+		{
+			Value val = interp.get_var(hndl.name, this);
+			if (val.t_vType != Value::vType::Object)
+			{
+				interp.RuntimeError(this, "Cannot acquire member of non-object Value!");
+				return Value();
+			}
+			objptr = val.t_value.as_object_ptr;
+			break;
+		}
+		case(Handle::HType::Global):
+		{
+			Value val = interp.get_global(hndl.name, this);
+			if (val.t_vType != Value::vType::Object)
+			{
+				interp.RuntimeError(this, "Cannot acquire member of non-object global Value!");
+				return Value();
+			}
+			objptr = val.t_value.as_object_ptr;
+			break;
+		}
+		case(Handle::HType::Parent):
+		{
+			Value val = interp.get_property(hndl.name, this);
+			if (val.t_vType != Value::vType::Object)
+			{
+				interp.RuntimeError(this, "Cannot acquire member of non-object global Value!");
+				return Value();
+			}
+			objptr = val.t_value.as_object_ptr;
+			break;
+		}
+		default:
+			interp.RuntimeError(this, "Unknown Handle type returned during MemberAccess!");
+			return Value();
+		}
 
-		if (!hndl.obj)
-			interp.RuntimeError(this, "MemberAccess failed to return object pointer!");
-		else
-			hndl.obj->set_property(interp, hndl.name, rhs_val);
+		objptr->set_property(interp, hndl.name, rhs_val);
 	}
 	else
 	{
-		interp.RuntimeError(this, "Unknown or underimplemented handle found at runtime!");
+		interp.RuntimeError(this, "Unknown or underimplemented handleable ASTNode found at runtime!");
 	}
 
 	return rhs_val; // If anything.
@@ -156,7 +198,7 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
 	}
 
-	interp.set_var(static_cast<Identifier*>(id)->get_str(), rhs_val, this);
+	interp.init_var(static_cast<Identifier*>(id)->get_str(), rhs_val, this);
 
 	return rhs_val;
 }
@@ -206,8 +248,13 @@ Value UnaryExpression::resolve(Interpreter& interp)
 std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
 {
 	//step 1. get string
-	std::string suh = id->const_handle(parser).name;
+	Handle huh = id->const_handle(parser);
 
+	if (huh.type != Handle::HType::Name)
+		parser.ParserError(nullptr, "Illegitimate Handle given for property in class definition!");
+
+	std::string suh = huh.name;
+	huh.qdel();
 
 	//step 2. get value
 	Value ruh = rhs->const_resolve(parser, true);
@@ -488,8 +535,12 @@ Value BinaryExpression::resolve(Interpreter& interp)
 }
 
 
-void Function::give_args(std::vector<Value>& args, Interpreter& interp)
+void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* o = nullptr)
 {
+	if (o)
+	{
+		obj = o;
+	}
 	t_args = args;
 	if (t_args.size() < t_argnames.size()) // If we were not given enough arguments
 	{
@@ -546,6 +597,21 @@ Value Function::resolve(Interpreter & interp)
 
 Value CallExpression::resolve(Interpreter& interp)
 {
+	Handle hndl = func_expr->handle(interp);
+	if (hndl.type != Handle::HType::Name)
+	{
+		interp.RuntimeError(this, "Method calls are unimplemented!"); // FIXME: Soon.
+		return Value();
+	}
+
+	if (!hndl.is_function)
+	{
+		interp.RuntimeError(this, "Cannot call Values!");
+		return Value();
+	}
+
+	std::string func_name = hndl.name;
+
 	std::vector<Value> vargs;
 	for (auto it = args.begin(); it != args.end(); ++it)
 	{
@@ -553,7 +619,7 @@ Value CallExpression::resolve(Interpreter& interp)
 		vargs.push_back(e->resolve(interp));
 	}
 	Function* ourfunc = interp.get_func(func_name, this);
-	ourfunc->give_args(vargs,interp);
+	ourfunc->give_args(interp, vargs);
 	return ourfunc->resolve(interp);
 }
 
@@ -591,16 +657,16 @@ Value Block::iterate_statements(Interpreter& interp)
 			if (rt.has_expr) // If this actually has something to return
 			{
 				Value ret = rt.resolve(interp); // Get the return		
-				interp.pop_stack(); // THEN pop the stack
+				interp.pop_block(); // THEN pop the stack
 				return ret; // THEN return the value.
 			}
-			interp.pop_stack();
+			interp.pop_block();
 			return Value();
 		}
 		else if (ptr->class_name() == "BreakStatement")
 		{
 			ptr->resolve(interp);
-			interp.pop_stack();
+			interp.pop_block();
 			return Value();
 		}
 		else
@@ -608,7 +674,7 @@ Value Block::iterate_statements(Interpreter& interp)
 			Value vuh = ptr->resolve(interp); // I dunno.
 			if (interp.FORCE_RETURN)
 			{
-				interp.pop_stack();
+				interp.pop_block();
 				return vuh;
 			}
 		}
@@ -628,19 +694,19 @@ Value IfBlock::resolve(Interpreter& interp)
 		return Value(); // Otherwise return Null, I guess.
 	}
 	
-	interp.push_stack("if");
+	interp.push_block("if");
 	Value blockret = iterate_statements(interp);
 	
 	if (interp.FORCE_RETURN)
 		return blockret;
 	else
-		interp.pop_stack();
+		interp.pop_block();
 	return Value();
 }
 
 Value ForBlock::resolve(Interpreter& interp)
 {
-	interp.push_stack("for"); // Has to happen here since initializer takes place in the for-loops var stack
+	interp.push_block("for"); // Has to happen here since initializer takes place in the for-loops var stack
 	if (initializer)
 		initializer->resolve(interp);
 	while (condition && condition->resolve(interp))
@@ -655,13 +721,13 @@ Value ForBlock::resolve(Interpreter& interp)
 			return blockret;
 		increment->resolve(interp);
 	}
-	interp.pop_stack();
+	interp.pop_block();
 	return Value();
 }
 
 Value WhileBlock::resolve(Interpreter& interp)
 {
-	interp.push_stack("while");
+	interp.push_block("while");
 	if(!condition) // if condition not defined
 		interp.RuntimeError(*this, "Missing condition in WhileBlock!");
 	/*
@@ -684,7 +750,7 @@ Value WhileBlock::resolve(Interpreter& interp)
 			return blockret;
 		}
 	}
-	interp.pop_stack();
+	interp.pop_block();
 	return Value();
 }
 
@@ -698,14 +764,64 @@ Value MemberAccess::resolve(Interpreter& interp)
 {
 	Handle fr = front->handle(interp);
 	
+	//Has to always be a plain string handle
 	Handle bk = back->handle(interp);
 
-	/*
-	if (fr.obj && !bk.obj)
+	if (bk.type != Handle::HType::Name)
 	{
-		return interp.get_prop(fr.obj, bk.name);
+		interp.RuntimeError(this, "Cannot do MemberAccess with non-string property name!");
+		return Value();
 	}
-	*/
+	if (bk.is_function)
+	{
+		interp.RuntimeError(this, "MemberAccess cannot return Function pointers in this implementation!"); // Soon.
+		return Value();
+	}
+	if (fr.is_function)
+	{
+		interp.RuntimeError(this, "Illegal attempt to access members of a function or method!");
+		return Value();
+	}
+
+	switch (fr.type)
+	{
+	default:
+		interp.RuntimeError(this, "Unknown or underimplemented HandleType used during MemberAccess!");
+	case(Handle::HType::Invalid):
+		return Value();
+	case(Handle::HType::Name):
+	{
+		Value vuh = interp.get_var(fr.name, this);
+		if (vuh.t_vType != Value::vType::Object)
+		{
+			interp.RuntimeError(this, "Cannot access method of non-object Value!");
+			return Value();
+		}
+		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
+	}
+	case(Handle::HType::Global):
+	{
+		Value vuh = interp.get_global(fr.name, this);
+		if (vuh.t_vType != Value::vType::Object)
+		{
+			interp.RuntimeError(this, "Cannot access method of non-object Value!");
+			return Value();
+		}
+		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
+	}
+	case(Handle::HType::Parent):
+	{
+		Value vuh = interp.get_property(fr.name, this);
+		if (vuh.t_vType != Value::vType::Object)
+		{
+			interp.RuntimeError(this, "Cannot access method of non-object Value!");
+			return Value();
+		}
+		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
+	}
+	}
+
+
 	interp.RuntimeError(this, "Unimplemented MemberAccess detected at runtime!");
 	return Value();
 }
@@ -727,4 +843,22 @@ std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parse
 Value Construction::resolve(Interpreter& interp)
 {
 	return interp.makeObject(type,args,this);
+}
+
+Value ParentAccess::resolve(Interpreter& interp)
+{
+	return interp.get_property(prop,this);
+}
+
+Value GrandparentAccess::resolve(Interpreter& interp)
+{
+	return interp.grand_property(depth, prop, this);
+}
+Handle GrandparentAccess::handle(Interpreter& interp)
+{
+/*
+	So we might be a function or a property.
+	Lets find out!
+*/
+	return interp.grand_handle(depth, prop, this);
 }

@@ -89,16 +89,47 @@ public:
 	std::string typestring();
 };
 
-//Is either a directory lookup OR a pointer to an object and the name of the method or property being accessed.
+//Used during assignment, member access, and method/function calling. Stores a handle to either
+//1. the name of a localish variable that needs to be get_var()'d
+//2. the name of a property/method of the objectscope
+//3. the name of a global/function in globalscope
+//4. a pointer to an object someplace
 struct Handle
 {
 	std::string name;
-	Object* obj;
-	Handle(std::string n = "", Object* o = nullptr)
-		:name(n),
-		obj(o)
-	{
 
+	bool is_function = false;
+	union
+	{
+		Object* obj;
+		ObjectType* objtype;
+	}data;
+	enum class HType {
+		Invalid,
+		Name,
+		Parent,
+		Global,
+		Obj,
+		ObjType
+	} type;
+	Handle()
+	{
+		name = "?????";
+		type = HType::Invalid;
+	}
+	Handle(std::string& n)
+	{
+		name = n;
+		type = HType::Name;
+	}
+	Handle(Object* o)
+	{
+		data.obj = o;
+		type = HType::Obj;
+	}
+	void qdel()
+	{
+		return;
 	}
 };
 
@@ -365,18 +396,14 @@ public:
 };
 
 class CallExpression : public Expression {
-	std::string func_name;
+	ASTNode* func_expr;
+
 	std::vector<Expression*> args;
 public:
-	CallExpression(std::string str)
-		:func_name(str)
+	CallExpression(ASTNode* f)
+		:func_expr(f)
 	{
 
-	}
-	CallExpression(Value &v)
-	{
-		assert(v.t_vType == Value::vType::String);
-		func_name = *(v.t_value.as_string_ptr);
 	}
 	CallExpression* append_arg(Expression* expr)
 	{
@@ -396,6 +423,7 @@ protected:
 	std::vector<std::string> t_argnames;
 	//std::vector<Expression> args;
 	std::string t_name; // My name
+	Object* obj = nullptr;
 
 	Function()
 	{
@@ -417,7 +445,7 @@ public:
 		statements = exprs;
 		t_argnames = sargs;
 	}
-	void give_args(std::vector<Value>&, Interpreter&);
+	void give_args(Interpreter&, std::vector<Value>&, Object*);
 	Function* append(Expression* expr)
 	{
 		statements.push_back(expr);
@@ -675,4 +703,61 @@ public:
 		return std::string(indent, ' ') + "Construction, type: " + type + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
+};
+
+class ParentAccess : public ASTNode
+{
+	std::string prop;
+public:
+	ParentAccess(std::string p)
+		:prop(p)
+	{
+
+	}
+	virtual const std::string class_name() const override { return "ParentAccess"; }
+	virtual std::string dump(int indent) override
+	{
+		return std::string(indent, ' ') + "ParentAccess, property: " + prop + "\n";
+	}
+	virtual Value resolve(Interpreter&) override;
+	virtual Handle handle(Interpreter&) override;
+};
+
+class GrandparentAccess : public ASTNode
+{
+	unsigned int depth;
+	std::string prop;
+
+public:
+	GrandparentAccess(unsigned int d,std::string p)
+		:prop(p)
+		,depth(d)
+	{
+
+	}
+	virtual const std::string class_name() const override { return "GrandparentAccess"; }
+	virtual std::string dump(int indent) override
+	{
+		return std::string(indent, ' ') + "GrandparentAccess, property: " + prop + "; depth: " + std::to_string(depth) + "\n";
+	}
+	virtual Value resolve(Interpreter&) override;
+	virtual Handle handle(Interpreter&) override;
+};
+
+class GlobalAccess : public ASTNode
+{
+	std::string var;
+public:
+	GlobalAccess(std::string v)
+		:var(v)
+	{
+
+	}
+	virtual const std::string class_name() const override { return "GlobalAccess"; }
+	virtual std::string dump(int indent) override
+	{
+		return std::string(indent, ' ') + "GlobalAccess, property: " + var + "\n";
+	}
+	virtual Value resolve(Interpreter&) override;
+	virtual Handle handle(Interpreter&) override;
 };

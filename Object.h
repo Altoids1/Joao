@@ -73,20 +73,30 @@ public:
 		{
 			Function* fuh = typefuncs["#constructor"]; //fuh.
 			if(args.size())
-				fuh->give_args(args, interp);
+				fuh->give_args(interp, args, o);
 			fuh->resolve(interp);
 		}
 		return o;
 	}
 
-	Value get_typeproperty(Interpreter& interp, std::string str, ASTNode* getter)
+	Value get_typeproperty(Interpreter&, std::string, ASTNode*);
+
+	Value* has_typeproperty(Interpreter& interp, std::string str, ASTNode* getter)
 	{
-		if(!typeproperties.count(str))
-		{ 
-			interp.RuntimeError(getter, "Failed to access property " + str + " of grandparent " + object_type + "!");
-			return Value();
+		if (!typeproperties.count(str))
+		{
+			return nullptr;
 		}
-		return typeproperties.at(str);
+		return &(typeproperties.at(str));
+	}
+
+	Function* has_typemethod(Interpreter& interp, std::string str, ASTNode* getter)
+	{
+		if (!typefuncs.count(str))
+		{
+			return nullptr;
+		}
+		return typefuncs.at(str);
 	}
 
 

@@ -41,6 +41,7 @@ public:
 	///Objectscope
 	Value get_property(std::string, ASTNode*);
 	Value grand_property(unsigned int, std::string, ASTNode*);
+	Handle grand_handle(unsigned int, std::string, ASTNode*);
 
 	//Construct an object and return it as a Value.
 	Value makeObject(std::string,std::vector<ASTNode*>&,ASTNode*);

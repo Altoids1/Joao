@@ -128,8 +128,11 @@ Value Interpreter::get_property(std::string str, ASTNode* getter)
 Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();
-	if(!obj)
+	if (!obj)
+	{
 		RuntimeError(getter, "Cannot get grandparent property in classless objectscope!");
+		return Value();
+	}
 
 	std::string dir = obj->object_type;
 
@@ -161,7 +164,61 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 	return Value();
 }
 
+Handle Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* getter)
+{
+	Object* obj = objectscope.top();
+	if (!obj)
+	{
+		RuntimeError(getter, "Cannot get grandparent handle in classless objectscope!");
+		return Handle();
+	}
 
+	std::string dir = obj->object_type;
+
+	for (unsigned int i = 0; i < depth; ++i)
+	{
+		std::string dir = Directory::DotDot(dir);
+	}
+	if (dir == "/")
+	{
+		RuntimeError(getter, "Attempted to get grandparent handle of root directory!");
+		return Handle();
+	}
+
+	if (!prog->definedObjTypes.count(dir))
+	{
+		RuntimeError(getter, "Failed to find objecttype of type " + dir + " during handle() of GrandparentAccess!"); // This'll be a weird error to get once inheritence is functional
+		return Handle();
+	}
+
+	ObjectType* objt = prog->definedObjTypes.at(dir);
+
+	//If it's a property
+	Value* vuh = objt->has_typeproperty(*this, str, getter);
+	if (vuh)
+	{
+		Handle huh;
+		huh.type = Handle::HType::ObjType;
+		huh.name = str;
+		huh.data.objtype = objt;
+		return huh;
+	}
+
+	//If it's a method
+	Function* fnuh = objt->has_typemethod(*this, str, getter);
+	if (fnuh)
+	{
+		Handle huh;
+		huh.type = Handle::HType::ObjType;
+		huh.name = str;
+		huh.data.objtype = objt;
+		huh.is_function = true;
+		return huh;
+	}
+
+	RuntimeError(getter, "Failed to get property of Parent objectscope!");
+	return Handle();
+}
 
 Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTNode* maker)
 {
