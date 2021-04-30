@@ -199,8 +199,18 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 			}
 		}
 	}
+	Token* t;
+	if (first == '.' && second == '\0') // FIXME: This function's whole control flow is pretty messy and a tad unoptimized, could use a rework
+	{
+		t = new MemberToken(linenum, syntactic_linenum);
+	}
+	else
+	{
+		t = new SymbolToken(linenum, syntactic_linenum, first, second);
+	}
 
-	Token* t = new SymbolToken(linenum, syntactic_linenum, first, second);
+
+	
 
 	append(t);
 	return it;

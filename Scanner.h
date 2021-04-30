@@ -29,7 +29,8 @@ public:
 		DirectoryToken,
 		ConstructionToken,
 		ParentToken,
-		GrandparentToken
+		GrandparentToken,
+		MemberToken
 	};
 	uint32_t line;
 	uint32_t syntactic_line;
@@ -356,6 +357,16 @@ public:
 	NAME_CONST_METHODS(GrandparentToken);
 };
 
+class MemberToken : public Token
+{
+public:
+	MemberToken(uint32_t l, uint32_t sl)
+		:Token(l, sl)
+	{
+
+	}
+	NAME_CONST_METHODS(MemberToken);
+};
 
 class Scanner
 {
