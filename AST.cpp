@@ -143,6 +143,14 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 		Identifier* idfr = static_cast<Identifier*>(id);
 		interp.override_var(idfr->get_str(), rhs_val, this);
 	}
+	else if (id->class_name() == "GlobalAccess")
+	{
+		interp.set_global(static_cast<GlobalAccess*>(id)->var, rhs_val, this);
+	}
+	else if (id->class_name() == "ParentAccess")
+	{
+		interp.set_property(static_cast<ParentAccess*>(id)->prop, rhs_val, this);
+	}
 	else if (id->class_name() == "MemberAccess")
 	{
 		Handle hndl = id->handle(interp);
@@ -889,4 +897,18 @@ Handle GrandparentAccess::handle(Interpreter& interp)
 	Lets find out!
 */
 	return interp.grand_handle(depth, prop, this);
+}
+
+
+Value GlobalAccess::resolve(Interpreter& interp)
+{
+	return interp.get_global(var, this);
+}
+
+Handle GlobalAccess::handle(Interpreter& interp)
+{
+	Handle hdl;
+	hdl.name = var;
+	hdl.type = Handle::HType::Global;
+	return hdl;
 }

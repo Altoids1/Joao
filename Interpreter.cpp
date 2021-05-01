@@ -126,6 +126,19 @@ Value Interpreter::get_property(std::string str, ASTNode* getter)
 	return Value();
 }
 
+void Interpreter::set_property(std::string str, Value val, ASTNode* getter)
+{
+
+	Object* obj = objectscope.top();
+	if (obj)
+	{
+		obj->set_property(*this, str, val);
+		return;
+	}
+	RuntimeError(getter, "Failed to set property of Parent objectscope!");
+	return;
+}
+
 Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();

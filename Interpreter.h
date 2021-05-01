@@ -41,6 +41,7 @@ public:
 
 	///Objectscope
 	Value get_property(std::string, ASTNode*);
+	void set_property(std::string, Value, ASTNode*);
 	Value grand_property(unsigned int, std::string, ASTNode*);
 	Handle grand_handle(unsigned int, std::string, ASTNode*);
 

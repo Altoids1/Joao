@@ -747,8 +747,9 @@ public:
 
 class ParentAccess : public ASTNode
 {
-	std::string prop;
 public:
+	std::string prop;
+
 	ParentAccess(std::string p)
 		:prop(p)
 	{
@@ -786,8 +787,9 @@ public:
 
 class GlobalAccess : public ASTNode
 {
-	std::string var;
 public:
+	std::string var;
+
 	GlobalAccess(std::string v)
 		:var(v)
 	{
