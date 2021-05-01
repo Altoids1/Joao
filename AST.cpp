@@ -725,7 +725,7 @@ Value IfBlock::resolve(Interpreter& interp)
 	interp.push_block("if");
 	Value blockret = iterate_statements(interp);
 	
-	if (interp.FORCE_RETURN)
+	if (interp.FORCE_RETURN || interp.BREAK_COUNTER)
 		return blockret;
 	else
 		interp.pop_block();
