@@ -357,6 +357,7 @@ Situations that prove the programmer is an idiot:
 			TOKEN_SEPARATOR:
 			PAIRSYMBOL:
 			SYMBOL:
+			case(';'): // End of statement; can mean we're in an expression like "return /global_var_thing;"
 				--it; // Marks that whoever called us ought to start reading at this char, the $it we're looking at right now
 				goto READSLASH_FINISH;
 				break;
