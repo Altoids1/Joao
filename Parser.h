@@ -236,8 +236,11 @@ class Parser
 		}
 	}
 
-	ASTNode* readUnary(int, int);
+	
+	
 	ASTNode* readlvalue(int,int);
+	ASTNode* readUnary(int, int);
+	ASTNode* readPower(int, int);
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
 	ASTNode* readExp(int,int);
 	Construction* readConstruction(int, int);

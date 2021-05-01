@@ -215,8 +215,77 @@ ASTNode* Parser::readUnary(int here, int there)
 		ParserError(tokens[here], "Unexpected symbol when unary operator was expected!");
 	}
 
-	return new UnaryExpression(uh, readlvalue(here+1,there));
+
+
+	return new UnaryExpression(uh, readPower(here+1,there));
 	
+}
+
+//Vaguely similar and correlated to the behavior of readBinExp's loop, except it collects all lvalues and then builds the exponent chain via iterating in reverse order
+//Right-associativity, amirite?
+ASTNode* Parser::readPower(int here, int there)
+{
+	std::vector<ASTNode*> lvalues;
+
+	int where = here;
+	int last_power = here - 1;
+	for (; where <= there; ++where)
+	{
+		Token* t = tokens[where];
+		switch (t->class_enum())
+		{
+		case(Token::cEnum::PairSymbolToken): // WARNING: THIS IS A DUMB CTRL+C CTRL+V OF THE ANALOGOUS BLOCK IN READBINEXP(); SHOULD BE IDENTICAL!
+		{
+			PairSymbolToken pst = *static_cast<PairSymbolToken*>(t);
+
+			if (!pst.is_start)
+				ParserError(t, "Unexpected closing pairlet in BinaryExpression!");
+
+			int yonder = find_closing_pairlet(pst.t_pOp, where + 1);
+			if (yonder > there) // If down yonder is truly yonder
+			{
+				ParserError(t, "Could not find closing pairlet for open pairlet in BinaryExpression!");
+			}
+			where = yonder; // Expecting an imminent increment to make this point the correct place
+			continue;
+		}
+		case(Token::cEnum::EndLineToken):
+			goto READPOWER_LEAVE_POWERSEARCH;
+		case(Token::cEnum::KeywordToken):
+			ParserError(tokens[where], "Unexpected keyword in Expression!");
+			continue;
+		case(Token::cEnum::SymbolToken):
+		{
+			//This should just be '^' and nothing else; anything else implies a parsing error in this context.
+
+			SymbolToken* st = static_cast<SymbolToken*>(t);
+
+			if (st->len > 1 || st->get_symbol()[0] != '^')
+			{
+				ParserError(t, "Unexpected symbol when parsing PowerExpression!");
+			}
+			lvalues.push_back(readlvalue(last_power + 1, where - 1));
+			last_power = where;
+			continue;
+		}
+		default:
+			continue;
+		}
+	}
+READPOWER_LEAVE_POWERSEARCH:
+	if (lvalues.empty()) // If we didn't find a power
+		return readlvalue(here, there); // then this is just a normal lvalue
+	// (a ^ (b ^ (c ^ d)))
+
+	
+	//lvalues.push_back();// Add the final lvalue of the series of exponentiations, the "c" of a ^ b ^ c
+
+	ASTNode* powertower = readlvalue(last_power + 1, where - 1);
+	for (auto it = lvalues.rbegin(); it != lvalues.rend(); ++it)
+	{
+		powertower = new BinaryExpression(BinaryExpression::bOps::Exponent, *it, powertower);
+	}
+	return powertower;
 }
 
 //lvalue ::= 'null' | 'false' | 'true' | Numeral | LiteralString | tableconstructor | var_access | functioncall |'(' exp ')'
@@ -391,6 +460,10 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 	{
 		return readUnary(here, there); // Hear-hear!
 	}
+	else if (op == Scanner::OperationPrecedence::Power)
+	{
+		return readPower(here, there);
+	}
 
 
 	ASTNode* lhs = nullptr;
@@ -443,6 +516,7 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 			{
 				
 				//ALL THIS ASSUMES LEFT-ASSOCIATIVITY, AS IN ((1 + 2) + 3) + 4
+
 
 				if (!lhs)
 				{
