@@ -355,19 +355,26 @@ class Parser
 	//assumes here < there
 	std::vector<ASTNode*> readArgs(int here, int there)
 	{
-		int comma = find_comma(here, there);;
+#ifdef LOUD_TOKENHEADER
+		std::cout << "readVarAccess starting at " << std::to_string(here) << std::endl;
+#endif
+		int comma = find_comma(here, there);
 
 		if (!comma) // If comman't
 			return { readExp(here,there) };
+		//exp {, exp}
 
-		std::vector<ASTNode*> args;
+		std::vector<ASTNode*> args{ readExp(here,comma - 1) };
 		tokenheader = here;
-		do
+		
+		while (comma)
 		{
-			args.push_back(readExp(tokenheader, comma)); // updates tokenheader, hopefully
+			int newcomma = find_comma(comma + 1, there);
+			int yonder = (newcomma ? newcomma - 1 : there);
+			args.push_back(readExp(comma + 1, yonder));
+			comma = newcomma;
+		}
 
-			comma = find_comma(comma, tokenheader);
-		} while (comma);
 		return args;
 	}
 

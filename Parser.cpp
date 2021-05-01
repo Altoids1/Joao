@@ -168,13 +168,13 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 		}
 
 	}
-
+#ifdef LOUD_AST
 	std::cout << "Here's my class tree:\n";
 	for (auto it = list_of_types.begin(); it != list_of_types.end(); ++it)
 	{
 		std::cout << it->first << std::endl;
 	}
-
+#endif
 	//2. Generate inheritences and stash them in the hashtables for easier retrieval
 		//FIXME
 	
@@ -275,6 +275,8 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 					lvalue = new CallExpression(lvalue, readArgs(tokenheader + 1, close - 1));
 				else
 					lvalue = new CallExpression(lvalue, {});
+
+				tokenheader = close + 1;
 				break;
 			}
 		}
