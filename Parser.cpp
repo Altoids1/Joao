@@ -510,7 +510,7 @@ ASTNode* Parser::readExp(int here, int there)
 }
 
 //Here-there-update; updates through ReadExp().
-LocalAssignmentStatement* Parser::readLocalAssignment(LocalType ty, int here, int there) // Value x = 3;
+LocalAssignmentStatement* Parser::readLocalAssignment(int here, int there) // Value x = 3;
 {
 	Token* t = tokens[here];
 	if (t->class_enum() != Token::cEnum::LocalTypeToken)
@@ -532,7 +532,7 @@ LocalAssignmentStatement* Parser::readLocalAssignment(LocalType ty, int here, in
 
 	AssignmentStatement::aOps aesop = readaOp(here+2);
 
-	ASTNode* rvalue = readExp(here+3,there); // the static_cast here is just to silence dumb compiler warnings
+	ASTNode* rvalue = readExp(here+3,there);
 
 	return new LocalAssignmentStatement(id, rvalue, aesop);
 }
@@ -573,12 +573,33 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
 
 				size_t semicolon = find_first_semicolon(tokenheader, yonder-1);
-				ASTNode* init = readExp(tokenheader, semicolon);
+				ASTNode* init;
+				if (find_aOp(tokenheader, semicolon))
+				{
+					if (tokens[tokenheader]->class_enum() == Token::cEnum::LocalTypeToken)
+						init = readLocalAssignment(tokenheader, semicolon);
+					else
+						init = readAssignmentStatement(tokenheader, semicolon);
+				}
+				else
+				{
+					init = readExp(tokenheader, semicolon);
+				}
+
 				where = semicolon + 1;
 				semicolon = find_first_semicolon(where, yonder-1);
-				ASTNode* cond = readExp(where, semicolon);
+				ASTNode* cond = readExp(where, semicolon); // Assignments do not evaluate to anything in João so putting one in a conditional is silly
 				where = semicolon + 1;
-				ASTNode* inc = readExp(where, yonder-1);
+				ASTNode* inc;
+				if (find_aOp(where, yonder-1))
+				{
+					inc = readAssignmentStatement(where, yonder-1);
+				}
+				else
+				{
+					inc = readExp(where, yonder - 1);
+				}
+				 
 				consume_paren(false); // )
 
 				std::vector<Expression*> for_block = readBlock(BlockType::For,tokenheader,there); // { ...block... }
@@ -710,26 +731,15 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 			x = 3; ## Ambiguous, sets lowest-scoped x available to 3
 		*/
 		{
-			//CASE 1. local/property assign
-
-			ASTNode* id = readVarAccess(where, tokens.size() - 1);
-
-			AssignmentStatement::aOps aesop = readaOp();
-
-			
-			ASTNode* rvalue = readExp(tokenheader, static_cast<int>(tokens.size()) -1); // the static_cast here is just to silence dumb compiler warnings
-
+			ASTs.push_back(readAssignmentStatement(where, static_cast<int>(tokens.size() - 1)));
 			consume_semicolon();
-
-			ASTs.push_back(new AssignmentStatement(id, rvalue, aesop));
-
 			where = tokenheader-1; // Decrement so that the impending increment puts us in the correct place.
 			continue;
 		}
 		case(Token::cEnum::LocalTypeToken): // So this implies we're about to read in an initialization.
 		{
 			//std::cout << "Before: " << std::to_string(tokenheader) << std::endl ;
-			LocalAssignmentStatement* localassign = readLocalAssignment(static_cast<LocalTypeToken*>(t)->t_type, where, there);
+			LocalAssignmentStatement* localassign = readLocalAssignment(where, there);
 			consume_semicolon();
 			if(localassign) // if not nullptr
 				ASTs.push_back(localassign);
@@ -777,7 +787,7 @@ std::vector<LocalAssignmentStatement*> Parser::readClassDef(std::string name, in
 		case(Token::cEnum::LocalTypeToken):
 		{
 			LocalTypeToken* ltt_ptr = static_cast<LocalTypeToken*>(t);
-			LocalAssignmentStatement* lassy = readLocalAssignment(ltt_ptr->t_type, where, there);
+			LocalAssignmentStatement* lassy = readLocalAssignment(where, there);
 
 			ASTs.push_back(lassy);
 			consume_semicolon();

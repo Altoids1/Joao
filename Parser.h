@@ -86,6 +86,8 @@ class Parser
 
 	int tokenheader; // Which Token # are we on?
 	//This whole thing is one big Turing machine, reading a roll of tokens in sequence, so having a master counter is important to the iteration.
+	//However, most functions have their own internal headers for subiteration, sometimes updating tokenheader on exit.
+	//This is unfortunately necessary due to the recursive and multi-stroke nature of this Parser and its grammar.
 
 	BinaryExpression::bOps readbOpOneChar (char* c, Token* t)
 	{
@@ -195,6 +197,24 @@ class Parser
 		}
 		return BinaryExpression::bOps::NoOp;
 	}
+	AssignmentStatement::aOps aOp_of_symbol(SymbolToken* st)
+	{
+		char* c = st->get_symbol();
+
+		if (st->len == 1)
+		{
+			if (c[0] == '=')
+			{
+				return AssignmentStatement::aOps::Assign;
+			}
+			else
+			{
+				return AssignmentStatement::aOps::NoOp;
+			}
+		}
+
+		return AssignmentStatement::aOps::NoOp;
+	}
 
 	ASTNode* readlvalue(int,int);
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
@@ -208,7 +228,7 @@ class Parser
 	std::vector<LocalAssignmentStatement*> readClassDef(std::string, int, int);
 
 	//Reads a strongly-expected LocalAssignment (of form, "Value x = 3" or whatever). Does not consume a semicolon.
-	LocalAssignmentStatement* readLocalAssignment(LocalType, int, int);
+	LocalAssignmentStatement* readLocalAssignment(int, int);
 
 	AssignmentStatement::aOps readaOp(int here = 0)
 	{
@@ -344,6 +364,19 @@ class Parser
 		default: // I dunno what this is, just return what you have and hope the higher stacks know what it is
 			return scoped_access;
 		}
+	}
+
+	//Updates tokenheader via readExp().
+	AssignmentStatement* readAssignmentStatement(int here, int there)
+	{
+		ASTNode* id = readVarAccess(here, there);
+
+		AssignmentStatement::aOps aesop = readaOp();
+
+
+		ASTNode* rvalue = readExp(tokenheader, there);
+
+		return new AssignmentStatement(id, rvalue, aesop);
 	}
 
 
@@ -499,6 +532,21 @@ class Parser
 			}
 		}
 		ParserError(tokens[here-1], "Unable to find closing pairlet for this open pairlet!");
+	}
+	
+	int find_aOp(int here, int there)
+	{
+		for (int where = here; where <= there; ++where)
+		{
+			Token* t = tokens[where];
+			if (t->class_enum() != Token::cEnum::SymbolToken)
+				continue;
+			if (aOp_of_symbol(static_cast<SymbolToken*>(t)) != AssignmentStatement::aOps::NoOp)
+			{
+				return where;
+			}
+		}
+		return 0;
 	}
 	
 protected:
