@@ -257,8 +257,30 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	case(Token::cEnum::GrandparentToken):
 	case(Token::cEnum::ParentToken):
 	case(Token::cEnum::WordToken): //functioncall | var_access
-		lvalue = new Identifier(readIdentifierStr(here,there));
+	{
+		lvalue = readVarAccess(here, there);
+		if (tokenheader > there)
+		{
+			break;
+		}
+		//Now check to see if this is actually a function call
+		Token* nexttoken = tokens[tokenheader];
+		if (nexttoken->class_enum() == Token::cEnum::PairSymbolToken)
+		{
+			PairSymbolToken* pst = static_cast<PairSymbolToken*>(nexttoken);
+			if (pst->is_start && pst->t_pOp == PairSymbolToken::pairOp::Paren)
+			{
+				int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
+				if (close != tokenheader + 1)
+					lvalue = new CallExpression(lvalue, readArgs(tokenheader + 1, close - 1));
+				else
+					lvalue = new CallExpression(lvalue, {});
+				break;
+			}
+		}
+
 		break;
+	}
 	case(Token::cEnum::EndLineToken):
 		ParserError(t, "Endline found when lvalue was expected!");
 		break;
@@ -436,6 +458,7 @@ ASTNode* Parser::readExp(int here, int there)
 #ifdef LOUD_TOKENHEADER
 	std::cout << "Expression starts at " << std::to_string(here) << std::endl;
 #endif
+
 	//Okay, god, we're really getting close to actually being able to *resolve* something.
 
 	Token* t = tokens[here];
@@ -667,7 +690,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		{
 			//CASE 1. local/property assign
 
-			Identifier* id = new Identifier(readIdentifierStr(where, tokens.size() - 1));
+			ASTNode* id = readVarAccess(where, tokens.size() - 1);
 
 			AssignmentStatement::aOps aesop = readaOp();
 

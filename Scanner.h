@@ -30,7 +30,8 @@ public:
 		ConstructionToken,
 		ParentToken,
 		GrandparentToken,
-		MemberToken
+		MemberToken,
+		CommaToken
 	};
 	uint32_t line;
 	uint32_t syntactic_line;
@@ -368,6 +369,17 @@ public:
 	NAME_CONST_METHODS(MemberToken);
 };
 
+class CommaToken : public Token
+{
+public:
+	CommaToken(uint32_t l, uint32_t sl)
+		:Token(l, sl)
+	{
+
+	}
+	NAME_CONST_METHODS(CommaToken);
+};
+
 class Scanner
 {
 	enum class OperationPrecedence : uint8_t { // First is done first, last is done last
@@ -379,7 +391,7 @@ class Scanner
 		Concat, // .. (Lua does this so we're doing this)
 		Bitwise, // & ~ |
 		Comparison, // == != >= =< > <
-		Logical //  && || ^^
+		Logical //  && || ~~
 	};
 
 	const std::unordered_map<std::string, OperationPrecedence> str_to_precedence = {

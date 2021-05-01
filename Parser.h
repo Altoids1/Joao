@@ -187,6 +187,8 @@ class Parser
 				break;
 			}
 			break;
+		case('.'):
+			return BinaryExpression::bOps::Concatenate;
 		default:
 			ParserError(t, "Unknown or unimplemented two-char operation!" + t->dump());
 			break;
@@ -254,20 +256,119 @@ class Parser
 		return AssignmentStatement::aOps::NoOp;
 	}
 
-	// Name | ./Name | {../}Name
-	std::string readIdentifierStr( int here, int there)
+	// VAR_ACCESS ::=
+	// scoped_access | var_access property | var_access element
+	// scoped_access ::= './' Name | {'../'}'../' Name | '/' Name | Name
+	// property ::= {'.' Name }
+	// element ::= {'[' exp ']'}
+	//
+	// HERE-THERE-UPDATE!
+	ASTNode* readVarAccess( int here, int there)
 	{
 #ifdef LOUD_TOKENHEADER
-		std::cout << "readIdentifierStr starting at " << std::to_string(here) << std::endl;
+		std::cout << "readVarAccess starting at " << std::to_string(here) << std::endl;
 #endif
+		ASTNode* scoped_access = nullptr;
+
 		Token* t = tokens[here];
 
-		assert(t->class_enum() == Token::cEnum::WordToken);
+		switch (t->class_enum())
+		{
+		case(Token::cEnum::WordToken): // Name
+			scoped_access = new Identifier(static_cast<WordToken*>(t)->word);
+			tokenheader = here + 1;
+			break;
+		case(Token::cEnum::ParentToken):
+		{
+			if (there == here || tokens[here + 1]->class_enum() != Token::cEnum::WordToken)
+				ParserError(t, "ParentToken found with no corresponding Name!");
+			scoped_access = new ParentAccess(static_cast<WordToken*>(tokens[here + 1])->word);
+			tokenheader = here + 2;
+		}
+		case(Token::cEnum::GrandparentToken):
+		{
+			int depth = 1;
+			for(int where = here +1; where <= there; ++where)
+			{
+				Token* tuk = tokens[here]; // KARH EN TUK
 
-		WordToken wt = *static_cast<WordToken*>(t);
-		tokenheader = here + 1;
+				if (tuk->class_enum() == Token::cEnum::GrandparentToken)
+				{
+					++depth;
+				}
+				else if (tuk->class_enum() == Token::cEnum::WordToken)
+				{
+					scoped_access = new GrandparentAccess(depth, static_cast<WordToken*>(tuk)->word);
+					tokenheader = where + 1;
+					break;
+				}
+				else
+				{
+					ParserError(tuk, "Unexpected Token while reading GrandparentAccess!");
+				}
+			}
+			if(!scoped_access)
+				ParserError(t, "GrandparentToken found with no corresponding Name!");
+			break;
+		}
+		default:
+			ParserError(t, "Unexpected Token while reading scoped_access in readVarAccess()!");
+		}
 
-		return wt.word;
+		if (tokenheader+1 > there) // If we can't access at least 2 more tokens
+			return scoped_access; // Just return the scoped_access find.
+		//Now lets check for property or element
+		Token* propeller = tokens[tokenheader]; // PROPerty or ELLERment. I guess. Shut up.
+
+		switch (propeller->class_enum())
+		{
+		case(Token::cEnum::MemberToken):
+			++tokenheader;
+			return new MemberAccess(scoped_access, readVarAccess(tokenheader, there)); // I'm *pretty* sure this ends up being left-associative.
+		case(Token::cEnum::PairSymbolToken):
+		{
+			PairSymbolToken pst = *static_cast<PairSymbolToken*>(propeller);
+			if (pst.t_pOp == PairSymbolToken::pairOp::Bracket)
+			{
+				ParserError(t, "Indexing operation is not yet implemented!"); // FIXME: soon.
+			}
+			//If it's a parenthesis then we're probably about to do a function call but, that's none of *our* business in readVarAccess() so just return
+			return scoped_access;
+		}
+		default: // I dunno what this is, just return what you have and hope the higher stacks know what it is
+			return scoped_access;
+		}
+	}
+
+
+	int find_comma(int here, int there)
+	{
+		for (int where = here; where <= there; ++where)
+		{
+			if (tokens[where]->class_enum() == Token::cEnum::CommaToken)
+				return where;
+		}
+		return 0; // Safe because it is impossible for the first token of a valid João program to be a CommaToken
+	}
+
+	//Here-there-update;
+	//assumes here < there
+	std::vector<ASTNode*> readArgs(int here, int there)
+	{
+		int comma = find_comma(here, there);;
+
+		if (!comma) // If comman't
+			return { readExp(here,there) };
+
+		std::vector<ASTNode*> args;
+		tokenheader = here;
+		do
+		{
+			args.push_back(readExp(tokenheader, comma)); // updates tokenheader, hopefully
+
+			comma = find_comma(comma, tokenheader);
+		} while (comma);
+		return args;
 	}
 
 	std::string readName(int here)
@@ -379,7 +480,7 @@ class Parser
 				--count;
 				if (!count)
 				{
-					std::cout << "I return " << std::to_string(where);
+					//std::cout << "I return " << std::to_string(where);
 					return where;
 				}
 			}

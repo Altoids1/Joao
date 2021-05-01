@@ -27,7 +27,7 @@ public:
 	Value execute(Program&);
 
 	//Gets function by Directory name.
-	Function* get_func(std::string, ASTNode*);
+	Function* get_func(std::string funkname, ASTNode* caller, bool loud = true);
 
 	///Blockscope/omniscope
 
@@ -36,7 +36,8 @@ public:
 	//Override the value of an already-existing variable at the lowest scope available.
 	void override_var(std::string, Value, ASTNode*);
 	//Get variable at the lowest scope available.
-	Value get_var(std::string,ASTNode*);
+	Value get_var(std::string, ASTNode*);
+	bool has_var(std::string, ASTNode*);
 
 	///Objectscope
 	Value get_property(std::string, ASTNode*);

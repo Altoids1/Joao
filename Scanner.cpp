@@ -204,6 +204,10 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 	{
 		t = new MemberToken(linenum, syntactic_linenum);
 	}
+	else if (first == ',' && second == '\0')
+	{
+		t = new CommaToken(linenum, syntactic_linenum);
+	}
 	else
 	{
 		t = new SymbolToken(linenum, syntactic_linenum, first, second);

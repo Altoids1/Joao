@@ -2,6 +2,7 @@
 
 #include "Forward.h"
 #include "AST.h"
+#include "Directory.h"
 
 class Program // this is pretty much what Parser is supposed to output, and what Interpreter is supposed to take as input.
 {
@@ -57,6 +58,10 @@ public:
 	}
 	void set_func(std::string name, Function* f)
 	{
+		if (name.find_first_of('/') != std::string::npos)
+			name = Directory::lastword(name);
+
+
 		definedFunctions[name] = f;
 	}
 

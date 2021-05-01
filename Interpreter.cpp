@@ -12,7 +12,7 @@ Value Interpreter::execute(Program& program)
 {
 	prog = &program;
 
-	Function* main = prog->get_func("/main");
+	Function* main = prog->get_func("main");
 
 	if (!main)
 	{
@@ -93,7 +93,7 @@ Value Interpreter::get_var(std::string varname, ASTNode *getter)
 	return Value();
 }
 
-Function* Interpreter::get_func(std::string funkname, ASTNode *caller)
+Function* Interpreter::get_func(std::string funkname, ASTNode *caller, bool loud)
 {
 	//Try to find an objectscope function with this name
 	Object* obj = objectscope.top();
@@ -110,7 +110,8 @@ Function* Interpreter::get_func(std::string funkname, ASTNode *caller)
 		return prog->get_func(funkname);
 	}
 
-	RuntimeError(*caller,"Failed to find function named " + funkname + "!");
+	if(loud)
+		RuntimeError(*caller,"Failed to find function named " + funkname + "!");
 	return nullptr;
 }
 

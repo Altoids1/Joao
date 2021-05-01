@@ -189,7 +189,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
-	virtual Handle handle(Interpreter& interp) override { return Handle(t_name); }
+	virtual Handle handle(Interpreter&) override;
 	virtual Handle const_handle(Parser& parse) override { return Handle(t_name); }
 	
 	virtual const std::string class_name() const override { return "Identifier"; }
@@ -398,20 +398,39 @@ public:
 class CallExpression : public Expression {
 	ASTNode* func_expr;
 
-	std::vector<Expression*> args;
+	std::vector<ASTNode*> args;
 public:
 	CallExpression(ASTNode* f)
 		:func_expr(f)
 	{
 
 	}
-	CallExpression* append_arg(Expression* expr)
+	CallExpression(ASTNode* f, std::vector<ASTNode*> arr)
+		:func_expr(f),
+		args(arr) // Arr!!
+	{
+
+	}
+	CallExpression* append_arg(ASTNode* expr)
 	{
 		args.push_back(expr);
 		return this;
 	}
 
 	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "CallExpression"; }
+	virtual std::string dump(int indent) override {
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "CallExpression\n";
+		str += ind +"@Function:\n" + func_expr->dump(indent+1);
+		str += ind + "(Args:\n";
+		for (int i = 0; i < args.size(); ++i)
+		{
+			str += args[i]->dump(indent + 1);
+		}
+		str += ind + ")\n";
+		return str;
+	}
 };
 
 class Function : public ASTNode
@@ -650,9 +669,22 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 
-	virtual Handle handle(Interpreter&) override;
+	//virtual Handle handle(Interpreter&) override;
 
 	virtual const std::string class_name() const override { return "MemberAccess"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "MemberAccess\n";
+
+		str += front->dump(indent + 1);
+		str += back->dump(indent + 1);
+
+		return str;
+	}
+
+
+
 };
 
 class ClassDefinition final : public ASTNode

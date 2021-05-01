@@ -113,6 +113,18 @@ Value Identifier::resolve(Interpreter& interp)
 	return interp.get_var(t_name,this);
 }
 
+Handle Identifier::handle(Interpreter& interp)
+{
+	//We actually have to evaluate here whether or not the identifier present is pointing to a function or not, at the current scope.
+
+	Handle hndl;
+	hndl.type = Handle::HType::Name;
+	hndl.name = t_name;
+	hndl.is_function = interp.get_func(t_name,this,false);
+
+	return hndl;
+}
+
 Value AssignmentStatement::resolve(Interpreter& interp)
 {
 	Value rhs_val = rhs->resolve(interp);
@@ -615,7 +627,7 @@ Value CallExpression::resolve(Interpreter& interp)
 	std::vector<Value> vargs;
 	for (auto it = args.begin(); it != args.end(); ++it)
 	{
-		Expression* e = *it;
+		ASTNode* e = *it;
 		vargs.push_back(e->resolve(interp));
 	}
 	Function* ourfunc = interp.get_func(func_name, this);
@@ -848,6 +860,14 @@ Value Construction::resolve(Interpreter& interp)
 Value ParentAccess::resolve(Interpreter& interp)
 {
 	return interp.get_property(prop,this);
+}
+
+Handle ParentAccess::handle(Interpreter& interp)
+{
+	Handle hdl;
+	hdl.name = prop;
+	hdl.type = Handle::HType::Parent;
+	return hdl;
 }
 
 Value GrandparentAccess::resolve(Interpreter& interp)
