@@ -458,7 +458,7 @@ public:
 		t_name = name;
 		statements = exprs;
 	}
-	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string> sargs) // Hopefully this works. :(
+	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string>& sargs) // Hopefully this works. :(
 	{
 		t_name = name;
 		statements = exprs;
@@ -477,6 +477,14 @@ public:
 	{
 		//std::string ind = std::string(indent, ' ');
 		std::string str = "Function, name: " + t_name + "\n";
+
+		str += "@Params:\n";
+		for (int i = 0; i < t_argnames.size(); ++i)
+		{
+			str += " " + t_argnames[i] + "\n";
+		}
+
+		str += "=Statements:\n";
 		for (int i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);

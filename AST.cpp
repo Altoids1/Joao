@@ -562,6 +562,12 @@ void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* 
 Value Function::resolve(Interpreter & interp)
 {
 	interp.push_stack(Directory::lastword(t_name));
+
+	for (int i = 0; i < t_args.size() && i < t_argnames.size(); ++i)
+	{
+		interp.init_var(t_argnames[i], t_args[i], this);
+	}
+	t_args = {};
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.

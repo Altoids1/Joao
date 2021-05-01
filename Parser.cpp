@@ -49,14 +49,32 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			}
 			if (pop == PairSymbolToken::pairOp::Paren) // THIS IS A FUNCDEF! HOT DAMN we're getting somewhere
 			{
-				//TODO: IMPLEMENT PARAMETER DEFINITIONS
-				tokenheader += 2; // jumps over the implied '()', hackish!
-				//grammarstack.push_front(GrammarState::block);
+				int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
 
-				std::vector<Expression*> bluh = readBlock(BlockType::Function,tokenheader, tokens.size()-1);
+				std::vector<std::string> pirate_noise;
+				if (close != tokenheader + 1)
+				{
+					pirate_noise.push_back(readName(tokenheader+1)); // Updates tokenheader hopefully
+					for (int where = tokenheader; where < close; ++where)
+					{
+						if (tokens[where]->class_enum() != Token::cEnum::CommaToken)
+						{
+							ParserError(tokens[where], "Unexpected Token when Comma expected!");
+						}
+						++where;
+						if (where == close)
+							ParserError(tokens[where], "Missing parameter name in FunctionDefinition!");
+						if (tokens[where]->class_enum() != Token::cEnum::WordToken)
+							ParserError(tokens[where], "Unexpected Token when ParameterName expected!");
+						pirate_noise.push_back(static_cast<WordToken*>(tokens[where])->word);
+					}
+				}
+
+
+				std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, tokens.size()-1);
 				--tokenheader;
 
-				Function* func = new Function(dir_name, bluh);
+				Function* func = new Function(dir_name, bluh, pirate_noise);
 
 				t_program.set_func(dir_name, func);
 
