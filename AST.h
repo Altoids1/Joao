@@ -29,7 +29,7 @@ public:
 	//Constructors
 	Value()
 	{
-
+		t_value.as_int = 0;
 	}
 	~Value();
 	Value(int i)

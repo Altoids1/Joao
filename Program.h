@@ -16,6 +16,7 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	Interpreter* myinterp{ nullptr };
 public:
 	enum class ErrorCode : int {
+		NoError,
 		BadArgType,
 		NotEnoughArgs
 	};
