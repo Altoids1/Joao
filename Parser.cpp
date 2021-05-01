@@ -274,6 +274,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	}
 	case(Token::cEnum::GrandparentToken):
 	case(Token::cEnum::ParentToken):
+	case(Token::cEnum::DirectoryToken):
 	case(Token::cEnum::WordToken): //functioncall | var_access
 	{
 		lvalue = readVarAccess(here, there);
@@ -693,20 +694,21 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 			}
 			ParserError(t, "Unexpected PairSymbol while traversing block!");
 		}
+		
+		
 		case(Token::cEnum::SymbolToken):
-		{
-			/*
-			If the Grammar serves me right, this is either a varstat or a functioncall.
-
-			VARSTAT:
-			there's four ways of doing varstats: in the Local scope, Object Scope, or Global Scope.
-				Value x = 3; ## Set local variable to 3
-				/x = 3; ## Set global variable to 3
-				./x = 3; ## Set property of object we're in called x to 3
-				x = 3; ## Ambiguous, sets lowest-scoped x available to 3
-			*/
-		}
 		case(Token::cEnum::WordToken):
+		case(Token::cEnum::DirectoryToken):
+		/*
+		If the Grammar serves me right, this is either a varstat or a functioncall.
+
+		VARSTAT:
+		there's four ways of doing varstats: in the Local scope, Object Scope, or Global Scope. This block implements the last three.
+			Value x = 3; ## Set local variable to 3
+			/x = 3; ## Set global variable to 3
+			./x = 3; ## Set property of object we're in called x to 3
+			x = 3; ## Ambiguous, sets lowest-scoped x available to 3
+		*/
 		{
 			//CASE 1. local/property assign
 

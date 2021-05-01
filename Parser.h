@@ -274,6 +274,12 @@ class Parser
 
 		switch (t->class_enum())
 		{
+		case(Token::cEnum::DirectoryToken):
+			if (static_cast<DirectoryToken*>(t)->dir != "/" + Directory::lastword(static_cast<DirectoryToken*>(t)->dir))
+				ParserError(t, "Unexpected directory when variable access expected!");
+			scoped_access = new GlobalAccess(Directory::lastword(static_cast<DirectoryToken*>(t)->dir));
+			tokenheader = here + 1;
+			break;
 		case(Token::cEnum::WordToken): // Name
 			scoped_access = new Identifier(static_cast<WordToken*>(t)->word);
 			tokenheader = here + 1;
