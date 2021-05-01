@@ -207,7 +207,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 ASTNode* Parser::readUnary(int here, int there)
 {
 	if (tokens[here]->class_enum() != Token::cEnum::SymbolToken)
-		return readlvalue(here, there);
+		return readPower(here, there);
 
 	UnaryExpression::uOps uh = symbol_to_uOp(static_cast<SymbolToken*>(tokens[here]));
 	if (uh == UnaryExpression::uOps::NoOp)
@@ -260,7 +260,7 @@ ASTNode* Parser::readPower(int here, int there)
 
 			SymbolToken* st = static_cast<SymbolToken*>(t);
 
-			if (st->len > 1 || st->get_symbol()[0] != '^')
+			if (st->len > 1 || st->get_symbol()[0] != '^') // Hardcoded to '^' for now
 			{
 				ParserError(t, "Unexpected symbol when parsing PowerExpression!");
 			}
@@ -275,12 +275,10 @@ ASTNode* Parser::readPower(int here, int there)
 READPOWER_LEAVE_POWERSEARCH:
 	if (lvalues.empty()) // If we didn't find a power
 		return readlvalue(here, there); // then this is just a normal lvalue
+
 	// (a ^ (b ^ (c ^ d)))
-
 	
-	//lvalues.push_back();// Add the final lvalue of the series of exponentiations, the "c" of a ^ b ^ c
-
-	ASTNode* powertower = readlvalue(last_power + 1, where - 1);
+	ASTNode* powertower = readlvalue(last_power + 1, where - 1); // Add the final lvalue of the series of exponentiations, the "c" of a ^ b ^ c
 	for (auto it = lvalues.rbegin(); it != lvalues.rend(); ++it)
 	{
 		powertower = new BinaryExpression(BinaryExpression::bOps::Exponent, *it, powertower);
