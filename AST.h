@@ -32,6 +32,11 @@ public:
 		t_value.as_int = 0;
 	}
 	~Value();
+	Value(size_t i)
+	{
+		t_value.as_int = i;
+		t_vType = vType::Integer;
+	}
 	Value(int i)
 	{
 		t_value.as_int = i;
@@ -168,10 +173,9 @@ public:
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Literal: " + heldval.to_string() + "\n"; }
 };
 
-
+// I'm not even terribly sure that this type needs to exist, but it does, so.
 class Expression : public ASTNode
 {
-
 };
 
 class Identifier : public ASTNode
@@ -260,10 +264,13 @@ public:
 
 class UnaryExpression : public Expression
 {
+	public:
 	enum class uOps : uint8_t {
+		NoOp,
 		Not,
 		Negate,
-		BitwiseNot
+		BitwiseNot,
+		Length
 	}t_op;
 	ASTNode* t_rhs;
 	UnaryExpression(uOps Operator, ASTNode* r)

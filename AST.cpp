@@ -245,6 +245,8 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	//NOT
 	case(UN_ENUMS(uOps::Not, Value::vType::Null)): // !NULL === NULL
 		return Value();
+	case(UN_ENUMS(uOps::Not, Value::vType::Bool)):
+		return Value(!rhs.t_value.as_bool);
 	case(UN_ENUMS(uOps::Not, Value::vType::Integer)):
 		return Value(!rhs.t_value.as_int);
 	case(UN_ENUMS(uOps::Not, Value::vType::Double)):
@@ -258,6 +260,9 @@ Value UnaryExpression::resolve(Interpreter& interp)
 		double newdouble = *(reinterpret_cast<double*>(&fauxint));
 		return Value(newdouble);
 	}
+	//LENGTH
+	case(UN_ENUMS(uOps::Length, Value::vType::String)):
+		return Value(rhs.t_value.as_string_ptr->size());
 
 	default:
 		interp.RuntimeError(*this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");

@@ -197,7 +197,7 @@ class Parser
 		}
 		return BinaryExpression::bOps::NoOp;
 	}
-	AssignmentStatement::aOps aOp_of_symbol(SymbolToken* st)
+	AssignmentStatement::aOps symbol_to_aOp(SymbolToken* st)
 	{
 		char* c = st->get_symbol();
 
@@ -216,13 +216,34 @@ class Parser
 		return AssignmentStatement::aOps::NoOp;
 	}
 
+	UnaryExpression::uOps symbol_to_uOp(SymbolToken* st)
+	{
+		if (st->len != 1)
+			return UnaryExpression::uOps::NoOp;
+
+		switch (st->get_symbol()[0])
+		{
+		case('!'):
+			return UnaryExpression::uOps::Not;
+		case('-'):
+			return UnaryExpression::uOps::Negate;
+		case('#'):
+			return UnaryExpression::uOps::Length;
+		case('~'):
+			return UnaryExpression::uOps::BitwiseNot;
+		default:
+			return UnaryExpression::uOps::NoOp;
+		}
+	}
+
+	ASTNode* readUnary(int, int);
 	ASTNode* readlvalue(int,int);
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
 	ASTNode* readExp(int,int);
 	Construction* readConstruction(int, int);
 
 	//Here-there-update; does not update if no last bracket found
-	std::vector<Expression*> readBlock(BlockType, int, int); 
+	std::vector<Expression*> readBlock(BlockType, int, int);
 
 	//Here-there-update; does not update if no last bracket found
 	std::vector<LocalAssignmentStatement*> readClassDef(std::string, int, int);
@@ -366,6 +387,14 @@ class Parser
 		}
 	}
 
+	/*
+		VARSTAT:
+		there's four ways of doing varstats: in the Local scope, Object Scope, or Global Scope. This block implements the last three.
+			Value x = 3; ## Set local variable to 3
+			/x = 3; ## Set global variable to 3
+			./x = 3; ## Set property of object we're in called x to 3
+			x = 3; ## Ambiguous, sets lowest-scoped x available to 3
+	*/
 	//Updates tokenheader via readExp().
 	AssignmentStatement* readAssignmentStatement(int here, int there)
 	{
@@ -541,7 +570,7 @@ class Parser
 			Token* t = tokens[where];
 			if (t->class_enum() != Token::cEnum::SymbolToken)
 				continue;
-			if (aOp_of_symbol(static_cast<SymbolToken*>(t)) != AssignmentStatement::aOps::NoOp)
+			if (symbol_to_aOp(static_cast<SymbolToken*>(t)) != AssignmentStatement::aOps::NoOp)
 			{
 				return where;
 			}

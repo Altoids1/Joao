@@ -203,6 +203,22 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	return;
 }
 
+//Here-there-update; updates through readlvalue.
+ASTNode* Parser::readUnary(int here, int there)
+{
+	if (tokens[here]->class_enum() != Token::cEnum::SymbolToken)
+		return readlvalue(here, there);
+
+	UnaryExpression::uOps uh = symbol_to_uOp(static_cast<SymbolToken*>(tokens[here]));
+	if (uh == UnaryExpression::uOps::NoOp)
+	{
+		ParserError(tokens[here], "Unexpected symbol when unary operator was expected!");
+	}
+
+	return new UnaryExpression(uh, readlvalue(here+1,there));
+	
+}
+
 //lvalue ::= 'null' | 'false' | 'true' | Numeral | LiteralString | tableconstructor | var_access | functioncall |'(' exp ')'
 ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we know for certain that there's no damned binary operator within it.
 {
@@ -371,10 +387,9 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 	*/
 	//std::cout << "Starting to search for operation " << Scanner::precedence_tostring(op) << "...\n";
 
-	if (op == Scanner::OperationPrecedence::NONE) // If we're at the bottom, evaluate a primary
+	if (op == Scanner::OperationPrecedence::Unary) // If we're at the near-bottom, evaluate a unary
 	{
-		Token* t = tokens[here];
-		return readlvalue(here, there); // Hear-hear!
+		return readUnary(here, there); // Hear-hear!
 	}
 
 
@@ -628,8 +643,10 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				continue;
 			}
 			case(KeywordToken::Key::Elseif):
+				ParserError(t, "Unexpected Elseif keyword with no corresponding If!");
+				continue;
 			case(KeywordToken::Key::Else):
-				ParserError(t, "Elseif & Else statements are not implemented!");
+				ParserError(t, "Unexpected Else keyword with no corresponding If!");
 				continue;
 			case(KeywordToken::Key::Break):
 			{
@@ -718,20 +735,16 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		
 		
 		case(Token::cEnum::SymbolToken):
+		{
+			ParserError(t, "Unexpected or underimplemented Symbol while traversing block!"); //FIXME: Allow for unary expressions to be their own statements (important for ++ and -- when they are implemented)
+			break;
+		}
 		case(Token::cEnum::WordToken):
 		case(Token::cEnum::DirectoryToken):
-		/*
-		If the Grammar serves me right, this is either a varstat or a functioncall.
-
-		VARSTAT:
-		there's four ways of doing varstats: in the Local scope, Object Scope, or Global Scope. This block implements the last three.
-			Value x = 3; ## Set local variable to 3
-			/x = 3; ## Set global variable to 3
-			./x = 3; ## Set property of object we're in called x to 3
-			x = 3; ## Ambiguous, sets lowest-scoped x available to 3
-		*/
+		//If the Grammar serves me right, this is either a varstat or a functioncall.
+		//The main way to disambiguate is to check if the var_access is immediately followed by an open-paren or not.
 		{
-			ASTs.push_back(readAssignmentStatement(where, static_cast<int>(tokens.size() - 1)));
+			ASTs.push_back(readAssignmentStatement(where, there));
 			consume_semicolon();
 			where = tokenheader-1; // Decrement so that the impending increment puts us in the correct place.
 			continue;

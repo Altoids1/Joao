@@ -395,6 +395,10 @@ class Scanner
 	};
 
 	const std::unordered_map<std::string, OperationPrecedence> str_to_precedence = {
+		{"!",OperationPrecedence::Unary},
+		{"~",OperationPrecedence::Unary},
+		{"#",OperationPrecedence::Unary},
+		//
 		{"+",OperationPrecedence::Term},
 		{"-",OperationPrecedence::Term},
 		{"*",OperationPrecedence::Factor},
