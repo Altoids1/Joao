@@ -157,6 +157,8 @@ public:
 	virtual Handle const_handle(Parser&);
 
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + class_name() + "\n"; } // Used for debugging
+
+	virtual bool is_expression() { return false; }
 };
 
 class Literal : public ASTNode { // A node which denotes a plain ol' literal.
@@ -173,9 +175,11 @@ public:
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Literal: " + heldval.to_string() + "\n"; }
 };
 
-// I'm not even terribly sure that this type needs to exist, but it does, so.
+// Expressions are ASTNodes that make sense to be done on their lonesome as a statement w/o other context.
 class Expression : public ASTNode
 {
+
+	virtual bool is_expression() override  { return true; }
 };
 
 class Identifier : public ASTNode

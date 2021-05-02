@@ -814,9 +814,21 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		case(Token::cEnum::WordToken):
 		case(Token::cEnum::DirectoryToken):
 		//If the Grammar serves me right, this is either a varstat or a functioncall.
-		//The main way to disambiguate is to check if the var_access is immediately followed by an open-paren or not.
+		//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
 		{
-			ASTs.push_back(readAssignmentStatement(where, there));
+			int yonder = find_first_semicolon(where+1, there);
+			int found_aop = find_aOp(where + 1, yonder - 1);
+
+			if(found_aop) // varstat
+				ASTs.push_back(readAssignmentStatement(where, there));
+			else // functioncall
+			{
+				ASTNode* luh = readlvalue(where, yonder - 1);
+				if (luh->is_expression())
+					ASTs.push_back(static_cast<Expression*>(luh));
+				else
+					ParserError(t, "Unexpected expression when Statement was expected!");
+			}
 			consume_semicolon();
 			where = tokenheader-1; // Decrement so that the impending increment puts us in the correct place.
 			continue;
