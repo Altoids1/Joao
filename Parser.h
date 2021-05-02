@@ -411,13 +411,23 @@ class Parser
 		return new AssignmentStatement(id, rvalue, aesop);
 	}
 
-
+	//A helper function for readArgs() that shouldn't really be called by anyone else
 	int find_comma(int here, int there)
 	{
 		for (int where = here; where <= there; ++where)
 		{
-			if (tokens[where]->class_enum() == Token::cEnum::CommaToken)
+			switch (tokens[where]->class_enum())
+			{
+			case(Token::cEnum::CommaToken):
 				return where;
+			case(Token::cEnum::PairSymbolToken): // This is function being called within this function call, I guess? Or perhaps a tableconstructor being used as a parameter.
+			//Regardless, we need to skip over it, as it may contain comma tokens that aren't for us.
+				where = find_closing_pairlet(static_cast<PairSymbolToken*>(tokens[where])->t_pOp, where + 1);
+				break;
+			default:
+				continue;
+			}
+				
 		}
 		return 0; // Safe because it is impossible for the first token of a valid João program to be a CommaToken
 	}
