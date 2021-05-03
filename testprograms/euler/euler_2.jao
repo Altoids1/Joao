@@ -2,13 +2,11 @@
 {	
 	Value a = 0;
 	Value b = 1;
-	Value c = 0;
-	
 	Value sum = 0;
 	
 	while(true)
 	{
-		c = a + b;
+		Value c = a + b;
 		
 		if(c > 4_000_000)
 		{
@@ -23,10 +21,10 @@
 			sum = sum + b;
 		}
 		
-		Value dummy = print(a,b);
+		print(a,b);
 	}
 	
-	Value dummy = print("Sum:", sum );
+	print("Sum:", sum );
 
 	return 0;
 }

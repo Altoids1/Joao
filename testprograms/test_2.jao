@@ -1,27 +1,28 @@
 /food
 {
-	Value taste = "Yummy";
+	Value taste = "generic";
 }
-
 
 /food/apple
 {
 	Value name = "Apple";
-	Value desc = "This is an apple. It smells of apple, and tastes of apple, unsurprisingly.";
+	Value size = "medium";
 }
 
-/food/banana/stinky()
+/food/get_taste()
 {
-	return "Stinky!";
+	return taste;
 }
+
 
 /main()
-{	
+{   
 
-	Value i = /food/apple/New();
-	##Value b = /food/banana/New() ##SOON.
-
-	return i;
+	Value a = /food/apple/New();
 	
+	print(a.taste);
 	
+	print(a.get_taste());
+	
+	return 0;
 }
