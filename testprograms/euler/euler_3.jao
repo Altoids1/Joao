@@ -6,15 +6,14 @@
 
 	for(Value x = 2.0; x < sqrt(bigboy); x = x + 1)
 	{
-		if( bigboy % x == 0)
+		if( bigboy % x == 0) ## This if-statement progressively slices bigboy smaller and smaller.
 		{
 			bigboy = bigboy / x;
 			biggest = x;
 		}
 	}
-	
 
-	print(bigboy,biggest);
+	print(bigboy,biggest); ## The former is the biggest prime, the latter is, I guess, the second biggest.
 	
 	return 0;
 }

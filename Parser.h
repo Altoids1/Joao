@@ -341,6 +341,7 @@ class Parser
 				ParserError(t, "ParentToken found with no corresponding Name!");
 			scoped_access = new ParentAccess(static_cast<WordToken*>(tokens[here + 1])->word);
 			tokenheader = here + 2;
+			break;
 		}
 		case(Token::cEnum::GrandparentToken):
 		{

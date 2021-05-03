@@ -1,0 +1,22 @@
+/main()
+{
+	Value largest = 0;
+	for(Value x = 100; x < 1000; x = x + 1)
+	{
+		for(Value y = 100; y < 1000; y = y + 1)
+		{
+			Value result = x * y;
+			Value res_str = tostring(result);
+			
+			if(res_str == reverse(res_str))
+			{
+				if(result > largest)
+				{
+					largest = result;
+				}
+			}
+		}
+	}
+	
+	print(largest);
+}

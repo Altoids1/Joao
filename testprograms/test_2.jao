@@ -1,28 +1,41 @@
 /food
 {
-	Value taste = "generic";
+	Value taste = "Good";
 }
+
 
 /food/apple
 {
 	Value name = "Apple";
-	Value size = "medium";
+	Value my_worm;
 }
 
-/food/get_taste()
+
+/food/apple/get_taste()
 {
-	return taste;
+	if(my_worm)
+	{
+		return my_worm.taste;
+	}
+	else
+	{
+		return ./taste;
+	}
 }
 
+/worm
+{
+	Value name = "Stanley";
+	Value taste = "Awful";
+}
 
 /main()
-{   
-
-	Value a = /food/apple/New();
+{
+	Value auh = /food/apple/New();
 	
-	print(a.taste);
+	print(auh.get_taste());
 	
-	print(a.get_taste());
+	auh.my_worm = /worm/New();
 	
-	return 0;
+	print(auh.get_taste());
 }

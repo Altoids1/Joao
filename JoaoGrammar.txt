@@ -10,7 +10,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	
 	parlist ::= Name {','Name} [',']
 	
-	varstat :: var assignop (exp | directory '/New(' [explist] ')')
+	varstat :: init_var | (var assignop (exp | directory '/New(' [explist] ')'))
 	
 	block ::= {stat}
 	
@@ -22,8 +22,9 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 		'if(' exp '){' block '}' {'elseif(' exp '){' block '}'} ['else(' exp '){' block '}'] |
 		'for('[varstat | exp] ';' [exp] ';' [varstat | exp] '){' block '}
 	
-	var ::= (('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name) |
-		var_access
+	init_var :: = ('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name
+	
+	var ::= init_var | var_access
 	
 	var_access ::= scoped_access | var_access property | var_access element
 	
