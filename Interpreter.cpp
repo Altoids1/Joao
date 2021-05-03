@@ -85,7 +85,7 @@ Value Interpreter::get_var(std::string varname, ASTNode *getter)
 	//Then try globalscope
 	if (globalscope.table.count(varname))
 	{
-		return globalscope.table.at(varname);
+		return *globalscope.table.at(varname);
 	}
 
 	//Give up :(
