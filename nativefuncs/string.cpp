@@ -43,6 +43,26 @@ void Program::construct_string_library()
 		return Value(str);
 	}));
 
+	NATIVE_FUNC("reverse")
+	{
+		if (args.size() < 1)
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
+
+		Value record = args[0];
+
+		if (record.t_vType != Value::vType::String)
+			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+
+		std::string oldstr = *record.t_value.as_string_ptr;
+		std::string str = "";
+
+		for (auto it = oldstr.rbegin(); it != oldstr.rend(); ++it)
+		{
+			str.push_back(*it);
+		}
+
+		return Value(str);
+	}));
 
 	NATIVE_FUNC("substr")
 	{

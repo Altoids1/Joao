@@ -266,7 +266,10 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	//LENGTH
 	case(UN_ENUMS(uOps::Length, Value::vType::String)):
 		return Value(rhs.t_value.as_string_ptr->size());
-
+	case(UN_ENUMS(uOps::Length, Value::vType::Object)):
+		if (rhs.t_value.as_object_ptr->is_table())
+			return Value(static_cast<Table*>(rhs.t_value.as_object_ptr)->length());
+	//Rolls over into the default error case on length failure
 	default:
 		interp.RuntimeError(*this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
 		return Value();
@@ -534,6 +537,27 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		std::string newstr = *(lhs.t_value.as_string_ptr) + *(rhs.t_value.as_string_ptr);
 		return Value(newstr);
 	}
+	case(BIN_ENUMS(bOps::Equals, Value::vType::String, Value::vType::String)):
+	{
+		return Value(*(lhs.t_value.as_string_ptr) == *(rhs.t_value.as_string_ptr));
+	}
+	case(BIN_ENUMS(bOps::Greater, Value::vType::String, Value::vType::String)):
+	{
+		return Value(*(lhs.t_value.as_string_ptr) > *(rhs.t_value.as_string_ptr));
+	}
+	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::String, Value::vType::String)):
+	{
+		return Value(*(lhs.t_value.as_string_ptr) >= * (rhs.t_value.as_string_ptr));
+	}
+	case(BIN_ENUMS(bOps::LessEquals, Value::vType::String, Value::vType::String)):
+	{
+		return Value(*(lhs.t_value.as_string_ptr) <= *(rhs.t_value.as_string_ptr));
+	}
+	case(BIN_ENUMS(bOps::LessThan, Value::vType::String, Value::vType::String)):
+	{
+		return Value(*(lhs.t_value.as_string_ptr) < *(rhs.t_value.as_string_ptr));
+	}
+
 	//STRING & INT
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Integer)):
 	{

@@ -102,5 +102,6 @@ public:
 		t_array[array_index] = newval;
 	}
 
+	size_t length() { return t_array.size(); }
 	bool virtual is_table() override { return true; }
 };

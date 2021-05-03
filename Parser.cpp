@@ -178,7 +178,6 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 		if (dir_f == "" || dir_f == "/") // I don't trust std::string.empty()
 		{
-			std::cout << "This is a global function: " << function_fullname << std::endl;
 			continue;
 		}
 		
@@ -1001,44 +1000,4 @@ READ_CLASSDEF_RETURN_ASTS:
 	std::cout << "Exiting Classdef with header pointed at " << std::to_string(tokenheader) << ".\n";
 #endif
 	return ASTs;
-}
-
-Construction* Parser::readConstruction(int here, int there)
-{
-	return nullptr;
-	std::string dir = "";
-	
-	int where = here;
-	bool looking_for_slash = true;
-	for (; where <= there; ++where)
-	{
-		Token* t = tokens[where];
-		
-		switch (t->class_enum())
-		{
-		case(Token::cEnum::SymbolToken):
-		{
-			if (!looking_for_slash)
-				ParserError(t, "Unexpected symbol when reading New() statement!");
-
-			SymbolToken* st = static_cast<SymbolToken*>(t);
-			if (st->len != 1 || st->get_symbol()[0] != '/')
-			{
-				ParserError(t, "Unexpected symbol when reading New() statement!");
-			}
-
-			dir.push_back('/');
-			continue;
-		}
-		case(Token::cEnum::KeywordToken): // New, or not, I dunno, I'm a comment not a soothsayer
-		{
-			if (looking_for_slash)
-				ParserError(t, "Unexpected keyword when reading New() statement!");
-
-			
-		}
-
-		}
-	}
-
 }
