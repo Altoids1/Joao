@@ -31,25 +31,20 @@ I hope you like it.
 ```dm
 /main()
 {
-	/apple a;
-	return a.get_color();
+	Value a = /apple/New();
+	print(a.get_color(), "is the color of my apple!");
 }
 
 /apple
 {
-	stinky = false;
-	color = "red";
-}
-
-/apple/New()
-{
-	print("An apple has been born! Rejoice!");
+	Value stinky = false;
+	Value color = "red";
 }
 
 /apple/rotten
 {
-	stinky = true;
-	color = "green";
+	Value stinky = true;
+	Value color = "green";
 }
 
 /apple/get_color()
