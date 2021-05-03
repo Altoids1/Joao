@@ -111,11 +111,11 @@ struct Handle
 	}data;
 	enum class HType {
 		Invalid,
-		Name,
-		Parent,
-		Global,
-		Obj,
-		ObjType
+		Name, // A locally-scoped name
+		Parent, // A reference to a parent method/property
+		Global, // A reference to a global method/property
+		Obj, // Object-property/method pair
+		ObjType // ObjectType-property/method pair
 	} type;
 	Handle()
 	{
@@ -127,9 +127,11 @@ struct Handle
 		name = n;
 		type = HType::Name;
 	}
-	Handle(Object* o)
+	Handle(Object* o, std::string& property, bool is_method = false) // And object pointer and its property
 	{
 		data.obj = o;
+		name = property;
+		is_function = is_method;
 		type = HType::Obj;
 	}
 	void qdel()
@@ -460,6 +462,8 @@ protected:
 
 	}
 public:
+	std::string get_name() { return t_name; };
+	void set_obj(Object* o) { obj = o; };
 	Function(std::string name, Expression* expr)
 	{
 		statements = std::vector<Expression*>{ expr };
@@ -688,7 +692,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 
-	//virtual Handle handle(Interpreter&) override;
+	virtual Handle handle(Interpreter&) override;
 
 	virtual const std::string class_name() const override { return "MemberAccess"; }
 	virtual std::string dump(int indent)

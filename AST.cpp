@@ -125,6 +125,8 @@ Handle Identifier::handle(Interpreter& interp)
 	return hndl;
 }
 
+
+
 Value AssignmentStatement::resolve(Interpreter& interp)
 {
 	Value rhs_val = rhs->resolve(interp);
@@ -138,6 +140,7 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 		return rhs_val;
 	}
 
+	//FIXME: This should really just be a switch statement.
 	if (id->class_name() == "Identifier")
 	{
 		Identifier* idfr = static_cast<Identifier*>(id);
@@ -574,13 +577,13 @@ void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* 
 }
 Value Function::resolve(Interpreter & interp)
 {
-	interp.push_stack(Directory::lastword(t_name));
+	interp.push_stack(Directory::lastword(t_name),obj);
 
 	for (int i = 0; i < t_args.size() && i < t_argnames.size(); ++i)
 	{
 		interp.init_var(t_argnames[i], t_args[i], this);
 	}
-	t_args = {};
+	t_args = {}; // Reset args
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.
@@ -619,6 +622,7 @@ Value Function::resolve(Interpreter & interp)
 		}
 	}
 	interp.pop_stack();
+	obj = nullptr; // Reset object
 	if (interp.BREAK_COUNTER)
 	{
 		interp.RuntimeError(this, "Break statement integer too large!");
@@ -629,19 +633,11 @@ Value Function::resolve(Interpreter & interp)
 Value CallExpression::resolve(Interpreter& interp)
 {
 	Handle hndl = func_expr->handle(interp);
-	if (hndl.type != Handle::HType::Name)
-	{
-		interp.RuntimeError(this, "Method calls are unimplemented!"); // FIXME: Soon.
-		return Value();
-	}
-
 	if (!hndl.is_function)
 	{
-		interp.RuntimeError(this, "Cannot call Values!");
+		interp.RuntimeError(this, "Attempted to call something that isn't a function or method!");
 		return Value();
 	}
-
-	std::string func_name = hndl.name;
 
 	std::vector<Value> vargs;
 	for (auto it = args.begin(); it != args.end(); ++it)
@@ -649,9 +645,24 @@ Value CallExpression::resolve(Interpreter& interp)
 		ASTNode* e = *it;
 		vargs.push_back(e->resolve(interp));
 	}
-	Function* ourfunc = interp.get_func(func_name, this);
-	ourfunc->give_args(interp, vargs);
-	return ourfunc->resolve(interp);
+
+	Function* ourfunc = nullptr;
+
+	if (hndl.type == Handle::HType::Name) // locally-scopped function call
+	{
+		Function* ourfunc = interp.get_func(hndl.name, this);
+		ourfunc->give_args(interp, vargs);
+		return ourfunc->resolve(interp);
+	}
+	else if (hndl.type == Handle::HType::Obj) // Call to a specific object
+	{
+		Object* obj = hndl.data.obj;
+		return obj->call_method(interp, hndl.name, vargs);
+	}
+
+	
+	interp.RuntimeError(this, "Failed to execute CallExpression!");
+	return Value();
 }
 
 Value NativeFunction::resolve(Interpreter& interp)
@@ -857,6 +868,69 @@ Value MemberAccess::resolve(Interpreter& interp)
 
 	interp.RuntimeError(this, "Unimplemented MemberAccess detected at runtime!");
 	return Value();
+}
+
+Handle MemberAccess::handle(Interpreter& interp) // Tons of similar code to MemberAccess::resolve(). Could be merged somehow?
+{
+	Handle fr = front->handle(interp);
+	//Has to always be a plain string handle
+	Handle bk = back->handle(interp);
+
+	if (bk.type != Handle::HType::Name)
+	{
+		interp.RuntimeError(this, "Cannot do MemberAccess with non-string property name!");
+		return Handle();
+	}
+	if (fr.is_function)
+	{
+		interp.RuntimeError(this, "Illegal attempt to access members of a function or method!");
+		return Handle();
+	}
+
+	switch (fr.type)
+	{
+	default:
+		interp.RuntimeError(this, "Unknown or underimplemented HandleType used during MemberAccess!");
+	case(Handle::HType::Invalid):
+		return Handle();
+	case(Handle::HType::Name): // A localscoped name of an object
+	{
+		Value vuh = interp.get_var(fr.name, this);
+		if (vuh.t_vType != Value::vType::Object) // Has to be an object
+		{
+			interp.RuntimeError(this, "Cannot access method of non-object Value!");
+			return Handle();
+		}
+
+		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
+
+	}
+	case(Handle::HType::Global): // A globalscope object
+	{
+		Value vuh = interp.get_global(fr.name, this);
+		if (vuh.t_vType != Value::vType::Object)
+		{
+			interp.RuntimeError(this, "Cannot access method of non-object Value!");
+			return Handle();
+		}
+		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
+	}
+	case(Handle::HType::Parent):
+	{
+		Value vuh = interp.get_property(fr.name, this);
+		if (vuh.t_vType != Value::vType::Object)
+		{
+			interp.RuntimeError(this, "Cannot access method of non-object Value!");
+			return Handle();
+		}
+		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
+	}
+	}
+
+
+	interp.RuntimeError(this, "Unimplemented MemberAccess detected at runtime!");
+	return Handle();
+
 }
 
 std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)

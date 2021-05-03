@@ -128,7 +128,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	So in general we would like for the properties and methods of object types to be "cooked,"
 	insofar that you can get a handle on, an ObjectType during runtime and it'll have all the properties and methods pre-inherited from object types higher in the hierarchy.
 
-	Making though is a bit of a headache, since the user programmer can declare functions and classdefs anywhere within the script, in any order.
+	Making this though is a bit of a headache, since the user programmer can declare functions and classdefs anywhere within the script, in any order.
 	Further, a type may be poofed into existence by a singular function definition and nowhere else;
 	an object type which inherits from its parent in all ways spare that one function.
 
@@ -160,29 +160,34 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	{
 		Function* fptr = it->second;
 
-		std::string fstr = it->first;
+		std::string function_fullname = it->second->get_name();
 
-		if (list_of_funcs.count(fstr))
+		std::string function_shortname = it->first;
+
+		if (list_of_funcs.count(function_fullname))
 		{
 			ParserError(nullptr, "Duplicate function definition detected!"); // FIXME: Allow for this (with suppressable warnings anyways)
 			continue;
 		}
-		list_of_funcs[fstr] = true;
+		list_of_funcs[function_fullname] = true;
 
-		std::string dir_f = Directory::DotDot(fstr);
+		std::string dir_f = Directory::DotDot(function_fullname);
 
 		if (dir_f == "" || dir_f == "/") // I don't trust std::string.empty()
+		{
+			std::cout << "This is a global function: " << function_fullname << std::endl;
 			continue;
+		}
 		
 		if (!list_of_types.count(dir_f)) // If our type doesn't exist
 		{
 			ObjectType* objtype = new ObjectType(dir_f);
-			objtype->set_typemethod(*this, dir_f, fptr);
+			objtype->set_typemethod(*this, function_shortname, fptr);
 			list_of_types[dir_f] = objtype; // Make it so!
 		}
 		else
 		{
-			list_of_types[dir_f]->set_typemethod(*this, dir_f, fptr);
+			list_of_types[dir_f]->set_typemethod(*this, function_shortname, fptr);
 		}
 
 	}

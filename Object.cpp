@@ -40,10 +40,11 @@ void Object::set_property(Interpreter& interp, std::string name, Value rhs)
 Value Object::call_method(Interpreter& interp, std::string name, std::vector<Value> &args)
 {
 	if (!base_funcs->count(name))
-		interp.RuntimeError(nullptr, "Unable to access method of object!");
+		interp.RuntimeError(nullptr, "Unable to access method of object: " + name);
 
 	Function* fuh = base_funcs->at(name);
 	fuh->give_args(interp, args, this);
+	fuh->set_obj(this);
 	return fuh->resolve(interp);
 }
 
