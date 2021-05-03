@@ -19,6 +19,7 @@
 //Forwarded Objects
 class Object;
 class ObjectType;
+class Table;
 class Value;
 class Interpreter;
 class Parser;

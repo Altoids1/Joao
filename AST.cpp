@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "Interpreter.h"
 #include "Parser.h"
+#include "Table.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
@@ -154,10 +155,11 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 	{
 		interp.set_property(static_cast<ParentAccess*>(id)->prop, rhs_val, this);
 	}
-	else if (id->class_name() == "MemberAccess")
+	else if (id->class_name() == "MemberAccess" || id->class_name() == "IndexAccess")
 	{
 		Handle hndl = id->handle(interp);
 		Object* objptr;
+
 		switch (hndl.type)
 		{
 		case(Handle::HType::Obj):
@@ -201,7 +203,22 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 			return Value();
 		}
 
-		objptr->set_property(interp, hndl.name, rhs_val);
+		if(id->class_name() == "MemberAccess")
+			objptr->set_property(interp, hndl.name, rhs_val);
+		else // IndexAccess
+		{
+			if (objptr->is_table())
+			{
+				if (hndl.index == -1)
+					static_cast<Table*>(objptr)->at_set(interp, Value(hndl.name), rhs_val);
+				else
+					static_cast<Table*>(objptr)->at_set(interp, Value(hndl.index), rhs_val);
+			}
+			else
+			{
+				objptr->set_property(interp, hndl.name, rhs_val);
+			}
+		}
 	}
 	else
 	{

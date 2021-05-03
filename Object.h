@@ -5,6 +5,7 @@
 
 class Object 
 {
+protected:
 	std::unordered_map<std::string, Value> properties; // A general container for all Value-type properties of this object. Functions are stored in the Program's ObjectTree.
 	std::unordered_map<std::string, Value>* base_properties; //A pointer to our ObjectType's property hashtable, to look up default values when needed
 	std::unordered_map<std::string, Function*>* base_funcs; // Pointer to object's base functions.
@@ -42,6 +43,8 @@ public:
 		return st + "}";
 	}
 	
+	bool virtual is_table() { return false; }
+
 	friend class ObjectType;
 };
 
@@ -53,6 +56,7 @@ class ObjectType // Stores the default methods and properties of this type of Ob
 	std::unordered_map<std::string, Function*> typefuncs;
 	std::unordered_map<std::string, Value> typeproperties;
 public:
+	bool is_table_type = false;
 	ObjectType(std::string n)
 		:object_type(n)
 	{
@@ -66,18 +70,7 @@ public:
 	}
 
 	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
-	Object* makeObject(Interpreter& interp, std::vector<Value> &args)
-	{
-		Object* o = new Object(object_type,&typeproperties, &typefuncs); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
-		if (typefuncs.count("#constructor"))
-		{
-			Function* fuh = typefuncs["#constructor"]; //fuh.
-			if(args.size())
-				fuh->give_args(interp, args, o);
-			fuh->resolve(interp);
-		}
-		return o;
-	}
+	Object* makeObject(Interpreter&, std::vector<Value>&);
 
 	Value get_typeproperty(Interpreter&, std::string, ASTNode*);
 
@@ -103,4 +96,5 @@ public:
 	//Passed Parser-by-reference as the Interpreter should never be calling this; ObjectTypes are static at runtime (for now, anyways!)
 	void set_typeproperty(Parser&,std::string, Value);
 	void set_typemethod(Parser&, std::string, Function*);
+	void set_typemethod_raw(std::string, Function*);
 };

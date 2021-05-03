@@ -31,7 +31,11 @@ public:
 	{
 		t_value.as_int = 0;
 	}
-	~Value();
+	Value(int64_t i)
+	{
+		t_value.as_int = i;
+		t_vType = vType::Integer;
+	}
 	Value(size_t i)
 	{
 		t_value.as_int = i;
@@ -102,10 +106,12 @@ public:
 struct Handle
 {
 	std::string name;
+	size_t index = -1; // FIXME: Really it'd be better if Handle just stored a Value instead of the both of these but that's neither here nor there at the moment
 
 	bool is_function = false;
 	union
 	{
+		Table* table;
 		Object* obj;
 		ObjectType* objtype;
 	}data;
@@ -127,12 +133,18 @@ struct Handle
 		name = n;
 		type = HType::Name;
 	}
-	Handle(Object* o, std::string& property, bool is_method = false) // And object pointer and its property
+	Handle(Object* o, std::string& property, bool is_method = false) // An object pointer and its property
 	{
 		data.obj = o;
 		name = property;
 		is_function = is_method;
 		type = HType::Obj;
+	}
+	Handle(Table* t, size_t ind)
+	{
+		data.table = t;
+		index = ind;
+		type = HType::Obj; // hehe
 	}
 	void qdel()
 	{

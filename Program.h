@@ -23,7 +23,7 @@ public:
 	Program()
 	{
 		//Construct all the native functions
-		construct_natives();
+		//construct_natives();
 	}
 	Program(Function* f)
 	{

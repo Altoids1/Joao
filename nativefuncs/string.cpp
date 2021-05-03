@@ -63,4 +63,4 @@ void Program::construct_string_library()
 }
 
 
-#undef NATIVE_FUNC;
+#undef NATIVE_FUNC

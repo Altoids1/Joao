@@ -7,6 +7,32 @@
 
 #define NATIVE_FUNC(name) definedFunctions[##name] = static_cast<Function*>(new NativeFunction(##name, [](std::vector<Value> args)
 
+
+Value math::round(std::vector<Value> args)
+{
+	if(args.empty())
+		return Value(Value::vType::Null, int(Program::ErrorCode::NotEnoughArgs));
+
+	switch (args[0].t_vType)
+	{
+	default:
+		return Value(Value::vType::Null, int(Program::ErrorCode::BadArgType));
+	case(Value::vType::Double):
+	{
+		double dee = args[0].t_value.as_double;
+		if (ceil(dee) - dee < 0.5)
+			return Value(static_cast<int64_t>(ceil(dee)));
+		else
+			return Value(static_cast<int64_t>(floor(dee)));
+	}
+	case(Value::vType::Integer):
+		return args[0];
+	}
+
+	return Value(); // Just in case
+}
+
+
 void Program::construct_math_library()
 {
 	//MATHEMATICS
@@ -246,6 +272,8 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 	}));
+
+	definedFunctions["round"] = static_cast<Function*>(new NativeFunction("round", math::round)); // FIXME: Weird, should have its own define or... something
 
 	//FIXME: Add random number generator functions here!
 

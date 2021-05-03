@@ -1,6 +1,7 @@
 #include "Object.h"
 #include "Interpreter.h"
 #include "Parser.h"
+#include "Table.h"
 
 Value* Object::has_property(Interpreter& interp, std::string name)
 {
@@ -60,6 +61,23 @@ Function* Object::get_method(Interpreter& interp, std::string name)
 
 /* Object Type */
 
+Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>& args)
+{
+	Object* o;
+	if (is_table_type)
+		o = new Table(object_type, &typeproperties, &typefuncs);
+	else
+		o = new Object(object_type, &typeproperties, &typefuncs); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
+	if (typefuncs.count("#constructor"))
+	{
+		Function* fuh = typefuncs["#constructor"]; //fuh.
+		if (args.size())
+			fuh->give_args(interp, args, o);
+		fuh->resolve(interp);
+	}
+	return o;
+}
+
 Value ObjectType::get_typeproperty(Interpreter& interp, std::string str, ASTNode* getter)
 {
 	if (!typeproperties.count(str))
@@ -88,5 +106,10 @@ void ObjectType::set_typemethod(Parser& parse, std::string name, Function* f)
 		parse.ParserError(nullptr, "Duplicate method of ObjectType detected!");
 	}
 
+	typefuncs[name] = f;
+}
+
+void ObjectType::set_typemethod_raw(std::string name, Function* f)
+{
 	typefuncs[name] = f;
 }

@@ -205,6 +205,8 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 
 	t_program.definedObjTypes = list_of_types;
+	t_program.construct_natives();
+
 	return;
 }
 

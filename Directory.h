@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-A namespace of helper functions for the manipulation of strings that indicate a directory.
+A namespace of helper functions for the manipulation of strings that indicate a directory, and I guess also other shit, innit?
 */
 namespace Directory
 {
@@ -15,4 +15,9 @@ namespace Directory
 namespace string
 {
 	std::string replace_all(std::string, char, char);
+}
+
+namespace math
+{
+	Value round(std::vector<Value>);
 }
