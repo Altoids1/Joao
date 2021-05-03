@@ -1,0 +1,20 @@
+/main()
+{
+	Value bigboy = 600851475143.0; ## For now, has to be a double because the integer type is 32-bit and ergo unable to store a number this large
+
+	Value biggest = 0;
+
+	for(Value x = 2.0; x < sqrt(bigboy); x = x + 1)
+	{
+		if( bigboy % x == 0)
+		{
+			bigboy = bigboy / x;
+			biggest = x;
+		}
+	}
+	
+
+	print(bigboy,biggest);
+	
+	return 0;
+}
