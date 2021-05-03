@@ -716,8 +716,47 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 
 				std::vector<Expression*> if_block = readBlock(BlockType::If,tokenheader,there);
 
-				ASTs.push_back(new IfBlock(cond, if_block));
+				IfBlock* ifstatement = new IfBlock(cond, if_block);
+				
+				while (tokens[tokenheader]->class_enum() == Token::cEnum::KeywordToken)
+				{
+					KeywordToken* ktptr = static_cast<KeywordToken*>(tokens[tokenheader]);
 
+					ASTNode* elif_cond = nullptr;
+					std::vector<Expression*> elif_block = {};
+
+					int block_start = tokenheader + 1;
+
+					bool was_else = true;
+
+					switch (ktptr->t_key)
+					{
+					default:
+						goto IF_BLOCK_LEAVE_ELIF_SEARCH;
+					case(KeywordToken::Key::Elseif):
+					{
+						was_else = false;
+						++tokenheader;
+						consume_paren(true); // (
+						int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
+						elif_cond = readExp(tokenheader, yonder - 1);
+						consume_paren(false); // )
+						block_start = tokenheader;
+					}//ROLLS INTO THE ELSE CODE
+					case(KeywordToken::Key::Else):
+					{
+						elif_block = readBlock(BlockType::If, block_start, there);
+						ifstatement->append_else(new IfBlock(elif_cond, elif_block));
+					}
+					}
+
+					if (was_else) // Stops the Parser from accepting multiple else blocks, or an elif after an else, or whatever
+						break;
+				}
+				IF_BLOCK_LEAVE_ELIF_SEARCH:
+				
+
+				ASTs.push_back(ifstatement);
 				where = tokenheader - 1;
 				continue;
 			}

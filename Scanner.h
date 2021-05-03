@@ -452,6 +452,8 @@ class Scanner
 
 	const std::unordered_map<std::string, KeywordToken::Key> keywordhash = {
 		{"if",KeywordToken::Key::If},
+		{"elseif",KeywordToken::Key::Elseif},
+		{"else",KeywordToken::Key::Else},
 		{"while",KeywordToken::Key::While},
 		{"for",KeywordToken::Key::For},
 		{"return",KeywordToken::Key::Return},

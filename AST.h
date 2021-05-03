@@ -577,7 +577,10 @@ public:
 
 	void append_else(IfBlock* elif)
 	{
-		Elseif = elif;
+		if (Elseif) // If we already have an elif
+			Elseif->append_else(elif); // append this to the bottom of the current chain. FIXME: Recursion is bad and you should feel bad.
+		else
+			Elseif = elif;
 	}
 
 	virtual Value resolve(Interpreter&) override;

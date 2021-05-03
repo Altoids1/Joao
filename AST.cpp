@@ -728,16 +728,16 @@ Value Block::iterate_statements(Interpreter& interp)
 
 Value IfBlock::resolve(Interpreter& interp)
 {
-	if (!condition)
-		return Value();
 
-	if (!condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
+	if (condition && !condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
 	{
 		if (Elseif) // If we have an Elseif to point to
 			return Elseif->resolve(interp); // Return that
 		return Value(); // Otherwise return Null, I guess.
 	}
-	
+	//Getting here either means our condition is true or we have no condition because we're an else statement
+	//Either way, lets go innit
+
 	interp.push_block("if");
 	Value blockret = iterate_statements(interp);
 	
