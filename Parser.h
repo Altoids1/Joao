@@ -380,7 +380,11 @@ class Parser
 			PairSymbolToken pst = *static_cast<PairSymbolToken*>(propeller);
 			if (pst.t_pOp == PairSymbolToken::pairOp::Bracket)
 			{
-				ParserError(t, "Indexing operation is not yet implemented!"); // FIXME: soon.
+				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Bracket, tokenheader + 1);
+				IndexAccess* ack = new IndexAccess(scoped_access, readExp(tokenheader + 1, yonder - 1));
+				tokenheader = yonder + 1;
+				return ack;
+
 			}
 			//If it's a parenthesis then we're probably about to do a function call but, that's none of *our* business in readVarAccess() so just return
 			return scoped_access;

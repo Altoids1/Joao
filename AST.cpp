@@ -991,3 +991,83 @@ Handle GlobalAccess::handle(Interpreter& interp)
 	hdl.type = Handle::HType::Global;
 	return hdl;
 }
+
+Value IndexAccess::resolve(Interpreter& interp)
+{
+	Handle h_lhs = container->handle(interp);
+	Value rhs = index->resolve(interp);
+
+	if (h_lhs.type != Handle::HType::Name)
+		interp.RuntimeError(this, "Indexing is not fully implemented in all grammatical circumstances!");
+
+	Value lhs = interp.get_var(h_lhs.name, this);
+	switch (lhs.t_vType)
+	{
+	default:
+		interp.RuntimeError(this, "Attempted to index a Value of type " + lhs.typestring() + "!");
+		return Value();
+	case(Value::vType::String):
+		if (rhs.t_vType != Value::vType::Integer)
+		{
+			interp.RuntimeError(this, "Cannot index into a String with a Value of type " + rhs.typestring() + "!");
+			return Value();
+		}
+
+		return Value(std::string({ lhs.t_value.as_string_ptr->at(rhs.t_value.as_int) })); // It's lines like these that remind me why I want to make my own programming language in the first place. Happy 1000th line, by the way!
+	case(Value::vType::Object):
+	{
+		Object* obj = lhs.t_value.as_object_ptr;
+		if (obj->is_table())
+		{
+			Table* la_table = static_cast<Table*>(obj);
+			return la_table->at(interp, rhs);
+		}
+		else
+		{
+			if (rhs.t_vType != Value::vType::String)
+			{
+				interp.RuntimeError(this, "Cannot index into an Object with a Value of type " + rhs.typestring() + "!");
+				return Value();
+			}
+			return obj->get_property(interp, *rhs.t_value.as_string_ptr);
+		}
+		
+	}
+	}
+}
+
+Handle IndexAccess::handle(Interpreter& interp)
+{
+	Handle h_lhs = container->handle(interp);
+	Value rhs = index->resolve(interp);
+
+	if (h_lhs.type != Handle::HType::Name)
+	{
+		interp.RuntimeError(this, "Attempted illegal or underimplemented indexing operation!");
+	}
+
+	Value lhs = interp.get_var(h_lhs.name, this);
+
+	if (lhs.t_vType != Value::vType::Object) // FIXME: Allow for index-based setting of string data
+	{
+		interp.RuntimeError(this, "Cannot get handle of anything except object properties!");
+	}
+
+	Object* obj = lhs.t_value.as_object_ptr;
+	if(!obj->is_table())
+		return MemberAccess(container, index).handle(interp); //FIXME: This is so fucked up but it makes so much sense; main issue is that runtimes will report themselves strangely
+
+	switch (rhs.t_vType)
+	{
+	case(Value::vType::String):
+		return Handle(obj, *rhs.t_value.as_string_ptr);
+	case(Value::vType::Integer):
+	{
+		return Handle(static_cast<Table*>(obj), rhs.t_value.as_int);
+	}
+	default:
+		interp.RuntimeError(this, "Unexpected or underimplemented type for index into Table: " + rhs.typestring() + "!");
+		return Handle();
+	}
+
+}

@@ -818,3 +818,27 @@ public:
 	virtual Value resolve(Interpreter&) override;
 	virtual Handle handle(Interpreter&) override;
 };
+
+// a[i] and all that
+class IndexAccess : public ASTNode
+{
+public:
+	ASTNode* container;
+	ASTNode* index;
+
+	IndexAccess(ASTNode* c, ASTNode* i)
+		:container(c)
+		,index(i)
+	{
+
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual Handle handle(Interpreter&) override;
+
+	virtual const std::string class_name() const override { return "IndexAccess"; }
+	virtual std::string dump(int indent) override
+	{
+		return std::string(indent, ' ') + "IndexAccess:\n";
+	}
+};
