@@ -17,82 +17,14 @@ Somewhat dynamically typed but lets not get too angsty about it
 
 #include <chrono>
 
-#define PROGRAM 3
-
 int main(int argc, char** argv)
 {
-#if PROGRAM == 1 // Tests adding two literals together and returning
-	/*
-	main()
-	{
-		return 2 + 1;
-	}
-	*/
-	Function main = Function("main", &ReturnStatement(&BinaryExpression(
-		BinaryExpression::bOps::Add,
-		&Literal(Value(2)),
-		&Literal(Value(1))
-	)));
-#elif PROGRAM == 2 // Tests setting vars and doing math with them
-	/*
-	main()
-	{
-		a = 7;
-		b = 3;
-		return a + b;
-	}
-	*/
-
-	Identifier a = Identifier("a");
-	Identifier b = Identifier("b");
-	Literal seven = Literal(Value(7));
-	Literal three = Literal(Value(3));
-	AssignmentStatement a_seven = AssignmentStatement(&a, &seven);
-	AssignmentStatement b_three = AssignmentStatement(&b, &three);
-	BinaryExpression a_plus_b = BinaryExpression(
-		BinaryExpression::bOps::Add,
-		&a,
-		&b
-	);
-	ReturnStatement ret_aplusb = ReturnStatement(&a_plus_b);
-
-
-	Function main = Function("main", &a_seven);
-	main.append(&b_three);
-	main.append(&ret_aplusb);
-#elif PROGRAM == 3 // Tests Values containing strings, and doing math with them
-	/*
-	main()
-	{
-		a = "Hello";
-		b = " World!";
-		return a + b;
-	}
-	*/
-	Identifier a = Identifier("a");
-	Identifier b = Identifier("b");
-	std::string h = "Hello", _w = " World!";
-	Literal hello = Literal(Value(h));
-	Literal _world = Literal(Value(_w));
-	AssignmentStatement a_seven = AssignmentStatement(&a, &hello);
-	AssignmentStatement b_three = AssignmentStatement(&b, &_world);
-	BinaryExpression a_plus_b = BinaryExpression(
-		BinaryExpression::bOps::Concatenate,
-		&a,
-		&b
-	);
-	ReturnStatement ret_aplusb = ReturnStatement(&a_plus_b);
-
-
-	Function testmain = Function("main", &a_seven);
-	testmain.append(&b_three);
-	testmain.append(&ret_aplusb);
-#endif
 	Program parsed;
 	std::chrono::steady_clock::time_point t1;
 	if (argc == 1)
 	{
-		parsed = Program(&testmain);
+		std::cout << "ERROR: No file provided for execution!\n";
+		exit(1);
 	}
 	else
 	{
@@ -128,8 +60,9 @@ int main(int argc, char** argv)
 
 	std::cout << "Execution took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 
+#ifdef PRINT_MAIN_RETURN_VAL
 	std::cout << v.to_string();
-
+#endif
 
 	return EXIT_SUCCESS;
 }

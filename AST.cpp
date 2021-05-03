@@ -8,23 +8,6 @@
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
-//It's necessary for me to do this.
-Value::~Value()
-{
-	//std::cout << "*Yoda Scream*\n";
-	//TODO: Make sure we're not the only being in the universe that has a pointer to these things.
-	/*
-	if (t_vType == vType::String)
-	{
-		delete t_value.as_string_ptr;
-	}
-	else if (t_vType == vType::Object)
-	{
-		delete t_value.as_object_ptr;
-	}
-	*/
-}
-
 std::string Value::to_string()
 {
 	switch (t_vType)
