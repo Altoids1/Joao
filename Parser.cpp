@@ -133,6 +133,9 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	an object type which inherits from its parent in all ways spare that one function.
 
 	Here is my attempt at resolving the problem, written at three in the morning. Enjoy.
+
+	FIXME: While this probably does work, its complexity is practically quadratic, and will have to be reworked to improve its performance later on.
+	Additionally, this doesn't allow for correct overloading of the /table class.
 	*/
 
 	//Step 1. Get a list of all classes that exist in some way
@@ -191,6 +194,40 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 		}
 
 	}
+
+	for (auto Klass = list_of_types.begin(); Klass != list_of_types.end(); ++Klass)
+	{
+		for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
+		{
+			ClassDefinition* cdptr = *it;
+			std::string cdstr = cdptr->direct;
+
+			if (cdstr == Klass->first || !Directory::is_base_of(cdstr,Klass->first))
+				continue;
+
+			cdptr->append_properties(*this, Klass->second);
+		}
+		for (auto it = fdefs.begin(); it != fdefs.end(); ++it) // Ask all the functions
+		{
+			Function* fptr = it->second;
+
+			std::string function_fullname = it->second->get_name();
+			std::string function_shortname = it->first;
+			std::string dir_f = Directory::DotDot(function_fullname);
+
+			if (dir_f == "" || dir_f == "/") // I don't trust std::string.empty()
+			{
+				continue;
+			}
+
+			if (dir_f == Klass->first || !Directory::is_base_of(dir_f, Klass->first))
+				continue;
+
+			Klass->second->set_typemethod(*this, function_shortname, fptr);
+		}
+	}
+
+
 #ifdef LOUD_AST
 	std::cout << "Here's my class tree:\n";
 	for (auto it = list_of_types.begin(); it != list_of_types.end(); ++it)

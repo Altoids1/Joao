@@ -740,6 +740,7 @@ public:
 	//virtual Value resolve(Interpreter&) override;
 
 	std::unordered_map<std::string, Value> resolve_properties(Parser&);
+	void append_properties(Parser&, ObjectType*);
 
 	virtual const std::string class_name() const override { return "ClassDefinition"; }
 	virtual std::string dump(int indent)

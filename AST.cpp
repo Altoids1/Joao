@@ -947,6 +947,19 @@ std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parse
 	return svluh;
 }
 
+void ClassDefinition::append_properties(Parser& parse, ObjectType* objtype)
+{
+
+	for (auto it = statements.begin(); it != statements.end(); ++it)
+	{
+		LocalAssignmentStatement* lassy = *it;
+
+		std::pair<std::string, Value> pear = lassy->resolve_property(parse);
+
+		objtype->set_typeproperty(parse, pear.first,pear.second);	
+	}
+}
+
 Value Construction::resolve(Interpreter& interp)
 {
 	return interp.makeObject(type,args,this);

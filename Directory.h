@@ -10,6 +10,8 @@ namespace Directory
 
 	// Get the last word token within this dir, returning emptystring if there is none and dir if there's no slash
 	std::string lastword(std::string);
+
+	bool is_base_of(std::string, std::string);
 }
 
 namespace string

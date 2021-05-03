@@ -25,6 +25,22 @@ std::string Directory::lastword(std::string dir)
 	return dir.substr(lastslashpos + 1, std::string::npos);
 }
 
+bool Directory::is_base_of(std::string base, std::string derived)
+{
+	if (base == "/")
+		return true;
+	if (derived == base)
+		return false;
+	while (true)
+	{
+		derived = Directory::DotDot(derived);
+		if (derived == base)
+			return true;
+		if (base.length() > derived.length())
+			return false;
+	}
+}
+
 std::string string::replace_all(std::string hay, char needle, char cooler_needle) // Needle vs. the cooler needle
 {
 	size_t pos = hay.find_first_of(needle);
@@ -35,3 +51,4 @@ std::string string::replace_all(std::string hay, char needle, char cooler_needle
 	}
 	return hay;
 }
+
