@@ -33,6 +33,7 @@ I hope you like it.
 {
 	Value a = /apple/New();
 	print(a.get_color(), "is the color of my apple!");
+	return 0;
 }
 
 /apple
