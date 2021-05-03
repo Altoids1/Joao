@@ -254,7 +254,7 @@ class Parser
 	//Reads a strongly-expected LocalAssignment (of form, "Value x = 3" or whatever). Does not consume a semicolon.
 	LocalAssignmentStatement* readLocalAssignment(int, int);
 
-	AssignmentStatement::aOps readaOp(int here = 0)
+	AssignmentStatement::aOps readaOp(int here = 0, bool loud = true)
 	{
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readaOp starting at " << std::to_string(tokenheader) << std::endl;
@@ -265,11 +265,11 @@ class Parser
 		else
 			t = tokens[tokenheader];
 
+
 		if (t->class_enum() != Token::cEnum::SymbolToken)
 		{
-			ParserError(t, "Unexpected Token when aOp was expected!");
-			if(!here)
-				++tokenheader;
+			if(loud)
+				ParserError(t, "Unexpected Token when aOp was expected!");
 			return AssignmentStatement::aOps::NoOp;
 		}
 		SymbolToken st = *static_cast<SymbolToken*>(t);
@@ -286,12 +286,19 @@ class Parser
 			}
 			else
 			{
-				ParserError(t, "Unexpected single-char SymbolToken; aOp was expected!");
+				if (loud)
+				{
+					ParserError(t, "Unexpected single-char SymbolToken; aOp was expected!");
+				}
+				return AssignmentStatement::aOps::NoOp;
 			}
 		}
+		if (loud)
+			ParserError(t, "Two-char assignment operations are not implemented!");
 
-		ParserError(t, "Two-char assignment operations are not implemented!");
+		return AssignmentStatement::aOps::NoOp;
 
+		//FIXME: two-char assignment operations!
 		if(!here)
 			++tokenheader;
 #ifdef LOUD_TOKENHEADER

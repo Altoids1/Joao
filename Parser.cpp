@@ -660,7 +660,19 @@ LocalAssignmentStatement* Parser::readLocalAssignment(int here, int there) // Va
 
 	Identifier* id = new Identifier(readName(here+1));
 
-	AssignmentStatement::aOps aesop = readaOp(here+2);
+	AssignmentStatement::aOps aesop = readaOp(here+2, false);
+
+	if (aesop == AssignmentStatement::aOps::NoOp)
+	{
+		if(tokens[here+2]->class_enum() != Token::cEnum::EndLineToken)
+			ParserError(t, "Unexpected token when reading LocalAssignment!");
+		//This implies something like "Value x;", which ought to be equivalent to "Value x = null;"
+		//So... lets make it equivalent!
+		
+		//(We don't consume the semicolon; it's assumed by higher stacks that *they* will be the ones to consume it)
+		//(We know it's there, though ;) )
+		return new LocalAssignmentStatement(id, new Literal(Value()), AssignmentStatement::aOps::Assign);
+	}
 
 	ASTNode* rvalue = readExp(here+3,there);
 
