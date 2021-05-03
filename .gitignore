@@ -356,7 +356,7 @@ MigrationBackup/
 ####
 ####
 
-#Solutions, vcxproj, and vcxproj.filters (Temporarily not part of the repo while in very early development)
-*.sln
-*.vcxproj
-*.vcxproj.filters
+#Solutions, vcxproj, and vcxproj.filters
+#*.sln
+#*.vcxproj
+#*.vcxproj.filters
