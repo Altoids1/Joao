@@ -466,6 +466,8 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, here+1);
 			
 			lvalue = readExp(here + 1, close - 1); // ReadExp will increment tokenheader for us, hopefully. Can't say for sure, this recursion is confusing.
+
+			consume_paren(false); // Consumes that paren we found
 		}
 		break;
 	}
