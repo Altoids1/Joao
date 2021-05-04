@@ -1,5 +1,11 @@
 #include "Program.h"
 
+#ifdef __GNUG__
+	#include "./nativefuncs/math.cpp"
+	#include "./nativefuncs/string.cpp"
+	#include "./nativefuncs/table.cpp"
+#endif
+
 void Program::construct_natives()
 {
 	//TEXT MANIPULATION

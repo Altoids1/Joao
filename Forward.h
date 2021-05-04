@@ -10,6 +10,10 @@
 #include <list>
 #include <stack>
 
+#ifdef __GNUG__
+	#include <cmath>
+#endif
+
 #ifdef _DEBUG
 
 //Debug flags

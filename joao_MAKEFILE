@@ -1,0 +1,65 @@
+# My first, crappy attempt at making a makefile for Joao.
+# So scared about this working that I'm too timid to use a circumflex on the a, there.
+# Typing 'make' or 'make count' will create the executable file.
+#
+
+# define some Makefile variables for the compiler and compiler flags
+# to use Makefile variables later in the Makefile: $()
+#
+#  -g    adds debugging information to the executable file
+#  -Wall turns on most, but not all, compiler warnings
+#
+# for C++ define  CC = g++
+CC = g++
+CFLAGS  = -g -Wall
+
+# typing 'make' will invoke the first target entry in the file 
+# (in this case the default target entry)
+# you can name this target entry anything, but "default" or "all"
+# are the most commonly used names by convention
+#
+default: joao
+
+# To create the executable file count we need the object files
+joao:  AST.o Directory.o Interpreter.o main.o math.o string.o table.o Object.o Parser.o Program.o Scanner.o
+	$(CC) $(CFLAGS) -o joao AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o
+
+AST.o: AST.cpp Forward.h AST.h Object.h Interpreter.h Parser.h Table.h
+	$(CC) $(CFLAGS) -c AST.cpp
+
+Directory.o: Directory.cpp Forward.h Directory.h
+	$(CC) $(CFLAGS) -c Directory.cpp
+
+Interpreter.o: Interpreter.cpp Forward.h AST.h Interpreter.h
+	$(CC) $(CFLAGS) -c Interpreter.cpp
+
+main.o: main.cpp Forward.h AST.h Interpreter.h Object.h Parser.h
+	$(CC) $(CFLAGS) -c main.cpp
+	
+math.o: ./nativefuncs/math.cpp Program.h
+	$(CC) $(CFLAGS) -c ./nativefuncs/math.cpp
+
+string.o: ./nativefuncs/string.cpp Program.h
+	$(CC) $(CFLAGS) -c ./nativefuncs/string.cpp
+
+table.o: ./nativefuncs/table.cpp Program.h
+	$(CC) $(CFLAGS) -c ./nativefuncs/table.cpp
+
+Object.o: Object.cpp Object.h Interpreter.h Parser.h Table.h
+	$(CC) $(CFLAGS) -c Object.cpp
+
+Parser.o: Parser.cpp Parser.h Object.h Directory.h
+	$(CC) $(CFLAGS) -c Parser.cpp
+
+Program.o: Program.cpp Program.h
+	$(CC) $(CFLAGS) -c Program.cpp
+
+Scanner.o:  Scanner.cpp Scanner.h 
+	$(CC) $(CFLAGS) -c Scanner.cpp
+
+# To start over from scratch, type 'make clean'.  This
+# removes the executable file, as well as old .o object
+# files and *~ backup files:
+#
+clean: 
+	$(RM) count *.o *~

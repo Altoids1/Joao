@@ -396,7 +396,7 @@ public:
 	virtual const std::string class_name() const override { return "ReturnStatement"; }
 
 	ReturnStatement()
-		:held_expr(&Literal(Value()))
+		:held_expr(new Literal(Value()))
 	{
 
 	}

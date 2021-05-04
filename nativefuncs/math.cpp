@@ -5,7 +5,7 @@
 #define MATH_E 2.71828182845904523536
 #define PI 3.14159265358979323846
 
-#define NATIVE_FUNC(name) definedFunctions[##name] = static_cast<Function*>(new NativeFunction(##name, [](std::vector<Value> args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
 
 
 Value math::round(std::vector<Value> args)

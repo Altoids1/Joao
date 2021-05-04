@@ -1,6 +1,7 @@
 #pragma once
 #include "Forward.h"
 #include "Object.h"
+#include "Directory.h"
 
 /*
 Tables are a very special variety of Objects, for these reasons:

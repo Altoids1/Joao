@@ -402,7 +402,10 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Double, Value::vType::Integer)):
 		return Value(pow(lhs.t_value.as_double, rhs.t_value.as_int));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Double, Value::vType::Integer)):
-		return Value(modf(lhs.t_value.as_double / rhs.t_value.as_int, nullptr));
+	{
+		double nowhere;
+		return Value(modf(lhs.t_value.as_double / rhs.t_value.as_double, &nowhere) * rhs.t_value.as_double);
+	}
 	//
 		//Bitwise :(
 	//

@@ -1,6 +1,6 @@
 #include "../Program.h"
 
-#define NATIVE_FUNC(name) definedFunctions[##name] = static_cast<Function*>(new NativeFunction(##name, [](std::vector<Value> args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
 
 void Program::construct_string_library()
 {
