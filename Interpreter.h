@@ -89,7 +89,7 @@ public:
 	{
 		if (!globalscope.table.count(name))
 			RuntimeError(getter, "Unable to access global value: " + name);
-		return globalscope.table.at(name);
+		return *globalscope.table.at(name);
 	}
 	void set_global(std::string name, Value& val, ASTNode* setter)
 	{
