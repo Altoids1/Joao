@@ -166,6 +166,21 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 					}
 				}
 			}
+			else if (first == '!' && c == '=')
+			{
+				second = c;
+				++it;
+				std::string str{ first, second };
+				if (str_to_precedence.count(str))
+				{
+					OperationPrecedence op = str_to_precedence.at(str);
+					if (op > lowop)
+					{
+						lowop = op;
+					}
+				}
+				break;
+			}
 			//Double-char operators and things; '..' rolls over into here if finding '../' fails
 			if (c == first)
 			{
@@ -186,7 +201,7 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 				}
 				break;
 			}
-			
+			//Casually rolls-over into the default case when it realizes this isn't a two-char symbol
 		default:
 			std::string str{first};
 			if (str_to_precedence.count(str))

@@ -542,18 +542,13 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 		{
 			SymbolToken st = *static_cast<SymbolToken*>(t2);
 
-			BinaryExpression::bOps boopitybeep;
+			BinaryExpression::bOps boopitybeep = readbOp(static_cast<SymbolToken*>(t2));
 
-			if (st.len == 1)
+			if (boopitybeep == BinaryExpression::bOps::NoOp)
 			{
-				boopitybeep = readbOpOneChar(st.get_symbol(), t2);
+				continue;
 			}
-			else
-			{
-				boopitybeep = readbOpTwoChar(st.get_symbol(), t2);
-			}
-
-			if (bOp_to_precedence.at(boopitybeep) == op) // WE GOT A HIT!
+			else if (bOp_to_precedence.at(boopitybeep) == op) // WE GOT A HIT!
 			{
 				
 				//ALL THIS ASSUMES LEFT-ASSOCIATIVITY, AS IN ((1 + 2) + 3) + 4

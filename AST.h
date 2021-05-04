@@ -298,6 +298,34 @@ class UnaryExpression : public Expression
 
 	}
 	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "UnaryExpression"; }
+	virtual std::string dump(int indent) override
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string op;
+		switch (t_op)
+		{
+		case(uOps::Not):
+			op = "Not";
+			break;
+		case(uOps::BitwiseNot):
+			op = "BitwiseNot";
+			break;
+		case(uOps::Length):
+			op = "Length";
+			break;
+		case(uOps::Negate):
+			op = "Negate";
+			break;
+		default:
+			op = "???";
+			break;
+		}
+
+		std::string str = ind + "UnaryExpresion, Operation: " + op + "\n";
+
+		return str + t_rhs->dump(indent + 1);
+	}
 };
 
 class BinaryExpression : public Expression 
@@ -352,6 +380,9 @@ public:
 		std::string sop;
 		switch (t_op)
 		{
+		case(bOps::NoOp):
+			sop = "NoOp, somehow?";
+			break;
 		case(bOps::Add):
 			sop = "Add";
 			break;

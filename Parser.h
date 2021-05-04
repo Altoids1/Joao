@@ -89,7 +89,7 @@ class Parser
 	//However, most functions have their own internal headers for subiteration, sometimes updating tokenheader on exit.
 	//This is unfortunately necessary due to the recursive and multi-stroke nature of this Parser and its grammar.
 
-	BinaryExpression::bOps readbOpOneChar (char* c, Token* t)
+	BinaryExpression::bOps readbOpOneChar (char* c)
 	{
 		switch (c[0])
 		{
@@ -103,7 +103,7 @@ class Parser
 		case('*'):
 			return BinaryExpression::bOps::Multiply;
 			break;
-		case('/'): //FIXME: The Scanner currently creates ambiguous Tokens, such that the Parser can't distinguish between "/apple/rotten/a / b" and "/apple/rotten/a/b".
+		case('/')://multichar
 			return BinaryExpression::bOps::Divide;
 			break;
 		case('^'):
@@ -127,35 +127,17 @@ class Parser
 		case('<')://multichar needed
 			return BinaryExpression::bOps::LessThan;
 			break;
-		case('='):
-			//We actually can deduce that this is == w/o looking at the second char in symbol. If this were assignment, we'd be reading a varstat, not an exp.
-			return BinaryExpression::bOps::Equals;
-			break;
-		case('!'):
-			//Related to the logic above, this has to be operator!=.
-			//...that being said, we should genuinely check (FIXME) that these are accurate; they may be malformed symbols. Perhaps the check could even be in Scanner?
-			return BinaryExpression::bOps::NotEquals;
-			break;
 		default:
-			ParserError(t, "Unknown or unimplemented one-char operation!");
-			break;
+			return BinaryExpression::bOps::NoOp;
 		}
 		return BinaryExpression::bOps::NoOp;
 	}
-	BinaryExpression::bOps readbOpTwoChar(char* c, Token* t)
+	BinaryExpression::bOps readbOpTwoChar(char* c)
 	{
 		switch (c[1])
 		{
 			//This Switch tries to keep the binOps in the order in which they appear in JoaoGrammar.txt.
-		case('+')://++
-			ParserError(t, "Improper use of unary operator in BinaryExpression!");
-			return BinaryExpression::bOps::Add;
-			break;
-		case('-')://--
-			ParserError(t, "Improper use of unary operator in BinaryExpression!");
-			return BinaryExpression::bOps::Subtract;
-			break;
-		case('/')://FIXME: The Scanner currently creates ambiguous Tokens, such that the Parser can't distinguish between "/apple/rotten/a / b" and "/apple/rotten/a/b".
+		case('/'):
 			return BinaryExpression::bOps::FloorDivide;
 			break;
 		case('&')://&&
@@ -185,15 +167,13 @@ class Parser
 			case('='): // == 
 				return BinaryExpression::bOps::Equals;
 			default:
-				ParserError(t, "Unknown or unimplemented equivalence operation!");
-				break;
+				return BinaryExpression::bOps::NoOp;
 			}
 			break;
 		case('.'):
 			return BinaryExpression::bOps::Concatenate;
 		default:
-			ParserError(t, "Unknown or unimplemented two-char operation!" + t->dump());
-			break;
+			return BinaryExpression::bOps::NoOp;
 		}
 		return BinaryExpression::bOps::NoOp;
 	}
@@ -305,6 +285,17 @@ class Parser
 		std::cout << "readaOp setting tokenheader to " << std::to_string(tokenheader) << std::endl;
 #endif
 		return AssignmentStatement::aOps::NoOp;
+	}
+
+	BinaryExpression::bOps readbOp(SymbolToken* st)
+	{
+		char* symbol = st->get_symbol();
+		if (st->len == 1)
+			return readbOpOneChar(symbol);
+		else
+			return readbOpTwoChar(symbol);
+
+		return BinaryExpression::bOps::NoOp;
 	}
 
 	// VAR_ACCESS ::=
