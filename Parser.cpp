@@ -14,107 +14,91 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 
 	for (tokenheader = 0; tokenheader < tokens.size(); ++tokenheader)
 	{
-
-		switch (grammarstack.front())
+		//Expecting: a bunch of classdefs and funcdefs
+		//Both of these start with a directory that ends in a '/'Name, so lets read that in
+		Token* t = tokens[tokenheader];
+		if (t->class_enum() != Token::cEnum::DirectoryToken)
 		{
-		case(GrammarState::program): // This state implies we're surfing the global scope, looking for things to def.
-		{
-			//Expecting: a bunch of classdefs and funcdefs
-			//Both of these start with a directory that ends in a '/'Name, so lets read that in
-			Token* t = tokens[tokenheader];
-			if (t->class_enum() != Token::cEnum::DirectoryToken)
-			{
-				ParserError(t, "Unexpected Token at global-scope definition when Directory was expected!");
-			}
-
-			std::string dir_name = static_cast<DirectoryToken*>(t)->dir;
-
-			++tokenheader;
-			//The next token has to be either a '(', which disambiguates us into being a funcdef,
-			//or a '{', which brings us towards being a classdef.
-			t = tokens[tokenheader];
-			if (t->class_enum() != Token::cEnum::PairSymbolToken)
-			{
-				ParserError(t, "Unexpected Token at global-scope definition!");
-				continue; // ?????????
-			}
-
-			PairSymbolToken st = *static_cast<PairSymbolToken*>(t); // Allah
-
-			PairSymbolToken::pairOp pop = st.t_pOp;
-			if (pop == PairSymbolToken::pairOp::Bracket || !st.is_start)
-			{
-				ParserError(t, "Unexpected PairSymbol at global-scope definition!");
-				continue;
-			}
-			if (pop == PairSymbolToken::pairOp::Paren) // THIS IS A FUNCDEF! HOT DAMN we're getting somewhere
-			{
-				int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
-
-				std::vector<std::string> pirate_noise;
-				if (close != tokenheader + 1)
-				{
-					pirate_noise.push_back(readName(tokenheader+1)); // Updates tokenheader hopefully
-					for (int where = tokenheader; where < close; ++where)
-					{
-						if (tokens[where]->class_enum() != Token::cEnum::CommaToken)
-						{
-							ParserError(tokens[where], "Unexpected Token when Comma expected!");
-						}
-						++where;
-						if (where == close)
-							ParserError(tokens[where], "Missing parameter name in FunctionDefinition!");
-						if (tokens[where]->class_enum() != Token::cEnum::WordToken)
-							ParserError(tokens[where], "Unexpected Token when ParameterName expected!");
-						pirate_noise.push_back(static_cast<WordToken*>(tokens[where])->word);
-					}
-				}
-
-
-				std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, tokens.size()-1);
-				--tokenheader;
-
-				Function* func = new Function(dir_name, bluh, pirate_noise);
-
-				t_program.set_func(dir_name, func);
-
-				continue;
-			}
-			else if (pop == PairSymbolToken::pairOp::Brace) // THIS IS A CLASSDEF!
-			{
-#ifdef LOUD_TOKENHEADER
-				std::cout << "Classdefinition began read at tokenheader " << std::to_string(tokenheader) << std::endl;
-#endif
-				std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, tokens.size() - 1);
-
-				classdef_list.push_back(new ClassDefinition(dir_name, lasses));
-
-#ifdef LOUD_TOKENHEADER
-				std::cout << "Classdefinition set tokenheader for globalscope to " << std::to_string(tokenheader) << std::endl;
-#endif
-
-				--tokenheader; // Handle imminent increment
-				
-				continue;
-
-				//ParserError(t, "Classdefs are not implemented yet!");
-			}
-			else
-			{
-				ParserError(t, "Unexpected Pairsymbol at global-scope definition!");
-				continue;
-			}
+			ParserError(t, "Unexpected Token at global-scope definition when Directory was expected!");
 		}
-		case(GrammarState::block): // This state implies we're entering into a scope
-		//Right now, it's the Interpreter's duty to comprehend how things scope out. We're just here to parse things, not run them.
+
+		std::string dir_name = static_cast<DirectoryToken*>(t)->dir;
+
+		++tokenheader;
+		//The next token has to be either a '(', which disambiguates us into being a funcdef,
+		//or a '{', which brings us towards being a classdef.
+		t = tokens[tokenheader];
+		if (t->class_enum() != Token::cEnum::PairSymbolToken)
 		{
-			ParserError(tokens[tokenheader], "Parsing block in an unknown context!");
-			readBlock(BlockType::Unknown, tokenheader, tokens.size() - 1); // Has to be a function so as to allow itself to call itself recursively.
-			--tokenheader;
+			ParserError(t, "Unexpected Token at global-scope definition!");
+			continue; // ?????????
+		}
+
+		PairSymbolToken st = *static_cast<PairSymbolToken*>(t); // Allah
+
+		PairSymbolToken::pairOp pop = st.t_pOp;
+		if (pop == PairSymbolToken::pairOp::Bracket || !st.is_start)
+		{
+			ParserError(t, "Unexpected PairSymbol at global-scope definition!");
 			continue;
 		}
-		}
+		if (pop == PairSymbolToken::pairOp::Paren) // THIS IS A FUNCDEF! HOT DAMN we're getting somewhere
+		{
+			int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
 
+			std::vector<std::string> pirate_noise;
+			if (close != tokenheader + 1)
+			{
+				pirate_noise.push_back(readName(tokenheader+1)); // Updates tokenheader hopefully
+				for (int where = tokenheader; where < close; ++where)
+				{
+					if (tokens[where]->class_enum() != Token::cEnum::CommaToken)
+					{
+						ParserError(tokens[where], "Unexpected Token when Comma expected!");
+					}
+					++where;
+					if (where == close)
+						ParserError(tokens[where], "Missing parameter name in FunctionDefinition!");
+					if (tokens[where]->class_enum() != Token::cEnum::WordToken)
+						ParserError(tokens[where], "Unexpected Token when ParameterName expected!");
+					pirate_noise.push_back(static_cast<WordToken*>(tokens[where])->word);
+				}
+			}
+
+
+			std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, tokens.size()-1);
+			--tokenheader;
+
+			Function* func = new Function(dir_name, bluh, pirate_noise);
+
+			t_program.set_func(dir_name, func);
+
+			continue;
+		}
+		else if (pop == PairSymbolToken::pairOp::Brace) // THIS IS A CLASSDEF!
+		{
+#ifdef LOUD_TOKENHEADER
+			std::cout << "Classdefinition began read at tokenheader " << std::to_string(tokenheader) << std::endl;
+#endif
+			std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, tokens.size() - 1);
+
+			classdef_list.push_back(new ClassDefinition(dir_name, lasses));
+
+#ifdef LOUD_TOKENHEADER
+			std::cout << "Classdefinition set tokenheader for globalscope to " << std::to_string(tokenheader) << std::endl;
+#endif
+
+			--tokenheader; // Handle imminent increment
+				
+			continue;
+
+			//ParserError(t, "Classdefs are not implemented yet!");
+		}
+		else
+		{
+			ParserError(t, "Unexpected Pairsymbol at global-scope definition!");
+			continue;
+		}
 	}
 
 	generate_object_tree(classdef_list);
@@ -433,10 +417,8 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 		break;
 	case(Token::cEnum::SymbolToken):
 	{
-		//This can basically only be a unary operator.
-
-		SymbolToken* st = static_cast<SymbolToken*>(t);
-
+		//This can basically only be an extraneous unary operator.
+		//We don't allow multiple unops to happen after each other, at least not yet, so...
 		ParserError(t, "Unexpected or underimplemented unary operation!");
 		break;
 	}
@@ -542,8 +524,6 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 			continue;
 		case(Token::cEnum::SymbolToken):
 		{
-			SymbolToken st = *static_cast<SymbolToken*>(t2);
-
 			BinaryExpression::bOps boopitybeep = readbOp(static_cast<SymbolToken*>(t2));
 
 			if (boopitybeep == BinaryExpression::bOps::NoOp)
@@ -974,7 +954,7 @@ std::vector<LocalAssignmentStatement*> Parser::readClassDef(std::string name, in
 		{
 		case(Token::cEnum::LocalTypeToken):
 		{
-			LocalTypeToken* ltt_ptr = static_cast<LocalTypeToken*>(t);
+			//LocalTypeToken* ltt_ptr = static_cast<LocalTypeToken*>(t);
 			LocalAssignmentStatement* lassy = readLocalAssignment(where, there);
 
 			ASTs.push_back(lassy);

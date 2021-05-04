@@ -367,9 +367,9 @@ public:
 	ASTNode* t_lhs, *t_rhs;
 
 	BinaryExpression(bOps Operator, ASTNode* l, ASTNode* r)
-		:t_lhs(l) // What the fuck is this syntax holy shit
+		:t_op(Operator)
+		,t_lhs(l) // What the fuck is this syntax holy shit
 		,t_rhs(r)
-		,t_op(Operator)
 	{
 		
 	}
@@ -480,7 +480,7 @@ public:
 		std::string str = ind + "CallExpression\n";
 		str += ind +"@Function:\n" + func_expr->dump(indent+1);
 		str += ind + "(Args:\n";
-		for (int i = 0; i < args.size(); ++i)
+		for (size_t i = 0; i < args.size(); ++i)
 		{
 			str += args[i]->dump(indent + 1);
 		}
@@ -537,13 +537,13 @@ public:
 		std::string str = "Function, name: " + t_name + "\n";
 
 		str += "@Params:\n";
-		for (int i = 0; i < t_argnames.size(); ++i)
+		for (size_t i = 0; i < t_argnames.size(); ++i)
 		{
 			str += " " + t_argnames[i] + "\n";
 		}
 
 		str += "=Statements:\n";
-		for (int i = 0; i < statements.size(); ++i)
+		for (size_t i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);
 		}
@@ -623,7 +623,7 @@ public:
 
 		str += ind + "?Cond:\n" + condition->dump(indent + 2);
 
-		for (int i = 0; i < statements.size(); ++i)
+		for (size_t i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);
 		}
@@ -644,9 +644,10 @@ public:
 		statements = st;
 	}
 	ForBlock(ASTNode* init, ASTNode* cond, ASTNode* inc, std::vector<Expression*>& st)
-		:condition(cond),
-		initializer(init),
+		:initializer(init),
+		condition(cond),
 		increment(inc)
+		
 	{
 		statements = st;
 	}
@@ -662,7 +663,7 @@ public:
 		str += ind + "?Cond:\n" + condition->dump(indent + 2);
 		str += ind + "+Inc:\n" + increment->dump(indent + 2);
 
-		for (int i = 0; i < statements.size(); ++i)
+		for (size_t i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);
 		}
@@ -694,7 +695,7 @@ public:
 
 		str += ind + "?Cond:\n" + condition->dump(indent + 2);
 
-		for (int i = 0; i < statements.size(); ++i)
+		for (size_t i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);
 		}
@@ -762,8 +763,8 @@ class ClassDefinition final : public ASTNode
 public:
 	std::string direct;
 	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*> &s)
-		:direct(d),
-		statements(s)
+		:statements(s)
+		,direct(d)
 	{
 
 	}
@@ -778,7 +779,7 @@ public:
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ClassDefinition " + direct + ";\n";
-		for (int i = 0; i < statements.size(); ++i)
+		for (size_t i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);
 		}
@@ -833,8 +834,8 @@ class GrandparentAccess : public ASTNode
 
 public:
 	GrandparentAccess(unsigned int d,std::string p)
-		:prop(p)
-		,depth(d)
+		:depth(d)
+		,prop(p)
 	{
 
 	}

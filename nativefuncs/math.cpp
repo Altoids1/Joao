@@ -194,7 +194,7 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 		
-		for (int i = 1; i < args.size(); ++i)
+		for (size_t i = 1; i < args.size(); ++i)
 		{
 			Value v = args[i];
 			switch (v.t_vType)
@@ -234,7 +234,7 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 
-		for (int i = 1; i < args.size(); ++i)
+		for (size_t i = 1; i < args.size(); ++i)
 		{
 			Value v = args[i];
 			switch (v.t_vType)

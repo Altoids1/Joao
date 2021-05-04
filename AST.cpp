@@ -676,8 +676,6 @@ Value CallExpression::resolve(Interpreter& interp)
 		vargs.push_back(e->resolve(interp));
 	}
 
-	Function* ourfunc = nullptr;
-
 	if (hndl.type == Handle::HType::Name) // locally-scopped function call
 	{
 		Function* ourfunc = interp.get_func(hndl.name, this);

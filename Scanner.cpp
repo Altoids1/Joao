@@ -386,6 +386,7 @@ READSLASH_FINISH:
 	if (dir == "/")
 	{
 		Token* t = new SymbolToken(linenum, syntactic_linenum, '/');
+		append(t);
 		return it;
 	}
 	if (readword)
@@ -403,7 +404,7 @@ void Scanner::scan(std::ifstream& ifst)
 		linenum++; // At the start so that we're 1-indexed instead of 0-indexed
 		std::getline(ifst, line);
 
-		for (int i = 0; i < line.length(); ++i)
+		for (size_t i = 0; i < line.length(); ++i)
 		{
 			
 			char c = line[i];
@@ -453,13 +454,13 @@ void Scanner::scan(std::ifstream& ifst)
 
 #ifdef LOUD_SCANNER
 	std::cout << "SCANNER_DEBUG: Contents of Tokens:\n";
-	for (int i = 0; i < tokens.size(); ++i)
+	for (size_t i = 0; i < tokens.size(); ++i)
 	{
 		std::cout << "TOKEN#: "<< i << "\t" << tokens[i]->dump() << std::endl;
 	}
 
 	std::cout << "OperatorPrecedence per syntax line:\n";
-	for (int i = 0; i < lowest_ops.size(); ++i)
+	for (size_t i = 0; i < lowest_ops.size(); ++i)
 	{
 		std::string str = precedence_tostring(lowest_ops[i]);
 		std::cout << "LINE: " << i << " OP: " << str << std::endl;

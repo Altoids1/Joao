@@ -13,35 +13,9 @@ class Parser
 	/*
 	Here's how this is gonna work:
 	The Parser is going to semi-recursively iterate over the various grammar possibilities,
-	based on the formal grammar that we have (which is loosely based on how Lua formats it)
-
-	PLEASE preserve the fact that the enums listed here are in the same order as they are defined in JoaoGrammar.txt!
+	based on the formal grammar that we have (which is loosely based on how our grammar description formats it)
 	*/
-	enum class GrammarState : uint8_t { // I am become death, the destroyer of stack frames
-		program,
-		block,
-		stat,
-		retstat,
-		directory,
-		classdef,
-		funcdef,
-		varstat,
-		var,
-		namelist,
-		explist,
-		exp,
-		prefixexp,
-		functioncall,
-		args,
-		parlist,
-		tableconstructor,
-		fieldlist,
-		field,
-		assignop,
-		binop,
-		unop
-	};
-	std::list<GrammarState> grammarstack;
+
 	std::vector<Scanner::OperationPrecedence> lowest_ops;
 
 	const std::unordered_map<BinaryExpression::bOps, Scanner::OperationPrecedence> bOp_to_precedence =
@@ -554,7 +528,7 @@ class Parser
 	{
 		int count = 1;
 
-		for (int where = here; where < tokens.size(); ++where)
+		for (size_t where = here; where < tokens.size(); ++where)
 		{
 			Token* t = tokens[where];
 			if (t->class_enum() != Token::cEnum::PairSymbolToken)
@@ -576,7 +550,8 @@ class Parser
 				}
 			}
 		}
-		ParserError(tokens[here-1], "Unable to find closing pairlet for this open pairlet!");
+		ParserError(tokens[static_cast<size_t>(here)-1], "Unable to find closing pairlet for this open pairlet!");
+		return 0;
 	}
 	
 	int find_aOp(int here, int there)
@@ -602,7 +577,6 @@ public:
 		:tokens(t.tokens)
 		,lowest_ops(t.lowest_ops)
 	{
-		grammarstack.push_front(GrammarState::program);
 	}
 	void ParserError()
 	{
