@@ -156,6 +156,8 @@ class ASTNode // ASTNodes are abstract symbols which together form a "flow chart
 {
 
 public:
+	int my_line = 0; // Hypothetically, the line that this ASTNode happens on. This is remembered for the sake of improving runtime legibility.
+
 	virtual const std::string class_name() const { return "ASTNode"; }
 
 	// Collapses this symbol into a real dang thing or process that the interpreter can do.
@@ -232,11 +234,13 @@ public:
 		AssignMultiply, // *=
 		AssignDivide // /=
 	}t_op;
-	AssignmentStatement(ASTNode* i, ASTNode* r, aOps o = aOps::Assign)
+	AssignmentStatement(ASTNode* i, ASTNode* r, aOps o = aOps::Assign, int linenum = 0)
 		:id(i),
 		rhs(r),
 		t_op(o)
 	{
+		my_line = linenum;
+		
 		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}
 	virtual Value resolve(Interpreter&) override;
@@ -288,10 +292,11 @@ class LocalAssignmentStatement final : public AssignmentStatement // "Value x = 
 		return true;
 	}
 public:
-	LocalAssignmentStatement(Identifier* i, ASTNode* r, aOps o, LocalType localtype)
+	LocalAssignmentStatement(Identifier* i, ASTNode* r, aOps o, LocalType localtype, int linenum = 0)
 		:AssignmentStatement(i,r,o)
 		,ty(localtype)
 	{
+		my_line = linenum;
 		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}
 
@@ -324,10 +329,11 @@ class UnaryExpression : public Expression
 		Length
 	}t_op;
 	ASTNode* t_rhs;
-	UnaryExpression(uOps Operator, ASTNode* r)
+	UnaryExpression(uOps Operator, ASTNode* r, int linenum = 0)
 		:t_op(Operator)
 		,t_rhs(r)
 	{
+		my_line = linenum;
 
 	}
 	virtual Value resolve(Interpreter&) override;
@@ -399,11 +405,12 @@ public:
 	}t_op;
 	ASTNode* t_lhs, *t_rhs;
 
-	BinaryExpression(bOps Operator, ASTNode* l, ASTNode* r)
+	BinaryExpression(bOps Operator, ASTNode* l, ASTNode* r, int linenum = 0)
 		:t_op(Operator)
 		,t_lhs(l) // What the fuck is this syntax holy shit
 		,t_rhs(r)
 	{
+		my_line = linenum;
 		
 	}
 	virtual Value resolve(Interpreter&) override;
@@ -464,9 +471,10 @@ public:
 	{
 
 	}
-	ReturnStatement(ASTNode* node)
+	ReturnStatement(ASTNode* node, int linenum = 0)
 		:held_expr(node)
 	{
+		my_line = linenum;
 		has_expr = true;
 	}
 	virtual Value resolve(Interpreter& interp) override
@@ -494,10 +502,11 @@ public:
 	{
 
 	}
-	CallExpression(ASTNode* f, std::vector<ASTNode*> arr)
-		:func_expr(f),
-		args(arr) // Arr!!
-	{
+	CallExpression(ASTNode* f, std::vector<ASTNode*> arr, int linenum = 0)
+		:func_expr(f)
+		,args(arr) // Arr!!
+{
+		my_line = linenum;
 
 	}
 	CallExpression* append_arg(ASTNode* expr)
@@ -549,11 +558,12 @@ public:
 		t_name = name;
 		statements = exprs;
 	}
-	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string>& sargs) // Hopefully this works. :(
+	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string>& sargs, int linenum = 0)
 	{
 		t_name = name;
 		statements = exprs;
 		t_argnames = sargs;
+		my_line = linenum;
 	}
 	void give_args(Interpreter&, std::vector<Value>&, Object*);
 	Function* append(Expression* expr)
@@ -601,10 +611,11 @@ public:
 			return Value();
 		};
 	}
-	NativeFunction(std::string n, Value(*luh)(std::vector<Value>))
+	NativeFunction(std::string n, Value(*luh)(std::vector<Value>), int linenum = 0)
 	{
 		t_name = n;
 		lambda = luh;
+		my_line = linenum;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -633,9 +644,10 @@ public:
 	{
 		statements = st;
 	}
-	IfBlock(ASTNode* cond, std::vector<Expression*>& st)
+	IfBlock(ASTNode* cond, std::vector<Expression*>& st, int linenum = 0)
 		:condition(cond)
-	{
+{
+		my_line = linenum;
 		statements = st;
 	}
 
@@ -676,12 +688,12 @@ public:
 	{
 		statements = st;
 	}
-	ForBlock(ASTNode* init, ASTNode* cond, ASTNode* inc, std::vector<Expression*>& st)
+	ForBlock(ASTNode* init, ASTNode* cond, ASTNode* inc, std::vector<Expression*>& st, int linenum = 0)
 		:initializer(init),
 		condition(cond),
 		increment(inc)
-		
 	{
+		my_line = linenum;
 		statements = st;
 	}
 
@@ -713,9 +725,10 @@ public:
 	{
 		statements = st;
 	}
-	WhileBlock(ASTNode* cond, std::vector<Expression*>& st)
+	WhileBlock(ASTNode* cond, std::vector<Expression*>& st, int linenum = 0)
 		:condition(cond)
-	{
+{
+		my_line = linenum;
 		statements = st;
 	}
 
@@ -742,9 +755,10 @@ class BreakStatement final : public Expression
 {
 	int breaknum;
 public:
-	BreakStatement(int br = 1)
+	BreakStatement(int br = 1, int linenum = 0)
 		:breaknum(br)
-	{
+{
+		my_line = linenum;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -763,10 +777,11 @@ class MemberAccess final : public ASTNode
 	ASTNode* front;
 	ASTNode* back;
 public:
-	MemberAccess(ASTNode* f, ASTNode* b)
+	MemberAccess(ASTNode* f, ASTNode* b, int linenum = 0)
 		:front(f)
 		 ,back(b)
 	{
+		my_line = linenum;
 
 	}
 
@@ -795,10 +810,11 @@ class ClassDefinition final : public ASTNode
 	std::vector<LocalAssignmentStatement*> statements;
 public:
 	std::string direct;
-	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*> &s)
+	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*> &s, int linenum = 0)
 		:statements(s)
 		,direct(d)
-	{
+{
+		my_line = linenum;
 
 	}
 
@@ -826,10 +842,11 @@ class Construction : public ASTNode
 	std::string type;
 	std::vector<ASTNode*> args;
 public:
-	Construction(std::string t, std::vector<ASTNode*> a)
+	Construction(std::string t, std::vector<ASTNode*> a, int linenum = 0)
 		:type(t)
 		,args(a)
-	{
+{
+		my_line = linenum;
 
 	}
 
@@ -846,9 +863,10 @@ class ParentAccess : public ASTNode
 public:
 	std::string prop;
 
-	ParentAccess(std::string p)
+	ParentAccess(std::string p, int linenum = 0)
 		:prop(p)
-	{
+{
+		my_line = linenum;
 
 	}
 	virtual const std::string class_name() const override { return "ParentAccess"; }
@@ -866,10 +884,11 @@ class GrandparentAccess : public ASTNode
 	std::string prop;
 
 public:
-	GrandparentAccess(unsigned int d,std::string p)
+	GrandparentAccess(unsigned int d,std::string p, int linenum = 0)
 		:depth(d)
 		,prop(p)
-	{
+{
+		my_line = linenum;
 
 	}
 	virtual const std::string class_name() const override { return "GrandparentAccess"; }
@@ -886,9 +905,10 @@ class GlobalAccess : public ASTNode
 public:
 	std::string var;
 
-	GlobalAccess(std::string v)
+	GlobalAccess(std::string v, int linenum = 0)
 		:var(v)
-	{
+{
+		my_line = linenum;
 
 	}
 	virtual const std::string class_name() const override { return "GlobalAccess"; }
@@ -907,10 +927,11 @@ public:
 	ASTNode* container;
 	ASTNode* index;
 
-	IndexAccess(ASTNode* c, ASTNode* i)
+	IndexAccess(ASTNode* c, ASTNode* i, int linenum = 0)
 		:container(c)
 		,index(i)
-	{
+{
+		my_line = linenum;
 
 	}
 

@@ -55,20 +55,20 @@ public:
 	void RuntimeError()
 	{
 		std::cout << "RUNTIME_ERROR: UNKNOWN!";
+#ifdef EXIT_ON_RUNTIME
 		exit(1);
+#endif
 	}
-	void RuntimeError(ASTNode* a, std::string what)
-	{
-		//This is just a basic setup while everything else is fleshed out.
-		std::cout << "RUNTIME_ERROR: " << what << "\n";
-
-		exit(1);
-	}
+	
+	void RuntimeError(ASTNode*, std::string);
+	
 	void RuntimeError(ASTNode& a, std::string what)
 	{
 		//This is just a basic setup while everything else is fleshed out.
 		std::cout <<"RUNTIME_ERROR: " << what << "\n";
+#ifdef EXIT_ON_RUNTIME
 		exit(1);
+#endif
 	}
 
 	//Pushes a new blockstack and objstack layer
