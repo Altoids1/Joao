@@ -22,6 +22,9 @@
 
 int Scanner::readString(int it)
 {
+	/*
+	This function assumes that line[it] is the '"' character.
+	*/
 	++it;
 	std::string str = "";
 	for (; it < line.length(); ++it)
@@ -40,13 +43,16 @@ int Scanner::readString(int it)
 			case('n'):
 			case('N'):
 				str.push_back('\n');
+				break;
 			case('t'):
 			case('T'):
 				str.push_back('\t');
+				break;
 			default:
 				str.push_back(cc); // \" and \' and all that rubbish funnels into here in the end.
 				break; // Breaks out of the switch, not the for-loop, Allah-willing.
 			}
+			break;
 		}
 		case('"')://Delimiter found, returning...
 		{
