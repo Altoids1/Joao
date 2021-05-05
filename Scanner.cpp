@@ -237,9 +237,14 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 
 std::string Scanner::getWord(int& it)
 {
+	/*
+	This function assumes that the first character, the character pointed to by it,
+	is an acceptable initializing character for a word (A-Za-z_ or whatever)
+	*/
+
 	//std::cout << "Starting getWord at " << std::to_string(it) << std::endl;
-	std::string str = "";
-	for (; it < line.length(); ++it)
+	std::string str = { line[it] };
+	for (++it; it < line.length(); ++it)
 	{
 		char c = line[it];
 		switch (c)
@@ -247,6 +252,7 @@ std::string Scanner::getWord(int& it)
 		ascii_lower:
 		ascii_other:
 		ascii_UPPER:
+		DIGITS:
 			str.push_back(c);
 			continue;
 		TOKEN_SEPARATOR: // Oohp, we're done
