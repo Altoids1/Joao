@@ -404,7 +404,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Double, Value::vType::Integer)):
 	{
 		double nowhere;
-		return Value(modf(lhs.t_value.as_double / rhs.t_value.as_double, &nowhere) * rhs.t_value.as_double);
+		return Value(modf(lhs.t_value.as_double / rhs.t_value.as_int, &nowhere) * rhs.t_value.as_int);
 	}
 	//
 		//Bitwise :(
