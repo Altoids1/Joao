@@ -221,6 +221,11 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
 	}
 
+	if (!typecheck(rhs_val))
+	{
+		interp.RuntimeError(this, "LocalAssignmentStatement failed typecheck!");
+		return rhs_val; //FIXME: I'm not sure whether or not I want this runtime to cause the assignment to completely fail like this, or not.
+	}
 	interp.init_var(static_cast<Identifier*>(id)->get_str(), rhs_val, this);
 
 	return rhs_val;
@@ -290,33 +295,11 @@ std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser&
 	//step 2. get value
 	Value ruh = rhs->const_resolve(parser, true);
 
-	switch (ty)
-	{
-	case(LocalType::Value):
-		break;
-	case(LocalType::Number):
-		if (ruh.t_vType == Value::vType::Integer || ruh.t_vType == Value::vType::Double)
-			break;
-		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
-		break;
-	case(LocalType::String):
-		if (ruh.t_vType == Value::vType::String)
-			break;
-		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
-		break;
-	case(LocalType::Boolean):
-		if (ruh.t_vType == Value::vType::Bool)
-			break;
-		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
-		break;
-	case(LocalType::Object):
-		if (ruh.t_vType == Value::vType::Object)
-			break;
-		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
-		break;
-	default:
+	if(ty == LocalType::Local)
 		parser.ParserError(nullptr, "Unknown or underimplemented LocalType enum detected!");
-	}
+
+	if(!typecheck(ruh))
+		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
 
 	//step 3. profit!
 	return std::pair<std::string, Value>(suh,ruh);

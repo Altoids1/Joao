@@ -255,9 +255,42 @@ public:
 class LocalAssignmentStatement final : public AssignmentStatement // "Value x = 3;", which has a distinct ASTNode type from "x = 3;"
 {
 	LocalType ty = LocalType::Value;
+
+	bool typecheck(Value& ruh) // returns true if it passes the typecheck, false if it fails
+	{
+		switch (ty)
+		{
+		case(LocalType::Value):
+			break;
+		case(LocalType::Number):
+			if (ruh.t_vType == Value::vType::Integer || ruh.t_vType == Value::vType::Double)
+				break;
+			return false;
+			break;
+		case(LocalType::String):
+			if (ruh.t_vType == Value::vType::String)
+				break;
+			return false;
+			break;
+		case(LocalType::Boolean):
+			if (ruh.t_vType == Value::vType::Bool)
+				break;
+			return false;
+			break;
+		case(LocalType::Object):
+			if (ruh.t_vType == Value::vType::Object)
+				break;
+			return false;
+			break;
+		default:
+			return false;
+		}
+		return true;
+	}
 public:
-	LocalAssignmentStatement(Identifier* i, ASTNode* r, aOps o = aOps::Assign)
+	LocalAssignmentStatement(Identifier* i, ASTNode* r, aOps o, LocalType localtype)
 		:AssignmentStatement(i,r,o)
+		,ty(localtype)
 	{
 		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}

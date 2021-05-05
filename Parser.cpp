@@ -623,9 +623,16 @@ LocalAssignmentStatement* Parser::readLocalAssignment(int here, int there) // Va
 	if (t->class_enum() != Token::cEnum::LocalTypeToken)
 		ParserError(t, "Unexpected Token where LocalTypeToken was expected!");
 
+	LocalType tuh;
+
 	switch (static_cast<LocalTypeToken*>(t)->t_type) // I feel like a lvl 10 Wizard when I write lines of C++ like this
 	{
 	case(LocalType::Value):
+	case(LocalType::Boolean):
+	case(LocalType::Number):
+	case(LocalType::Object):
+	case(LocalType::String):
+		tuh = static_cast<LocalTypeToken*>(t)->t_type;
 		break;
 	case(LocalType::Local):
 		ParserError(t, "'local' is a reserved word; use 'Local' instead!");
@@ -648,12 +655,12 @@ LocalAssignmentStatement* Parser::readLocalAssignment(int here, int there) // Va
 		
 		//(We don't consume the semicolon; it's assumed by higher stacks that *they* will be the ones to consume it)
 		//(We know it's there, though ;) )
-		return new LocalAssignmentStatement(id, new Literal(Value()), AssignmentStatement::aOps::Assign);
+		return new LocalAssignmentStatement(id, new Literal(Value()), AssignmentStatement::aOps::Assign, tuh);
 	}
 
 	ASTNode* rvalue = readExp(here+3,there);
 
-	return new LocalAssignmentStatement(id, rvalue, aesop);
+	return new LocalAssignmentStatement(id, rvalue, aesop, tuh);
 }
 
 std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) // Tokenheader state should point to the opening brace of this block.
