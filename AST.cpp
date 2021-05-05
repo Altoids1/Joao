@@ -585,7 +585,11 @@ void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* 
 	t_args = args;
 	if (t_args.size() < t_argnames.size()) // If we were not given enough arguments
 	{
-		interp.RuntimeError(*this, "Insufficient amonut of arguments given!");
+		for (size_t i = t_args.size(); i < t_argnames.size(); ++i)
+		{
+			t_args.push_back(Value());
+		}
+		//interp.RuntimeError(*this, "Insufficient amonut of arguments given!");
 	}
 }
 Value Function::resolve(Interpreter & interp)
