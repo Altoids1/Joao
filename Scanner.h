@@ -438,7 +438,8 @@ class Scanner
 		MalformedLongComment,
 		MalformedDirectory,
 		BadDaddy,
-		BadGrandpa
+		BadGrandpa,
+		SwappedEqOp
 	};
 
 	uint32_t linenum = 0;
@@ -513,6 +514,9 @@ class Scanner
 			break;
 		case(ScanError::BadGrandpa):
 			msg = "SCANNER_ERROR: Improper Grandparent Access!";
+			break;
+		case(ScanError::SwappedEqOp):
+			msg = "SCANNER_ERROR: Improper comparison operation! Did you mean " + std::string({line[column_num], line[column_num-1]}) + "?";
 			break;
 		default:
 		case(ScanError::Unknown):
@@ -593,6 +597,7 @@ class Scanner
 	int readString(int);
 	int readNumber(int);
 	int readPairSymbol(int);
+	int readEqSymbol(int, std::ifstream&);
 	int readSymbol(int,std::ifstream&);
 	int readWord(int);
 	int readComment(int,std::ifstream&);
@@ -622,6 +627,18 @@ class Scanner
 			return "Logical";
 		default:
 			return "?????";
+		}
+	}
+
+	inline void update_precedence(std::string str)
+	{
+		if (str_to_precedence.count(str))
+		{
+			OperationPrecedence op = str_to_precedence.at(str);
+			if (op > lowop)
+			{
+				lowop = op;
+			}
 		}
 	}
 	

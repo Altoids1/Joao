@@ -9,7 +9,10 @@
 #define PAIRSYMBOL case '{':case '}':case '[':case ']':case '(':case ')'
 
 //SYMBOL on its own does not include '/' due to its special and oft-ambiguous nature. It is often still a symbol though, it's just that Scanner treats it special.
-#define SYMBOL case '+':case '-':case '*':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '>':case '<':case '=':case '!':case '%':case '#'
+#define SYMBOL case '+':case '-':case '*':case '.':case ',':case '&':case '|':case '^':case '~':case '?':case '%':case '#'
+
+//These are symbols which can (possibly) begin an equality operator.
+#define EQ_SYMBOL case '>':case '<':case '=':case '!'
 
 #define DOUBLEABLE_SYMBOL case '+':case '-':case '&':case '|':case '^':case '=':case '>':case '<':case '#':case '/':case '.'
 
@@ -114,15 +117,69 @@ int Scanner::readPairSymbol(int it)
 	return it;
 }
 
+/*
+This function handles symbols which are EQ_SYMBOLs, ones which can (but may possibly not) be the beginning of an equality operation.
+These are separated out to reduce the load on (and complexity of) readSymbol(), as well as allowing for more descriptive errors for this sort of symbol
+for instance, being able to warn about swapping <= to become =< instead, an invalid symbol which would get a more confusing error with an alternative implementation.
+
+Still generates a SymbolToken, just is a bit nicer about it.
+*/
+int Scanner::readEqSymbol(int it, std::ifstream& ifst)
+{
+	char first = line[it];
+	const bool can_be_two = static_cast<size_t>(it + 1) < line.length();
+	switch (first)
+	{
+	case('='):
+		if (can_be_two)
+		{
+			char second = line[static_cast<size_t>(it + 1)];
+			if (second == first || second == '=')
+			{
+				append(new SymbolToken(linenum, syntactic_linenum, first, second));
+				update_precedence(std::string{ first, second });
+				return it + 2;
+			}
+			else if (second == '<' || second == '>' || second == '!') // Ah, they got the order wrong. Tut tut!
+			{
+				ScannerError(it+1, ScanError::SwappedEqOp);
+			}
+		}
+		append(new SymbolToken(linenum, syntactic_linenum, first));
+		update_precedence(std::string{ first});
+		return it + 1;
+	case('!'):
+	case('<'):
+	case('>'):
+		if (can_be_two)
+		{
+			char second = line[it + 1];
+			if (second == first || second == '=')
+			{
+				append(new SymbolToken(linenum, syntactic_linenum, first, second));
+				update_precedence(std::string{ first, second });
+				return it + 2;
+			}
+			//else, falls through into the outer scope's returning of the one-char operator
+		}
+		append(new SymbolToken(linenum, syntactic_linenum, first));
+		update_precedence(std::string{ first });
+		return it + 1;
+	default:
+		ScannerError(it, ScanError::Unknown);
+		return it + 1;
+	}
+}
+
 int Scanner::readSymbol(int it, std::ifstream& ifst)
 {
 	char first = line[it];
 	char second = '\0';
 
 	//We don't really have to do a whole proper for-loop here since symbols can only be one or two characters in size.
-	if (it + 1 < line.length())
+	if (static_cast<size_t>(it + 1) < line.length())
 	{
-		char c = line[it + 1]; // Do a little look-ahead
+		char c = line[static_cast<size_t>(it + 1)]; // Do a little look-ahead
 		switch (c)
 		{
 		DOUBLEABLE_SYMBOL: // if this is a doubleable symbol
@@ -131,7 +188,7 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 			{
 				if (c == '/')
 				{
-					if (it + 2 < line.length())
+					if (static_cast<size_t>(it + 2) < line.length())
 					{
 						//Charlie because it's the third one & it's a char. I'm very funny.
 						char charlie = line[it + 2];
@@ -154,9 +211,9 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 				}
 				else if (c == '.')
 				{
-					if (it + 2 < line.length() && line[it+2] == '/' && it + 3 < line.length()) // If this all fails then it just assumes it's a concat op and rolls into the higher-scope if statement below
+					if (static_cast<size_t>(it + 2) < line.length() && line[static_cast<size_t>(it+2)] == '/' && static_cast<size_t>(it + 3) < line.length()) // If this all fails then it just assumes it's a concat op and rolls into the higher-scope if statement below
 					{
-						char dorothy = line[it + 3]; // We're peeking WAY fucking ahead aren't we
+						char dorothy = line[static_cast<size_t>(it + 3)]; // We're peeking WAY fucking ahead aren't we
 						switch (dorothy)
 						{
 						ascii_lower:
@@ -172,21 +229,6 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 					}
 				}
 			}
-			else if (first == '!' && c == '=')
-			{
-				second = c;
-				++it;
-				std::string str{ first, second };
-				if (str_to_precedence.count(str))
-				{
-					OperationPrecedence op = str_to_precedence.at(str);
-					if (op > lowop)
-					{
-						lowop = op;
-					}
-				}
-				break;
-			}
 			//Double-char operators and things; '..' rolls over into here if finding '../' fails
 			if (c == first)
 			{
@@ -196,28 +238,13 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 					return readComment(it+2,ifst);
 				}
 				++it;
-				std::string str{ first, second };
-				if (str_to_precedence.count(str))
-				{
-					OperationPrecedence op = str_to_precedence.at(str);
-					if (op > lowop)
-					{
-						lowop = op;
-					}
-				}
+				update_precedence(std::string{ first, second });
+				
 				break;
 			}
 			//Casually rolls-over into the default case when it realizes this isn't a two-char symbol
 		default:
-			std::string str{first};
-			if (str_to_precedence.count(str))
-			{
-				OperationPrecedence op = str_to_precedence.at(str);
-				if (op > lowop)
-				{
-					lowop = op;
-				}
-			}
+			update_precedence(std::string{first});
 		}
 	}
 	Token* t;
@@ -384,6 +411,7 @@ Situations that prove the programmer is an idiot:
 			TOKEN_SEPARATOR:
 			PAIRSYMBOL:
 			SYMBOL:
+			EQ_SYMBOL:
 			case(';'): // End of statement; can mean we're in an expression like "return /global_var_thing;"
 				--it; // Marks that whoever called us ought to start reading at this char, the $it we're looking at right now
 				goto READSLASH_FINISH;
@@ -440,6 +468,9 @@ void Scanner::scan(std::ifstream& ifst)
 			case('/'):
 				i = readSlash(i, ifst);
 				continue;
+			EQ_SYMBOL:
+				i = readEqSymbol(i, ifst);
+				continue;
 			SYMBOL:
 				i = readSymbol(i, ifst); // the 2nd argument is strange but bear with me here
 				continue;
@@ -486,3 +517,4 @@ void Scanner::scan(std::ifstream& ifst)
 #undef TOKEN_SEPARATOR
 #undef SYMBOL
 #undef DOUBLEABLE_SYMBOL 
+#undef EQ_SYMBOL
