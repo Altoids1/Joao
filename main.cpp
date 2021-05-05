@@ -1,7 +1,7 @@
 /*
 GOAL:
 
-Create an interpreter which can run "Rake" or "João," a simple OOP language made to use a directory-oriented object tree
+Create an interpreter which can run "João," a simple OOP language made to use a directory-oriented object tree
 
 Somewhat dynamically typed but lets not get too angsty about it
 

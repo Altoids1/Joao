@@ -289,7 +289,8 @@ ASTNode* Parser::readPower(int here, int there)
 
 			if (st->len > 1 || st->get_symbol()[0] != '^') // Hardcoded to '^' for now
 			{
-				ParserError(t, "Unexpected symbol when parsing PowerExpression!");
+				//ParserError(t, "Unexpected symbol when parsing PowerExpression!");
+				goto READPOWER_LEAVE_POWERSEARCH;
 			}
 			lvalues.push_back(readlvalue(last_power + 1, where - 1));
 			last_power = where;
