@@ -138,7 +138,7 @@ int Scanner::readEqSymbol(int it, std::ifstream& ifst)
 			{
 				append(new SymbolToken(linenum, syntactic_linenum, first, second));
 				update_precedence(std::string{ first, second });
-				return it + 2;
+				return it + 1;
 			}
 			else if (second == '<' || second == '>' || second == '!') // Ah, they got the order wrong. Tut tut!
 			{
@@ -147,7 +147,7 @@ int Scanner::readEqSymbol(int it, std::ifstream& ifst)
 		}
 		append(new SymbolToken(linenum, syntactic_linenum, first));
 		update_precedence(std::string{ first});
-		return it + 1;
+		return it;
 	case('!'):
 	case('<'):
 	case('>'):
@@ -158,16 +158,16 @@ int Scanner::readEqSymbol(int it, std::ifstream& ifst)
 			{
 				append(new SymbolToken(linenum, syntactic_linenum, first, second));
 				update_precedence(std::string{ first, second });
-				return it + 2;
+				return it + 1;
 			}
 			//else, falls through into the outer scope's returning of the one-char operator
 		}
 		append(new SymbolToken(linenum, syntactic_linenum, first));
 		update_precedence(std::string{ first });
-		return it + 1;
+		return it;
 	default:
 		ScannerError(it, ScanError::Unknown);
-		return it + 1;
+		return it;
 	}
 }
 
