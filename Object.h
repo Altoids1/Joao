@@ -13,12 +13,13 @@ protected:
 public:
 	std::string object_type; // A string denoting the directory position of this object.
 
-	Value* has_property(Interpreter&, std::string);
+	Metatable* get_metatable() const { return mt; }
 
+	Value* has_property(Interpreter&, std::string);
 	Value get_property(Interpreter&, std::string);
 	void set_property(Interpreter&, std::string, Value);
-	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
 
+	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
 	Function* get_method(Interpreter&, std::string);
 
 	//Attempts to queue this object for garbage collection. TODO: Make garbage collection for objects exist.
@@ -107,7 +108,7 @@ This is a sort of metatype which provides overriding, perhaps natively-implement
 class Metatable
 {
 	//These properties should be accessed by nobody but the metatable's metamethods themselves.
-	std::unordered_map<std::string, Value> privateproperties;
+	std::vector<void*> privates;
 
 	std::unordered_map<std::string, NativeMethod*> metamethods;
 
@@ -116,6 +117,24 @@ public:
 	{
 		metamethods[str] = newmethod;
 	}
+
+	void set_private(size_t index, void* ptr)
+	{
+		if (privates.size() <= index)
+		{
+			privates.resize(index+1, nullptr);
+		}
+
+		privates[index] = ptr;
+	}
+	void* get_private(size_t index)
+	{
+		if (index >= privates.size())
+			return nullptr;
+
+		return privates[index];
+	}
+
 	friend class Object;
 	friend class ObjectType;
 };

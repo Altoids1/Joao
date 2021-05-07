@@ -1,9 +1,9 @@
 #include "Forward.h"
 #include "AST.h"
 #include "Object.h"
+#include "Table.h"
 #include "Interpreter.h"
 #include "Parser.h"
-#include "Table.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )

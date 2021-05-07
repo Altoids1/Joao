@@ -4,7 +4,7 @@
 #ifdef __GNUG__
 	#include "./nativefuncs/math.cpp"
 	#include "./nativefuncs/string.cpp"
-	#include "./nativefuncs/table.cpp"
+	#include "./nativefuncs/tablelib.cpp"
 #endif
 
 void Program::construct_natives()
@@ -123,4 +123,5 @@ void Program::construct_natives()
 	construct_math_library();
 	construct_string_library();
 	construct_table_library();
+	construct_file_library();
 }

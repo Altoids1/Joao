@@ -19,89 +19,17 @@ This concept in general is a mixture of general OOP and Lua's concept of having 
 */
 class Table final : public Object
 {
-	std::vector<Value> t_array;
 public:
+	std::vector<Value> t_array;
 	Table(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
-		:Object(objty,puh,fuh)
+		:Object(objty,puh,fuh,nullptr)
 	{
 
 	}
 
 
-	Value at(Interpreter& interp, Value index)
-	{
-		int64_t array_index;
-
-		switch (index.t_vType)
-		{
-		default:
-			interp.RuntimeError(nullptr, "Bad type used to index into Table!");
-			return Value();
-		case(Value::vType::String): // Just use our properties, innit?
-			return get_property(interp, *index.t_value.as_string_ptr);
-		case(Value::vType::Integer):
-			array_index = index.t_value.as_int;
-			break;
-		case(Value::vType::Double): //Dude. You can't use a raw-ass double to index. That's fucking stupid. You're stupid.
-			//I'm rounding this while glaring at you sternly.
-			array_index = math::round({ index }).t_value.as_int;
-			break;
-		}
-		//Should be able to safely assert by this point that array_index has been set to something.
-
-		if (array_index < 0 || array_index >= t_array.size())
-		{
-			interp.RuntimeError(nullptr, "Index was out-of-bounds of array!");
-			return Value();
-		}
-
-		return t_array[array_index];
-	}
-
-	void at_set(Interpreter& interp, Value index, Value& newval)
-	{
-		int64_t array_index;
-
-		switch (index.t_vType)
-		{
-		default:
-			interp.RuntimeError(nullptr, "Bad type used to index into Table!");
-			return;
-		case(Value::vType::String): // Just use our properties, innit?
-		{
-			//Should be analogous to set_property, except it *makes no check as to whether this property is something our ObjectType has*!!
-			std::string str = *index.t_value.as_string_ptr;
-			if (properties.count(str))
-			{
-				properties.erase(str);
-				properties[str] = newval;
-			}
-			else
-			{
-				properties[str] = newval;
-			}
-			return;
-		}
-		case(Value::vType::Integer):
-			array_index = index.t_value.as_int;
-			break;
-		case(Value::vType::Double): // It looks like you were trying to index by doubles. Did you mean to use Integers?
-			array_index = math::round({ index }).t_value.as_int;
-			break;
-		}
-
-		if (array_index < 0)
-		{
-			interp.RuntimeError(nullptr, "Index cannot be negative in this implementation!"); //FIXME: Soon.
-			return;
-		}
-
-		if (array_index >= t_array.size())
-		{
-			t_array.resize(array_index+1,Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
-		}
-		t_array[array_index] = newval;
-	}
+	Value at(Interpreter&, Value);
+	void at_set(Interpreter&, Value, Value&);
 
 	size_t length() { return t_array.size(); }
 	bool virtual is_table() override { return true; }

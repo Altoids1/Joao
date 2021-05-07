@@ -35,6 +35,9 @@
 class Object;
 class ObjectType;
 class Metatable;
+
+class Function;
+
 class Table;
 class Value;
 class Interpreter;

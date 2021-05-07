@@ -144,13 +144,15 @@
     <ClCompile Include="Directory.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="nativefuncs\file.cpp" />
     <ClCompile Include="nativefuncs\math.cpp" />
     <ClCompile Include="nativefuncs\string.cpp" />
-    <ClCompile Include="nativefuncs\table.cpp" />
+    <ClCompile Include="nativefuncs\tablelib.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Scanner.cpp" />
+    <ClCompile Include="Table.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AST.h" />
