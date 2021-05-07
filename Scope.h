@@ -63,6 +63,13 @@ public:
 		return nullptr; // Give up.
 	}
 
+	_Ty* get_front(std::string name)
+	{
+		if (stack.front()->table.count(name))
+			return stack.front()->table.at(name);
+		return nullptr;
+	}
+
 	_Ty* get_back(std::string name)
 	{
 		if (top_scope->table.count(name))
