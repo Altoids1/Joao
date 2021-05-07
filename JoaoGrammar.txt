@@ -6,7 +6,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	
 	funcdef ::= directory '(' [parlist] '){' block '}'
 	
-	directory ::= '/'{Name'/'} Name
+	directory ::= '/'{Name'/'}Name
 	
 	parlist ::= Name {','Name} [',']
 	
@@ -22,7 +22,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 		'if(' exp '){' block '}' {'elseif(' exp '){' block '}'} ['else(' exp '){' block '}'] |
 		'for('[varstat | exp] ';' [exp] ';' [varstat | exp] '){' block '}
 	
-	init_var :: = ('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name
+	init_var ::= ('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name
 	
 	var ::= init_var | var_access
 	
@@ -41,7 +41,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	
 	explist ::= exp {, exp}
 	
-	exp ::= comparison {('&&' | '||' | '^^') comparison}
+	exp ::= comparison {('&&' | '||' | '~~') comparison}
 	
 	comparison ::= bitwise {(‘<’ | ‘<=’ | ‘>’ | ‘>=’ | ‘==’ | ‘!=’) bitwise}
 	
