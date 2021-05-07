@@ -702,6 +702,31 @@ Value NativeFunction::resolve(Interpreter& interp)
 	return result; // Woag.
 }
 
+Value NativeMethod::resolve(Interpreter& interp)
+{
+	if(!obj && !is_static)
+		interp.RuntimeError(*this, "Cannot call NativeMethod without an Object!");
+
+	Value result = lambda(t_args,obj);
+	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
+	{
+		switch (result.t_value.as_int)
+		{
+		case(int(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
+			break;
+		case(int(Program::ErrorCode::BadArgType)):
+			interp.RuntimeError(*this, "Args of improper type given to NativeMethod!");
+			break;
+		case(int(Program::ErrorCode::NotEnoughArgs)):
+			interp.RuntimeError(*this, "Not enough args provided to NativeMethod!");
+			break;
+		default:
+			interp.RuntimeError(*this, "Unknown RuntimeError in NativeMethod!");
+		}
+	}
+	return result; // Woag.
+}
+
 Value Block::iterate_statements(Interpreter& interp)
 {
 	for (auto it = statements.begin(); it != statements.end(); ++it)
@@ -916,6 +941,15 @@ Handle MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 			interp.RuntimeError(this, "Cannot access method of non-object Value!");
 			return Handle();
 		}
+		/*
+		So we can't actually trust bk's understanding of whether or not it is a function,
+		since it may be a function of this object, but not visible in objectscope nor globalscope.
+
+		Honestly the whole Handle system right now is a bit hackish and could be improved to improve performance and reduce complexity;
+		definitely something to consider overhauling for v1.1 or v1.2.
+		*/
+
+		bk.is_function = vuh.t_value.as_object_ptr->get_method(interp, bk.name);
 
 		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
 

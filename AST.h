@@ -626,6 +626,38 @@ public:
 	}
 };
 
+//Similar to a NativeFunction except it requires a handle to an object its acting within.
+class NativeMethod final : public Function
+{
+	/*
+	So this kinda overrides a lot of the typical behavior of a function, instead deferring it into some kickass lambda stored within.
+	*/
+	Value(*lambda)(std::vector<Value>,Object*) = nullptr;
+	// Value lambda() {};
+public:
+	bool is_static = false; // True if it actually doesn't need an object to act on
+	NativeMethod(std::string n)
+	{
+		t_name = n;
+		lambda = [](std::vector<Value> args,Object*)
+		{
+			return Value();
+		};
+	}
+	NativeMethod(std::string n, Value(*luh)(std::vector<Value>,Object*), int linenum = 0)
+	{
+		t_name = n;
+		lambda = luh;
+		my_line = linenum;
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "NativeMethod"; }
+	virtual std::string dump(int indent) override
+	{
+		return "NativeMethod, name: " + t_name + "\n";
+	}
+};
 
 class Block : public Expression
 {
