@@ -906,7 +906,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				if (luh->is_expression())
 					ASTs.push_back(static_cast<Expression*>(luh));
 				else
-					ParserError(t, "Unexpected expression when Statement was expected!");
+					ParserError(t, "Unexpected " + luh->class_name() +  " expression when Statement was expected!");
 			}
 			consume_semicolon();
 			where = tokenheader-1; // Decrement so that the impending increment puts us in the correct place.

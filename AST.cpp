@@ -118,11 +118,15 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 
+	/*
+	//While we do know our own assignment, we don't actually use that information in the AST (as of 7th May 2021)
+	//That's assumed to be handled by the parser.
 	if (t_op != aOps::Assign)
 	{
-		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + std::to_string(static_cast<int>(t_op)));
 		return rhs_val;
 	}
+	*/
 
 	//FIXME: This should really just be a switch statement.
 	if (id->class_name() == "Identifier")
