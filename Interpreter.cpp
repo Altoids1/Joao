@@ -37,7 +37,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 {
 	std::cout << "RUNTIME_ERROR: " << what << "\n";
 	
-	std::cout << "- - - - - - - - - - - - - - - -";
+	std::cout << "- - - - - - - - - - - - - - - -\n";
 	
 	//Stack dump
 	std::string whatfunk;

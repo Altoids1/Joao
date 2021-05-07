@@ -34,6 +34,7 @@
 //Forwarded Objects
 class Object;
 class ObjectType;
+class Metatable;
 class Table;
 class Value;
 class Interpreter;

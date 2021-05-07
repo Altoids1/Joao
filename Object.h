@@ -9,6 +9,7 @@ protected:
 	std::unordered_map<std::string, Value> properties; // A general container for all Value-type properties of this object. Functions are stored in the Program's ObjectTree.
 	std::unordered_map<std::string, Value>* base_properties; //A pointer to our ObjectType's property hashtable, to look up default values when needed
 	std::unordered_map<std::string, Function*>* base_funcs; // Pointer to object's base functions.
+	Metatable* mt = nullptr;
 public:
 	std::string object_type; // A string denoting the directory position of this object.
 
@@ -23,10 +24,11 @@ public:
 	//Attempts to queue this object for garbage collection. TODO: Make garbage collection for objects exist.
 	void qdel();
 
-	Object(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
-		:base_properties(puh),
-		base_funcs(fuh),
-		object_type(objty)
+	Object(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh, Metatable* m = nullptr)
+		:base_properties(puh)
+		,base_funcs(fuh)
+		,object_type(objty)
+		,mt(m)
 	{
 
 	}
@@ -55,10 +57,17 @@ class ObjectType // Stores the default methods and properties of this type of Ob
 	std::string object_type;
 	std::unordered_map<std::string, Function*> typefuncs;
 	std::unordered_map<std::string, Value> typeproperties;
+	Metatable* mt = nullptr;
 public:
 	bool is_table_type = false;
 	ObjectType(std::string n)
 		:object_type(n)
+	{
+
+	}
+	ObjectType(std::string n, Metatable* m)
+		:object_type(n)
+		,mt(m)
 	{
 
 	}
@@ -83,18 +92,30 @@ public:
 		return &(typeproperties.at(str));
 	}
 
-	Function* has_typemethod(Interpreter& interp, std::string str, ASTNode* getter)
-	{
-		if (!typefuncs.count(str))
-		{
-			return nullptr;
-		}
-		return typefuncs.at(str);
-	}
+	Function* has_typemethod(Interpreter&, std::string, ASTNode*);
 
 
 	//Passed Parser-by-reference as the Interpreter should never be calling this; ObjectTypes are static at runtime (for now, anyways!)
 	void set_typeproperty(Parser&,std::string, Value);
 	void set_typemethod(Parser&, std::string, Function*);
 	void set_typemethod_raw(std::string, Function*);
+};
+
+/*
+This is a sort of metatype which provides overriding, perhaps natively-implemented behavior for certain operations and methods for ObjectTypes which have a pointer to it.
+*/
+class Metatable
+{
+	//These properties should be accessed by nobody but the metatable's metamethods themselves.
+	std::unordered_map<std::string, Value> privateproperties;
+
+	std::unordered_map<std::string, NativeMethod*> metamethods;
+
+public:
+	void append_method(std::string str, NativeMethod* newmethod)
+	{
+		metamethods[str] = newmethod;
+	}
+	friend class Object;
+	friend class ObjectType;
 };
