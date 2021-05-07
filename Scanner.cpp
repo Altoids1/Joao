@@ -134,7 +134,7 @@ int Scanner::readEqSymbol(int it, std::ifstream& ifst)
 		if (can_be_two)
 		{
 			char second = line[static_cast<size_t>(it + 1)];
-			if (second == first || second == '=')
+			if (second == '=')
 			{
 				append(new SymbolToken(linenum, syntactic_linenum, first, second));
 				update_precedence(std::string{ first, second });
@@ -230,7 +230,7 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 				}
 			}
 			//Double-char operators and things; '..' rolls over into here if finding '../' fails
-			if (c == first)
+			if (c == first || c == '=')
 			{
 				second = c; //woag it's a double symbol
 				if (c == '#') // If ##, meaning a linecomment
@@ -239,25 +239,26 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 				}
 				++it;
 				update_precedence(std::string{ first, second });
-				
-				break;
+				append(new SymbolToken(linenum, syntactic_linenum, first, second));
+				return it;
 			}
 			//Casually rolls-over into the default case when it realizes this isn't a two-char symbol
 		default:
-			update_precedence(std::string{first});
+			break;
 		}
 	}
 	Token* t;
-	if (first == '.' && second == '\0') // FIXME: This function's whole control flow is pretty messy and a tad unoptimized, could use a rework
+	if (first == '.')
 	{
 		t = new MemberToken(linenum, syntactic_linenum);
 	}
-	else if (first == ',' && second == '\0')
+	else if (first == ',')
 	{
 		t = new CommaToken(linenum, syntactic_linenum);
 	}
 	else
 	{
+		update_precedence(std::string{ first });
 		t = new SymbolToken(linenum, syntactic_linenum, first, second);
 	}
 
