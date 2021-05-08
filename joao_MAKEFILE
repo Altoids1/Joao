@@ -62,4 +62,4 @@ Scanner.o:  Scanner.cpp Scanner.h
 # files and *~ backup files:
 #
 clean: 
-	$(RM) count *.o *~
+	$(RM) joao *.o *~
