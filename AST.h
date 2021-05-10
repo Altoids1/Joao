@@ -262,6 +262,9 @@ class LocalAssignmentStatement final : public AssignmentStatement // "Value x = 
 
 	bool typecheck(Value& ruh) // returns true if it passes the typecheck, false if it fails
 	{
+		if (ruh.t_vType == Value::vType::Null)
+			return true; // Allows for null-initialization of these things
+
 		switch (ty)
 		{
 		case(LocalType::Value):
