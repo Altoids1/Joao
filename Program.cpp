@@ -5,6 +5,7 @@
 	#include "./nativefuncs/math.cpp"
 	#include "./nativefuncs/string.cpp"
 	#include "./nativefuncs/tablelib.cpp"
+	#include "./nativefuncs/file.cpp"
 #endif
 
 void Program::construct_natives()
