@@ -17,12 +17,22 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 		//Expecting: a bunch of classdefs and funcdefs
 		//Both of these start with a directory that ends in a '/'Name, so lets read that in
 		Token* t = tokens[tokenheader];
-		if (t->class_enum() != Token::cEnum::DirectoryToken)
+		std::string dir_name;
+		if (t->class_enum() == Token::cEnum::DirectoryToken)
+		{
+			dir_name = static_cast<DirectoryToken*>(t)->dir;
+			
+		}
+		else if (t->class_enum() == Token::cEnum::ConstructionToken) // New() override, it seems
+		{
+			dir_name = static_cast<ConstructionToken*>(t)->dir + "/#constructor";
+		}
+		else
 		{
 			ParserError(t, "Unexpected Token at global-scope definition when Directory was expected!");
 		}
 
-		std::string dir_name = static_cast<DirectoryToken*>(t)->dir;
+		
 
 		++tokenheader;
 		//The next token has to be either a '(', which disambiguates us into being a funcdef,
