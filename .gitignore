@@ -360,3 +360,4 @@ MigrationBackup/
 #*.sln
 #*.vcxproj
 #*.vcxproj.filters
+testprograms/debug.jao
