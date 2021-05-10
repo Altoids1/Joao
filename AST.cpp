@@ -691,12 +691,12 @@ Value NativeFunction::resolve(Interpreter& interp)
 	{
 		switch (result.t_value.as_int)
 		{
-		case(int(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
+		case(static_cast<Value::JoaoInt>((Program::ErrorCode::NoError))): // An expected null, function returned successfully.
 			break;
-		case(int(Program::ErrorCode::BadArgType)):
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
 			interp.RuntimeError(*this, "Args of improper type given to NativeFunction!");
 			break;
-		case(int(Program::ErrorCode::NotEnoughArgs)):
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
 			interp.RuntimeError(*this, "Not enough args provided to NativeFunction!");
 			break;
 		default:
@@ -716,12 +716,12 @@ Value NativeMethod::resolve(Interpreter& interp)
 	{
 		switch (result.t_value.as_int)
 		{
-		case(int(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
 			break;
-		case(int(Program::ErrorCode::BadArgType)):
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
 			interp.RuntimeError(*this, "Args of improper type given to NativeMethod!");
 			break;
-		case(int(Program::ErrorCode::NotEnoughArgs)):
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
 			interp.RuntimeError(*this, "Not enough args provided to NativeMethod!");
 			break;
 		default:

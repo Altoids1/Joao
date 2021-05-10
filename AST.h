@@ -7,8 +7,8 @@
 #include "SharedEnums.h"
 
 class Value { // A general pseudo-typeless Value used to store data within the programming language.
-
 public:
+	using JoaoInt = int;
 	enum class vType : uint8_t {
 		Null,
 		Bool,
@@ -20,7 +20,7 @@ public:
 
 	union {
 		bool as_bool;
-		int as_int;
+		JoaoInt as_int;
 		double as_double;
 		std::string* as_string_ptr;
 		Object* as_object_ptr;
@@ -33,12 +33,12 @@ public:
 	}
 	Value(int64_t i)
 	{
-		t_value.as_int = i;
+		t_value.as_int = static_cast<JoaoInt>(i);
 		t_vType = vType::Integer;
 	}
 	Value(size_t i)
 	{
-		t_value.as_int = i;
+		t_value.as_int = static_cast<JoaoInt>(i);
 		t_vType = vType::Integer;
 	}
 	Value(int i)
@@ -74,7 +74,7 @@ public:
 		if (vt != Value::vType::Null)
 			return;
 
-		t_value.as_int = errcode;
+		t_value.as_int = static_cast<JoaoInt>(errcode);
 	}
 
 	explicit operator bool() const { // Q-q-quadruple keyword!!
