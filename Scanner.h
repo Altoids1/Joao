@@ -643,7 +643,23 @@ class Scanner
 	}
 	
 public:
+	Scanner()
+	{
+
+	}
+	Scanner(uint32_t synline)
+		:syntactic_linenum(synline)
+	{
+
+	}
+
+	//Reads in an ifstream line-by-line as an ASCII text file which is supposed to contain João code.
 	void scan(std::ifstream&);
+
+	//These functions mostly exist to get convenient access to sub-Scanners invoked by the 'include' keyword and its functionality
+	std::vector<Token*> get_tokens() const { return tokens; }
+	std::vector<OperationPrecedence> get_lowops() const { return lowest_ops; }
+	uint32_t get_synline() const { return syntactic_linenum; }
 
 	friend class Parser;
 };

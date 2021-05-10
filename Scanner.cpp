@@ -454,6 +454,39 @@ void Scanner::scan(std::ifstream& ifst)
 		linenum++; // At the start so that we're 1-indexed instead of 0-indexed
 		std::getline(ifst, line);
 
+		//include checking
+		if (line.size() > 10 && line.substr(0, 9) == "include \"")
+		{
+			int start = 10;
+			std::string strfile = getString(start);
+
+			std::ifstream includedfile;
+			std::cout << "Opening file " << strfile << "...\n";
+			includedfile.open(strfile);
+			if (!includedfile.good())
+			{
+				std::cout << "Unable to open file " << strfile << "!\n";
+				exit(1);
+			}
+			
+			Scanner subscanner(syntactic_linenum+1);
+			subscanner.scan(includedfile);
+
+			//Token merging
+			std::vector<Token*> their_tokens = subscanner.get_tokens();
+			tokens.insert(tokens.end(), their_tokens.begin(), their_tokens.end());
+
+			//Precedence merging
+			std::vector<OperationPrecedence> their_ops = subscanner.get_lowops();
+			lowest_ops.insert(lowest_ops.end(), their_ops.begin(), their_ops.end());
+
+			syntactic_linenum = subscanner.get_synline() + 1;
+			lowest_ops.push_back(lowop);
+			lowop = OperationPrecedence::NONE;
+
+			continue;
+		}
+
 		for (size_t i = 0; i < line.length(); ++i)
 		{
 			

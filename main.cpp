@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	std::ifstream file;
 	std::cout << "Opening file " << argv[1] << "...\n";
 	file.open(argv[1]);
-	if (file.bad())
+	if (!file.good())
 	{
 		std::cout << "Unable to open file " << argv[1] << "!\n";
 		exit(1);
