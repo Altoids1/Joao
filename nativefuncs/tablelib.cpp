@@ -1,5 +1,6 @@
 #include "../Program.h"
 #include "../Object.h"
+#include "../Table.h"
 
 void Program::construct_table_library()
 {
@@ -20,7 +21,7 @@ void Program::construct_table_library()
 	definedObjTypes["/table"]->set_typemethod_raw("implode",new NativeMethod("implode",[](std::vector<Value> args, Object* obj){
 		Table* t = static_cast<Table*>(obj);
 
-		std::string sep = "";
+		std::string sep = ", ";
 		size_t start = 0;
 		size_t stop = t->t_array.size() - 1;
 
@@ -29,27 +30,28 @@ void Program::construct_table_library()
 		default:
 		case(3):
 			if(args[2].t_vType != Value::vType::Integer)
-				return Value(Value::vType::Null, int(ErrorCode::BadArgtype));
-			stop = args[2];
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+			stop = args[2].t_value.as_int;
+			//Falls over into the other arguments
 		case(2):
 			if(args[1].t_vType != Value::vType::Integer)
-				return Value(Value::vType::Null, int(ErrorCode::BadArgtype));
-			start = args[1];
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+			start = args[1].t_value.as_int;
+			//Falls over into the other arguments
 		case(1):
 			sep = args[0].to_string();
-			break;
 		case(0):
-			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
+			break;
 		}
 
-		if(args.size() < 1)
-			sep = args[0].to_string();
+		if (!(t->t_array.size()) || start >= t->t_array.size())
+			return Value("");
 		
-		std::string result = "";
+		std::string result = t->t_array[start].to_string();
 
-		for(start; start <= stop && start < t->t_array.size(); ++start)
+		for(++start; start <= stop && start < t->t_array.size(); ++start)
 		{
-			result += t->t_array[start];
+			result += sep + t->t_array[start].to_string();
 		}
 		return Value(result);
 	}));
@@ -79,7 +81,7 @@ void Program::construct_table_library()
 		}
 		else
 		{
-			t->t_array.insert(index,args[1]);
+			t->t_array.insert(t->t_array.begin() + index,args[1]);
 		}
 		return Value();
 	}));
@@ -101,7 +103,7 @@ void Program::construct_table_library()
 			return Value();
 		}
 
-		t->t_array.erase(index,args[1]);
+		t->t_array.erase(t->t_array.begin() + index);
 		return Value();
 	}));
 }

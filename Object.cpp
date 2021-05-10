@@ -88,8 +88,7 @@ Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>& args)
 	if (typefuncs.count("#constructor"))
 	{
 		Function* fuh = typefuncs["#constructor"]; //fuh.
-		if (args.size())
-			fuh->give_args(interp, args, o);
+		fuh->give_args(interp, args, o);
 		fuh->resolve(interp);
 	}
 	return o;

@@ -426,8 +426,14 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	case(Token::cEnum::ConstructionToken): // Not legally an lvalue but it makes sense to stash this here for now
 	{
 		ConstructionToken ct = *static_cast<ConstructionToken*>(t);
-		lvalue = new Construction(ct.dir, {}, t->line); // FIXME: Allow for constructors to take operands
-		tokenheader = here + 3; // Jump over the impending (). Hackish!
+		consume_paren(true, tokens[static_cast<size_t>(here)+1]);
+		int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, here + 2);
+		if (close != here + 2)
+			lvalue = new Construction(ct.dir, readArgs(here + 2, close - 1), tokens[here]->line);
+		else
+			lvalue = new Construction(ct.dir, {}, tokens[here]->line);
+
+		tokenheader = close + 1;
 		break;
 	}
 	case(Token::cEnum::PairSymbolToken): // tableconstructor | '(' exp ')'
