@@ -587,12 +587,12 @@ class Scanner
 			return;
 		}
 
-
 		//otherwise, do the normal business
 		WordToken* wt = new WordToken(linenum, syntactic_linenum, str);
 		append(wt);
 	}
 	std::string getWord(int&);
+	std::string getString(int&);
 
 	int readString(int);
 	int readNumber(int);

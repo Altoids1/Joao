@@ -23,7 +23,8 @@
 
 
 
-int Scanner::readString(int it)
+
+std::string Scanner::getString(int& it)
 {
 	/*
 	This function assumes that line[it] is the '"' character.
@@ -37,7 +38,7 @@ int Scanner::readString(int it)
 		{
 		case('\n'):
 			ScannerError(it, ScanError::UnterminatedString);
-			return it;
+			return str;
 		case('\\'): // An escape character! Fancy
 		{
 			char cc = line[++it];
@@ -59,15 +60,23 @@ int Scanner::readString(int it)
 		}
 		case('"')://Delimiter found, returning...
 		{
-			Token* t = new StringToken(linenum, syntactic_linenum,str);
-			append(t);
-			return it;
+			return str;
 		}
 		default:
 			str.push_back(c);
 		}
 	}
 	ScannerError(it, ScanError::UnterminatedString);
+	return str;
+}
+
+int Scanner::readString(int it)
+{
+	/*
+	This function assumes that line[it] is the '"' character.
+	*/
+	Token* t = new StringToken(linenum, syntactic_linenum, getString(it));
+	append(t);
 	return it;
 }
 
