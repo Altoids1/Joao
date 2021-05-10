@@ -60,7 +60,7 @@ Program.o: Program.cpp Program.h
 Scanner.o:  Scanner.cpp Scanner.h 
 	$(CC) $(CFLAGS) -c Scanner.cpp
 	
-Table.o: Table.cpp Table.h Interpeter.h
+Table.o: Table.cpp Table.h Interpreter.h
 	$(CC) $(CFLAGS) -c Table.cpp
 
 # To start over from scratch, type 'make clean'.  This
