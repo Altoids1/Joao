@@ -885,7 +885,15 @@ public:
 	virtual const std::string class_name() const override { return "Construction"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "Construction, type: " + type + "\n";
+		std::string ind = std::string(indent, ' ');
+		std::string str = std::string(indent, ' ') + "Construction, type: " + type + "\n";
+		str += ind + "(Args:\n";
+		for (size_t i = 0; i < args.size(); ++i)
+		{
+			str += args[i]->dump(indent + 1);
+		}
+		str += ind + ")\n";
+		return str;
 	}
 	virtual Value resolve(Interpreter&) override;
 };
@@ -973,6 +981,16 @@ public:
 	virtual const std::string class_name() const override { return "IndexAccess"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "IndexAccess:\n";
+		std::string ind = std::string(indent,' ');
+		
+		std::string str = ind + "IndexAccess:\n";
+
+		str += ind + "*Container:\n";
+		str += container->dump(indent + 1);
+		str += ind + "[Index:\n";
+		str += index->dump(indent + 1);
+		str += ind + "]\n";
+
+		return str;
 	}
 };
