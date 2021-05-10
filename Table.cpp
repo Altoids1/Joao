@@ -3,7 +3,7 @@
 
 Value Table::at(Interpreter& interp, Value index)
 {
-	int64_t array_index;
+	Value::JoaoInt array_index;
 
 	switch (index.t_vType)
 	{
@@ -22,7 +22,7 @@ Value Table::at(Interpreter& interp, Value index)
 	}
 	//Should be able to safely assert by this point that array_index has been set to something.
 
-	if (array_index < 0 || array_index >= t_array.size())
+	if (array_index < 0 || array_index >= static_cast<Value::JoaoInt>(t_array.size()))
 	{
 		interp.RuntimeError(nullptr, "Index was out-of-bounds of array!");
 		return Value();
@@ -33,7 +33,7 @@ Value Table::at(Interpreter& interp, Value index)
 
 void Table::at_set(Interpreter& interp, Value index, Value& newval)
 {
-	int64_t array_index;
+	Value::JoaoInt array_index;
 
 	switch (index.t_vType)
 	{
@@ -69,9 +69,9 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 		return;
 	}
 
-	if (array_index >= t_array.size())
+	if (array_index >= static_cast<Value::JoaoInt>(t_array.size()))
 	{
-		t_array.resize(array_index + 1, Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
+		t_array.resize(static_cast<size_t>(array_index) + 1, Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
 	}
 	t_array[array_index] = newval;
 }

@@ -565,7 +565,7 @@ class Parser
 				if (!count)
 				{
 					//std::cout << "I return " << std::to_string(where);
-					return where;
+					return static_cast<int>(where);
 				}
 			}
 		}

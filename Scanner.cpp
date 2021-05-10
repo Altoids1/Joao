@@ -324,7 +324,7 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 {
 
 	if(it > line.length() || line[it] != '#') // If this is a linecomment
-		return line.length(); // Skip to end of line
+		return static_cast<int>(line.length()); // Skip to end of line
 
 	//Else, we are now in the readlongcomment zone
 
@@ -341,7 +341,7 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 		}
 
 	} while (!ifst.eof());
-	return line.length();
+	return static_cast<int>(line.length());
 }
 
 
@@ -497,7 +497,7 @@ void Scanner::scan(std::ifstream& ifst)
 			TOKEN_SEPARATOR:
 				continue;
 			case('"'): // Start of string
-				i = readString(i);
+				i = readString(static_cast<int>(i));
 				continue;
 			case(';'): // End of statement
 			{
@@ -506,27 +506,27 @@ void Scanner::scan(std::ifstream& ifst)
 				continue;
 			}
 			DIGITS:
-				i = readNumber(i);
+				i = readNumber(static_cast<int>(i));
 				continue;
 			case('/'):
-				i = readSlash(i, ifst);
+				i = readSlash(static_cast<int>(i), ifst);
 				continue;
 			EQ_SYMBOL:
-				i = readEqSymbol(i, ifst);
+				i = readEqSymbol(static_cast<int>(i), ifst);
 				continue;
 			SYMBOL:
-				i = readSymbol(i, ifst); // the 2nd argument is strange but bear with me here
+				i = readSymbol(static_cast<int>(i), ifst); // the 2nd argument is strange but bear with me here
 				continue;
 			PAIRSYMBOL:
-				i = readPairSymbol(i);
+				i = readPairSymbol(static_cast<int>(i));
 				continue;
 			ascii_UPPER:
 			ascii_lower:
 			ascii_other:
-				i = readWord(i);
+				i = readWord(static_cast<int>(i));
 				continue;
 			default:
-				ScannerError(i, ScanError::UnknownCharacter);
+				ScannerError(static_cast<unsigned int>(i), ScanError::UnknownCharacter);
 			}
 		}
 		

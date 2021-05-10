@@ -66,7 +66,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			}
 
 
-			std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, tokens.size()-1);
+			std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, static_cast<int>(tokens.size()-1));
 			--tokenheader;
 
 			Function* func = new Function(dir_name, bluh, pirate_noise, t->line);
@@ -80,7 +80,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 #ifdef LOUD_TOKENHEADER
 			std::cout << "Classdefinition began read at tokenheader " << std::to_string(tokenheader) << std::endl;
 #endif
-			std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, tokens.size() - 1);
+			std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, static_cast<int>(tokens.size() - 1));
 
 			classdef_list.push_back(new ClassDefinition(dir_name, lasses, t->line));
 
@@ -707,22 +707,22 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 
 				size_t semicolon = find_first_semicolon(tokenheader, yonder-1);
 				ASTNode* init;
-				if (find_aOp(tokenheader, semicolon))
+				if (find_aOp(tokenheader, static_cast<int>(semicolon)))
 				{
 					if (tokens[tokenheader]->class_enum() == Token::cEnum::LocalTypeToken)
-						init = readLocalAssignment(tokenheader, semicolon);
+						init = readLocalAssignment(tokenheader, static_cast<int>(semicolon));
 					else
-						init = readAssignmentStatement(tokenheader, semicolon);
+						init = readAssignmentStatement(tokenheader, static_cast<int>(semicolon));
 				}
 				else
 				{
-					init = readExp(tokenheader, semicolon);
+					init = readExp(tokenheader, static_cast<int>(semicolon));
 				}
 
-				where = semicolon + 1;
+				where = static_cast<int>(semicolon + 1);
 				semicolon = find_first_semicolon(where, yonder-1);
-				ASTNode* cond = readExp(where, semicolon); // Assignments do not evaluate to anything in João so putting one in a conditional is silly
-				where = semicolon + 1;
+				ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in João so putting one in a conditional is silly
+				where = static_cast<int>(semicolon + 1);
 				ASTNode* inc;
 				if (find_aOp(where, yonder-1))
 				{
@@ -901,7 +901,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		//If the Grammar serves me right, this is either a varstat or a functioncall.
 		//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
 		{
-			int yonder = find_first_semicolon(where+1, there);
+			int yonder = static_cast<int>(find_first_semicolon(where+1, there));
 			int found_aop = find_aOp(where + 1, yonder - 1);
 
 			if(found_aop) // varstat
