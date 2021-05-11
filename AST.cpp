@@ -521,6 +521,22 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Bool)):
 		return Value((lhs.t_value.as_bool || rhs.t_value.as_bool) && !(lhs.t_value.as_bool && rhs.t_value.as_bool));
 
+	//BOOL & INT
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Integer)):
+		return Value(lhs.t_value.as_bool && rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Bool, Value::vType::Integer)):
+		return Value(lhs.t_value.as_bool || rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Integer)):
+		return Value((lhs.t_value.as_bool || rhs.t_value.as_int) && !(lhs.t_value.as_bool && rhs.t_value.as_int));
+
+	//BOOL & DOUBLE
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Double)):
+		return Value(lhs.t_value.as_bool && rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Bool, Value::vType::Double)):
+		return Value(lhs.t_value.as_bool || rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Double)):
+		return Value((lhs.t_value.as_bool || rhs.t_value.as_double) && !(lhs.t_value.as_bool && rhs.t_value.as_double));
+
 	//STRING & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::String)):
 	{
