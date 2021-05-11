@@ -2,13 +2,21 @@
 #include "AST.h"
 #include "Interpreter.h"
 #include "Object.h"
+#include "Table.h"
 
 Interpreter::Interpreter()
 {
 
 }
 
-Value Interpreter::execute(Program& program)
+//Fair warning: In this context Interpreter doesn't ensure that its Program will not be garbage collected in a higher scope.
+Interpreter::Interpreter(Program& p)
+{
+	prog = &p;
+	p.set_interp(*this);
+}
+
+Value Interpreter::execute(Program& program, Value& jarg)
 {
 	prog = &program;
 
@@ -20,7 +28,43 @@ Value Interpreter::execute(Program& program)
 		exit(1); // HAS to be a forced-exit since this crashes the .exe otherwise!
 	}
 
+	std::vector<Value> jargs = {jarg};
+	main->give_args(*this,jargs,nullptr);
 	return main->resolve(*this);
+}
+
+void Interpreter::RuntimeError(ASTNode* a, std::string what)
+{
+	std::cout << "RUNTIME_ERROR: " << what << "\n";
+	
+	std::cout << "- - - - - - - - - - - - - - - -\n";
+	
+	//Stack dump
+	std::string whatfunk;
+	if(objectscope.top()) // If we runtimed within a method
+	{
+		whatfunk = "method of object of type " + objectscope.top()->object_type;
+	}
+	else
+	{
+		whatfunk = "global function";
+	}
+	
+	std::cout << "Line number: ";
+	if(a->my_line)
+	{
+		std::cout << std::to_string(a->my_line);
+	}
+	else
+	{
+		std::cout << "Unknown!"; // Eventually things should be configured to never do this
+	}
+	
+	std::cout << "\nRuntime in " << blockscope.top()->get_back_name() << ", a " << whatfunk << std::endl;
+
+#ifdef EXIT_ON_RUNTIME
+	exit(1);
+#endif
 }
 
 void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
@@ -250,4 +294,24 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 	}
 
 	return Value(prog->definedObjTypes[str]->makeObject(*this, eval_args));
+}
+
+
+Value Interpreter::makeBaseTable( std::vector<Value> elements, std::unordered_map<std::string,Value> entries, ASTNode* maker = nullptr)
+{
+	std::vector<Value> dumb_ref; // Hate this language, why even have a distinction between rvalues and lvalues
+	Object* objdesk = prog->definedObjTypes["/table"]->makeObject(*this,dumb_ref);
+	
+	Table* desk = static_cast<Table*>(objdesk);
+	for(size_t i = 0; i < elements.size(); ++i)
+	{
+		desk->at_set(*this,Value(i), elements[i]);
+	}
+	
+	for(auto it = entries.begin(); it != entries.end(); ++it)
+	{
+		desk->at_set(*this,Value(it->first), it->second);
+	}
+	
+	return Value(objdesk);
 }

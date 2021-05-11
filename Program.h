@@ -38,6 +38,7 @@ public:
 	void construct_math_library();
 	void construct_string_library();
 	void construct_table_library();
+	void construct_file_library();
 
 	void dump()
 	{

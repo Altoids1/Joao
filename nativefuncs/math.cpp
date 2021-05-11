@@ -7,6 +7,8 @@
 
 #define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
 
+#define MAXMIN_ENUM(type,thebool) (static_cast<uint16_t>(type) | (static_cast<uint16_t>(thebool) << 8))
+
 
 Value math::round(std::vector<Value> args)
 {
@@ -183,13 +185,20 @@ void Program::construct_math_library()
 			return Value();
 
 		Value biggest = args[0];
-		double bigval; // Yes, I can store Int32s into Float64s without loss of precision. According to Julia just now, typemax(Int32) < maxintfloat(Float64).
+		union
+		{
+			double d;
+			Value::JoaoInt i;
+		}bigval;
+		bool is_double;
 		switch (biggest.t_vType)
 		{
 		case(Value::vType::Double):
-			bigval = biggest.t_value.as_double;
+			bigval.d = biggest.t_value.as_double;
+			is_double = true;
 		case(Value::vType::Integer):
-			bigval = biggest.t_value.as_int;
+			bigval.i = biggest.t_value.as_int;
+			is_double = false;
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
@@ -197,20 +206,38 @@ void Program::construct_math_library()
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			Value v = args[i];
-			switch (v.t_vType)
+			switch (MAXMIN_ENUM(v.t_vType,is_double))
 			{
-			case(Value::vType::Double):
-				if (v.t_value.as_double > bigval)
+			case(MAXMIN_ENUM(Value::vType::Double, true)):
+				if (v.t_value.as_double > bigval.d)
 				{
 					biggest = v;
-					bigval = v.t_value.as_double;
+					bigval.d = v.t_value.as_double;
 				}
-			case(Value::vType::Integer):
-				if (v.t_value.as_int > bigval)
+				break;
+			case(MAXMIN_ENUM(Value::vType::Double, false)):
+				if (v.t_value.as_double > bigval.i)
 				{
 					biggest = v;
-					bigval = v.t_value.as_int;
+					bigval.d = v.t_value.as_double;
+					is_double = true;
 				}
+				break;
+			case(MAXMIN_ENUM(Value::vType::Integer, false)):
+				if (v.t_value.as_int > bigval.i)
+				{
+					biggest = v;
+					bigval.i = v.t_value.as_int;
+				}
+				break;
+			case(MAXMIN_ENUM(Value::vType::Integer, true)):
+				if (v.t_value.as_int > bigval.d)
+				{
+					biggest = v;
+					bigval.i = v.t_value.as_int;
+					is_double = false;
+				}
+				break;
 			default: // Bools aren't allowed here, piss off
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			}
@@ -223,13 +250,20 @@ void Program::construct_math_library()
 			return Value();
 
 		Value smallest = args[0];
-		double smallval; // Yes, I can store Int32s into Float64s without loss of precision. According to Julia just now, typemax(Int32) < maxintfloat(Float64).
+		union
+		{
+			double d;
+			Value::JoaoInt i;
+		}smallval;
+		bool is_double;
 		switch (smallest.t_vType)
 		{
 		case(Value::vType::Double):
-			smallval = smallest.t_value.as_double;
+			smallval.d = smallest.t_value.as_double;
+			is_double = true;
 		case(Value::vType::Integer):
-			smallval = smallest.t_value.as_int;
+			smallval.i = smallest.t_value.as_int;
+			is_double = false;
 		default:
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
@@ -237,20 +271,38 @@ void Program::construct_math_library()
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			Value v = args[i];
-			switch (v.t_vType)
+			switch (MAXMIN_ENUM(v.t_vType,is_double))
 			{
-			case(Value::vType::Double):
-				if (v.t_value.as_double < smallval)
+			case(MAXMIN_ENUM(Value::vType::Double, true)):
+				if (v.t_value.as_double < smallval.d)
 				{
 					smallest = v;
-					smallval = v.t_value.as_double;
+					smallval.d = v.t_value.as_double;
 				}
-			case(Value::vType::Integer):
-				if (v.t_value.as_int < smallval)
+				break;
+			case(MAXMIN_ENUM(Value::vType::Double, false)):
+				if (v.t_value.as_double < smallval.i)
 				{
 					smallest = v;
-					smallval = v.t_value.as_int;
+					smallval.d = v.t_value.as_double;
+					is_double = true;
 				}
+				break;
+			case(MAXMIN_ENUM(Value::vType::Integer, false)):
+				if (v.t_value.as_int < smallval.i)
+				{
+					smallest = v;
+					smallval.i = v.t_value.as_int;
+				}
+				break;
+			case(MAXMIN_ENUM(Value::vType::Integer, true)):
+				if (v.t_value.as_int < smallval.d)
+				{
+					smallest = v;
+					smallval.i = v.t_value.as_int;
+					is_double = false;
+				}
+				break;
 			default: // Bools aren't allowed here, piss off
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			}

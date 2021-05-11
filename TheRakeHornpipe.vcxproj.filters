@@ -42,13 +42,19 @@
     <ClCompile Include="nativefuncs\string.cpp">
       <Filter>Source Files\nativeLibrary</Filter>
     </ClCompile>
-    <ClCompile Include="nativefuncs\table.cpp">
+    <ClCompile Include="nativefuncs\tablelib.cpp">
       <Filter>Source Files\nativeLibrary</Filter>
     </ClCompile>
     <ClCompile Include="Directory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nativefuncs\file.cpp">
+      <Filter>Source Files\nativeLibrary</Filter>
+    </ClCompile>
+    <ClCompile Include="Table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

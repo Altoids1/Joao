@@ -40,10 +40,22 @@ void Object::set_property(Interpreter& interp, std::string name, Value rhs)
 
 Value Object::call_method(Interpreter& interp, std::string name, std::vector<Value> &args)
 {
-	if (!base_funcs->count(name))
-		interp.RuntimeError(nullptr, "Unable to access method of object: " + name);
+	Function* fuh;
 
-	Function* fuh = base_funcs->at(name);
+	if (base_funcs->count(name)) // Note how it checks the typical methods before trying to invoke any metamethods.
+	{
+		fuh = base_funcs->at(name);
+	}
+	else if (mt && mt->metamethods.count(name))
+	{
+		fuh = mt->metamethods.at(name);
+	}
+	else
+	{
+		interp.RuntimeError(nullptr, "Unable to access method of object: " + name);
+		return Value();
+	}
+	
 	fuh->give_args(interp, args, this);
 	fuh->set_obj(this);
 	return fuh->resolve(interp);
@@ -56,6 +68,10 @@ Function* Object::get_method(Interpreter& interp, std::string name)
 	{
 		return base_funcs->at(name);
 	}
+	else if (mt && mt->metamethods.count(name))
+	{
+		return mt->metamethods.at(name);
+	}
 	return nullptr;
 }
 
@@ -67,12 +83,12 @@ Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>& args)
 	if (is_table_type)
 		o = new Table(object_type, &typeproperties, &typefuncs);
 	else
-		o = new Object(object_type, &typeproperties, &typefuncs); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
+		o = new Object(object_type, &typeproperties, &typefuncs, mt); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
+
 	if (typefuncs.count("#constructor"))
 	{
 		Function* fuh = typefuncs["#constructor"]; //fuh.
-		if (args.size())
-			fuh->give_args(interp, args, o);
+		fuh->give_args(interp, args, o);
 		fuh->resolve(interp);
 	}
 	return o;
@@ -88,6 +104,16 @@ Value ObjectType::get_typeproperty(Interpreter& interp, std::string str, ASTNode
 	return typeproperties.at(str);
 }
 
+Function* ObjectType::has_typemethod(Interpreter& interp, std::string str, ASTNode* getter)
+{
+	if (!typefuncs.count(str))
+	{
+		if (mt && mt->metamethods.count(str))
+			return mt->metamethods.at(str);
+		return nullptr;
+	}
+	return typefuncs.at(str);
+}
 
 void ObjectType::set_typeproperty(Parser& parse, std::string name, Value v)
 {

@@ -17,12 +17,22 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 		//Expecting: a bunch of classdefs and funcdefs
 		//Both of these start with a directory that ends in a '/'Name, so lets read that in
 		Token* t = tokens[tokenheader];
-		if (t->class_enum() != Token::cEnum::DirectoryToken)
+		std::string dir_name;
+		if (t->class_enum() == Token::cEnum::DirectoryToken)
+		{
+			dir_name = static_cast<DirectoryToken*>(t)->dir;
+			
+		}
+		else if (t->class_enum() == Token::cEnum::ConstructionToken) // New() override, it seems
+		{
+			dir_name = static_cast<ConstructionToken*>(t)->dir + "/#constructor";
+		}
+		else
 		{
 			ParserError(t, "Unexpected Token at global-scope definition when Directory was expected!");
 		}
 
-		std::string dir_name = static_cast<DirectoryToken*>(t)->dir;
+		
 
 		++tokenheader;
 		//The next token has to be either a '(', which disambiguates us into being a funcdef,
@@ -66,10 +76,10 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			}
 
 
-			std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, tokens.size()-1);
+			std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, static_cast<int>(tokens.size()-1));
 			--tokenheader;
 
-			Function* func = new Function(dir_name, bluh, pirate_noise);
+			Function* func = new Function(dir_name, bluh, pirate_noise, t->line);
 
 			t_program.set_func(dir_name, func);
 
@@ -80,9 +90,9 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 #ifdef LOUD_TOKENHEADER
 			std::cout << "Classdefinition began read at tokenheader " << std::to_string(tokenheader) << std::endl;
 #endif
-			std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, tokens.size() - 1);
+			std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, static_cast<int>(tokens.size() - 1));
 
-			classdef_list.push_back(new ClassDefinition(dir_name, lasses));
+			classdef_list.push_back(new ClassDefinition(dir_name, lasses, t->line));
 
 #ifdef LOUD_TOKENHEADER
 			std::cout << "Classdefinition set tokenheader for globalscope to " << std::to_string(tokenheader) << std::endl;
@@ -244,7 +254,7 @@ ASTNode* Parser::readUnary(int here, int there)
 
 
 
-	return new UnaryExpression(uh, readPower(here+1,there));
+	return new UnaryExpression(uh, readPower(here+1,there), tokens[here]->line);
 	
 }
 
@@ -309,7 +319,7 @@ READPOWER_LEAVE_POWERSEARCH:
 	ASTNode* powertower = readlvalue(last_power + 1, where - 1); // Add the final lvalue of the series of exponentiations, the "c" of a ^ b ^ c
 	for (auto it = lvalues.rbegin(); it != lvalues.rend(); ++it)
 	{
-		powertower = new BinaryExpression(BinaryExpression::bOps::Exponent, *it, powertower);
+		powertower = new BinaryExpression(BinaryExpression::bOps::Exponent, *it, powertower, tokens[here]->line);
 	}
 	return powertower;
 }
@@ -402,9 +412,9 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			{
 				int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
 				if (close != tokenheader + 1)
-					lvalue = new CallExpression(lvalue, readArgs(tokenheader + 1, close - 1));
+					lvalue = new CallExpression(lvalue, readArgs(tokenheader + 1, close - 1), tokens[here]->line);
 				else
-					lvalue = new CallExpression(lvalue, {});
+					lvalue = new CallExpression(lvalue, {},tokens[here]->line);
 
 				tokenheader = close + 1;
 				break;
@@ -426,8 +436,14 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	case(Token::cEnum::ConstructionToken): // Not legally an lvalue but it makes sense to stash this here for now
 	{
 		ConstructionToken ct = *static_cast<ConstructionToken*>(t);
-		lvalue = new Construction(ct.dir, {}); // FIXME: Allow for constructors to take operands
-		tokenheader = here + 3; // Jump over the impending (). Hackish!
+		consume_paren(true, tokens[static_cast<size_t>(here)+1]);
+		int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, here + 2);
+		if (close != here + 2)
+			lvalue = new Construction(ct.dir, readArgs(here + 2, close - 1), tokens[here]->line);
+		else
+			lvalue = new Construction(ct.dir, {}, tokens[here]->line);
+
+		tokenheader = close + 1;
 		break;
 	}
 	case(Token::cEnum::PairSymbolToken): // tableconstructor | '(' exp ')'
@@ -544,7 +560,7 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 
 				ASTNode* right = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), where+1, there);
 				
-				lhs = new BinaryExpression(boopitybeep, lhs, right);
+				lhs = new BinaryExpression(boopitybeep, lhs, right, t2->line);
 				
 				continue;
 			}
@@ -656,12 +672,12 @@ LocalAssignmentStatement* Parser::readLocalAssignment(int here, int there) // Va
 		
 		//(We don't consume the semicolon; it's assumed by higher stacks that *they* will be the ones to consume it)
 		//(We know it's there, though ;) )
-		return new LocalAssignmentStatement(id, new Literal(Value()), AssignmentStatement::aOps::Assign, tuh);
+		return new LocalAssignmentStatement(id, new Literal(Value()), AssignmentStatement::aOps::Assign, tuh, tokens[here+1]->line);
 	}
 
 	ASTNode* rvalue = readExp(here+3,there);
 
-	return new LocalAssignmentStatement(id, rvalue, aesop, tuh);
+	return new LocalAssignmentStatement(id, rvalue, aesop, tuh, tokens[here+1]->line);
 }
 
 std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) // Tokenheader state should point to the opening brace of this block.
@@ -701,22 +717,22 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 
 				size_t semicolon = find_first_semicolon(tokenheader, yonder-1);
 				ASTNode* init;
-				if (find_aOp(tokenheader, semicolon))
+				if (find_aOp(tokenheader, static_cast<int>(semicolon)))
 				{
 					if (tokens[tokenheader]->class_enum() == Token::cEnum::LocalTypeToken)
-						init = readLocalAssignment(tokenheader, semicolon);
+						init = readLocalAssignment(tokenheader, static_cast<int>(semicolon));
 					else
-						init = readAssignmentStatement(tokenheader, semicolon);
+						init = readAssignmentStatement(tokenheader, static_cast<int>(semicolon));
 				}
 				else
 				{
-					init = readExp(tokenheader, semicolon);
+					init = readExp(tokenheader, static_cast<int>(semicolon));
 				}
 
-				where = semicolon + 1;
+				where = static_cast<int>(semicolon + 1);
 				semicolon = find_first_semicolon(where, yonder-1);
-				ASTNode* cond = readExp(where, semicolon); // Assignments do not evaluate to anything in João so putting one in a conditional is silly
-				where = semicolon + 1;
+				ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in João so putting one in a conditional is silly
+				where = static_cast<int>(semicolon + 1);
 				ASTNode* inc;
 				if (find_aOp(where, yonder-1))
 				{
@@ -749,7 +765,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 
 				std::vector<Expression*> if_block = readBlock(BlockType::If,tokenheader,there);
 
-				IfBlock* ifstatement = new IfBlock(cond, if_block);
+				IfBlock* ifstatement = new IfBlock(cond, if_block, tokens[where]->line);
 				
 				while (tokens[tokenheader]->class_enum() == Token::cEnum::KeywordToken)
 				{
@@ -779,7 +795,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 					case(KeywordToken::Key::Else):
 					{
 						elif_block = readBlock(BlockType::If, block_start, there);
-						ifstatement->append_else(new IfBlock(elif_cond, elif_block));
+						ifstatement->append_else(new IfBlock(elif_cond, elif_block, ktptr->line));
 					}
 					}
 
@@ -850,7 +866,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 
 				std::vector<Expression*> while_block = readBlock(BlockType::While,tokenheader,there);
 
-				ASTs.push_back(new WhileBlock(cond, while_block));
+				ASTs.push_back(new WhileBlock(cond, while_block, tokens[where]->line));
 
 				where = tokenheader - 1;
 
@@ -860,7 +876,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 			case(KeywordToken::Key::Return):
 			{
 				++where; tokenheader = where; // Consume this return token
-				ReturnStatement* rs = new ReturnStatement(readExp(where, there-1));
+				ReturnStatement* rs = new ReturnStatement(readExp(where, there-1), tokens[where]->line);
 				ASTs.push_back(rs);
 				consume_semicolon();
 
@@ -895,7 +911,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		//If the Grammar serves me right, this is either a varstat or a functioncall.
 		//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
 		{
-			int yonder = find_first_semicolon(where+1, there);
+			int yonder = static_cast<int>(find_first_semicolon(where+1, there));
 			int found_aop = find_aOp(where + 1, yonder - 1);
 
 			if(found_aop) // varstat
@@ -906,7 +922,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				if (luh->is_expression())
 					ASTs.push_back(static_cast<Expression*>(luh));
 				else
-					ParserError(t, "Unexpected expression when Statement was expected!");
+					ParserError(t, "Unexpected " + luh->class_name() +  " expression when Statement was expected!");
 			}
 			consume_semicolon();
 			where = tokenheader-1; // Decrement so that the impending increment puts us in the correct place.

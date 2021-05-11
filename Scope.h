@@ -77,6 +77,11 @@ public:
 
 		return nullptr;
 	}
+	
+	std::string get_back_name()
+	{
+		return top_scope->scopename;
+	}
 
 	void set(std::string name, _Ty& t)
 	{

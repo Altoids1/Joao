@@ -1,9 +1,9 @@
 #include "Forward.h"
 #include "AST.h"
 #include "Object.h"
+#include "Table.h"
 #include "Interpreter.h"
 #include "Parser.h"
-#include "Table.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
@@ -118,11 +118,15 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 
+	/*
+	//While we do know our own assignment, we don't actually use that information in the AST (as of 7th May 2021)
+	//That's assumed to be handled by the parser.
 	if (t_op != aOps::Assign)
 	{
-		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + std::to_string(static_cast<int>(t_op)));
 		return rhs_val;
 	}
+	*/
 
 	//FIXME: This should really just be a switch statement.
 	if (id->class_name() == "Identifier")
@@ -517,6 +521,22 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Bool)):
 		return Value((lhs.t_value.as_bool || rhs.t_value.as_bool) && !(lhs.t_value.as_bool && rhs.t_value.as_bool));
 
+	//BOOL & INT
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Integer)):
+		return Value(lhs.t_value.as_bool && rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Bool, Value::vType::Integer)):
+		return Value(lhs.t_value.as_bool || rhs.t_value.as_int);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Integer)):
+		return Value((lhs.t_value.as_bool || rhs.t_value.as_int) && !(lhs.t_value.as_bool && rhs.t_value.as_int));
+
+	//BOOL & DOUBLE
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Double)):
+		return Value(lhs.t_value.as_bool && rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Bool, Value::vType::Double)):
+		return Value(lhs.t_value.as_bool || rhs.t_value.as_double);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Double)):
+		return Value((lhs.t_value.as_bool || rhs.t_value.as_double) && !(lhs.t_value.as_bool && rhs.t_value.as_double));
+
 	//STRING & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::String)):
 	{
@@ -687,16 +707,41 @@ Value NativeFunction::resolve(Interpreter& interp)
 	{
 		switch (result.t_value.as_int)
 		{
-		case(int(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
+		case(static_cast<Value::JoaoInt>((Program::ErrorCode::NoError))): // An expected null, function returned successfully.
 			break;
-		case(int(Program::ErrorCode::BadArgType)):
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
 			interp.RuntimeError(*this, "Args of improper type given to NativeFunction!");
 			break;
-		case(int(Program::ErrorCode::NotEnoughArgs)):
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
 			interp.RuntimeError(*this, "Not enough args provided to NativeFunction!");
 			break;
 		default:
 			interp.RuntimeError(*this, "Unknown RuntimeError in NativeFunction!");
+		}
+	}
+	return result; // Woag.
+}
+
+Value NativeMethod::resolve(Interpreter& interp)
+{
+	if(!obj && !is_static)
+		interp.RuntimeError(*this, "Cannot call NativeMethod without an Object!");
+
+	Value result = lambda(t_args,obj);
+	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
+	{
+		switch (result.t_value.as_int)
+		{
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
+			break;
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
+			interp.RuntimeError(*this, "Args of improper type given to NativeMethod!");
+			break;
+		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
+			interp.RuntimeError(*this, "Not enough args provided to NativeMethod!");
+			break;
+		default:
+			interp.RuntimeError(*this, "Unknown RuntimeError in NativeMethod!");
 		}
 	}
 	return result; // Woag.
@@ -916,6 +961,15 @@ Handle MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 			interp.RuntimeError(this, "Cannot access method of non-object Value!");
 			return Handle();
 		}
+		/*
+		So we can't actually trust bk's understanding of whether or not it is a function,
+		since it may be a function of this object, but not visible in objectscope nor globalscope.
+
+		Honestly the whole Handle system right now is a bit hackish and could be improved to improve performance and reduce complexity;
+		definitely something to consider overhauling for v1.1 or v1.2.
+		*/
+
+		bk.is_function = vuh.t_value.as_object_ptr->get_method(interp, bk.name);
 
 		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
 

@@ -23,7 +23,8 @@
 
 
 
-int Scanner::readString(int it)
+
+std::string Scanner::getString(int& it)
 {
 	/*
 	This function assumes that line[it] is the '"' character.
@@ -37,7 +38,7 @@ int Scanner::readString(int it)
 		{
 		case('\n'):
 			ScannerError(it, ScanError::UnterminatedString);
-			return it;
+			return str;
 		case('\\'): // An escape character! Fancy
 		{
 			char cc = line[++it];
@@ -59,15 +60,23 @@ int Scanner::readString(int it)
 		}
 		case('"')://Delimiter found, returning...
 		{
-			Token* t = new StringToken(linenum, syntactic_linenum,str);
-			append(t);
-			return it;
+			return str;
 		}
 		default:
 			str.push_back(c);
 		}
 	}
 	ScannerError(it, ScanError::UnterminatedString);
+	return str;
+}
+
+int Scanner::readString(int it)
+{
+	/*
+	This function assumes that line[it] is the '"' character.
+	*/
+	Token* t = new StringToken(linenum, syntactic_linenum, getString(it));
+	append(t);
 	return it;
 }
 
@@ -134,7 +143,7 @@ int Scanner::readEqSymbol(int it, std::ifstream& ifst)
 		if (can_be_two)
 		{
 			char second = line[static_cast<size_t>(it + 1)];
-			if (second == first || second == '=')
+			if (second == '=')
 			{
 				append(new SymbolToken(linenum, syntactic_linenum, first, second));
 				update_precedence(std::string{ first, second });
@@ -230,7 +239,7 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 				}
 			}
 			//Double-char operators and things; '..' rolls over into here if finding '../' fails
-			if (c == first)
+			if (c == first || c == '=')
 			{
 				second = c; //woag it's a double symbol
 				if (c == '#') // If ##, meaning a linecomment
@@ -239,25 +248,26 @@ int Scanner::readSymbol(int it, std::ifstream& ifst)
 				}
 				++it;
 				update_precedence(std::string{ first, second });
-				
-				break;
+				append(new SymbolToken(linenum, syntactic_linenum, first, second));
+				return it;
 			}
 			//Casually rolls-over into the default case when it realizes this isn't a two-char symbol
 		default:
-			update_precedence(std::string{first});
+			break;
 		}
 	}
 	Token* t;
-	if (first == '.' && second == '\0') // FIXME: This function's whole control flow is pretty messy and a tad unoptimized, could use a rework
+	if (first == '.')
 	{
 		t = new MemberToken(linenum, syntactic_linenum);
 	}
-	else if (first == ',' && second == '\0')
+	else if (first == ',')
 	{
 		t = new CommaToken(linenum, syntactic_linenum);
 	}
 	else
 	{
+		update_precedence(std::string{ first });
 		t = new SymbolToken(linenum, syntactic_linenum, first, second);
 	}
 
@@ -314,7 +324,7 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 {
 
 	if(it > line.length() || line[it] != '#') // If this is a linecomment
-		return line.length(); // Skip to end of line
+		return static_cast<int>(line.length()); // Skip to end of line
 
 	//Else, we are now in the readlongcomment zone
 
@@ -331,7 +341,7 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 		}
 
 	} while (!ifst.eof());
-	return line.length();
+	return static_cast<int>(line.length());
 }
 
 
@@ -444,6 +454,39 @@ void Scanner::scan(std::ifstream& ifst)
 		linenum++; // At the start so that we're 1-indexed instead of 0-indexed
 		std::getline(ifst, line);
 
+		//include checking
+		if (line.size() > 10 && line.substr(0, 9) == "include \"")
+		{
+			int start = 10;
+			std::string strfile = getString(start);
+
+			std::ifstream includedfile;
+			std::cout << "Opening file " << strfile << "...\n";
+			includedfile.open(strfile);
+			if (!includedfile.good())
+			{
+				std::cout << "Unable to open file " << strfile << "!\n";
+				exit(1);
+			}
+			
+			Scanner subscanner(syntactic_linenum+1);
+			subscanner.scan(includedfile);
+
+			//Token merging
+			std::vector<Token*> their_tokens = subscanner.get_tokens();
+			tokens.insert(tokens.end(), their_tokens.begin(), their_tokens.end());
+
+			//Precedence merging
+			std::vector<OperationPrecedence> their_ops = subscanner.get_lowops();
+			lowest_ops.insert(lowest_ops.end(), their_ops.begin(), their_ops.end());
+
+			syntactic_linenum = subscanner.get_synline() + 1;
+			lowest_ops.push_back(lowop);
+			lowop = OperationPrecedence::NONE;
+
+			continue;
+		}
+
 		for (size_t i = 0; i < line.length(); ++i)
 		{
 			
@@ -454,7 +497,7 @@ void Scanner::scan(std::ifstream& ifst)
 			TOKEN_SEPARATOR:
 				continue;
 			case('"'): // Start of string
-				i = readString(i);
+				i = readString(static_cast<int>(i));
 				continue;
 			case(';'): // End of statement
 			{
@@ -463,27 +506,27 @@ void Scanner::scan(std::ifstream& ifst)
 				continue;
 			}
 			DIGITS:
-				i = readNumber(i);
+				i = readNumber(static_cast<int>(i));
 				continue;
 			case('/'):
-				i = readSlash(i, ifst);
+				i = readSlash(static_cast<int>(i), ifst);
 				continue;
 			EQ_SYMBOL:
-				i = readEqSymbol(i, ifst);
+				i = readEqSymbol(static_cast<int>(i), ifst);
 				continue;
 			SYMBOL:
-				i = readSymbol(i, ifst); // the 2nd argument is strange but bear with me here
+				i = readSymbol(static_cast<int>(i), ifst); // the 2nd argument is strange but bear with me here
 				continue;
 			PAIRSYMBOL:
-				i = readPairSymbol(i);
+				i = readPairSymbol(static_cast<int>(i));
 				continue;
 			ascii_UPPER:
 			ascii_lower:
 			ascii_other:
-				i = readWord(i);
+				i = readWord(static_cast<int>(i));
 				continue;
 			default:
-				ScannerError(i, ScanError::UnknownCharacter);
+				ScannerError(static_cast<unsigned int>(i), ScanError::UnknownCharacter);
 			}
 		}
 		

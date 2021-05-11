@@ -166,6 +166,25 @@ class Parser
 				return AssignmentStatement::aOps::NoOp;
 			}
 		}
+		else
+		{
+			if (c[1] != '=')
+				return AssignmentStatement::aOps::NoOp;
+
+			switch (c[0])
+			{
+			case('+'):
+				return AssignmentStatement::aOps::AssignAdd;
+			case('-'):
+				return AssignmentStatement::aOps::AssignSubtract;
+			case('*'):
+				return AssignmentStatement::aOps::AssignMultiply;
+			case('/'):
+				return AssignmentStatement::aOps::AssignDivide;
+			default:
+				return AssignmentStatement::aOps::NoOp;
+			}
+		}
 
 		return AssignmentStatement::aOps::NoOp;
 	}
@@ -197,7 +216,6 @@ class Parser
 	ASTNode* readPower(int, int);
 	ASTNode* readBinExp(Scanner::OperationPrecedence,int,int);
 	ASTNode* readExp(int,int);
-	Construction* readConstruction(int, int);
 
 	//Here-there-update; does not update if no last bracket found
 	std::vector<Expression*> readBlock(BlockType, int, int);
@@ -226,39 +244,18 @@ class Parser
 				ParserError(t, "Unexpected Token when aOp was expected!");
 			return AssignmentStatement::aOps::NoOp;
 		}
-		SymbolToken st = *static_cast<SymbolToken*>(t);
 
-		char* c = st.get_symbol();
+		AssignmentStatement::aOps auhp = symbol_to_aOp(static_cast<SymbolToken*>(t));
 
-		if (st.len == 1)
-		{
-			if (c[0] == '=')
-			{
-				if(!here)
-					++tokenheader;
-				return AssignmentStatement::aOps::Assign;
-			}
-			else
-			{
-				if (loud)
-				{
-					ParserError(t, "Unexpected single-char SymbolToken; aOp was expected!");
-				}
-				return AssignmentStatement::aOps::NoOp;
-			}
-		}
-		if (loud)
-			ParserError(t, "Two-char assignment operations are not implemented!");
+		if (auhp == AssignmentStatement::aOps::NoOp)
+			ParserError(t, "Unexpected token when assignment operator was expected!");
 
-		return AssignmentStatement::aOps::NoOp;
-
-		//FIXME: two-char assignment operations!
 		if(!here)
 			++tokenheader;
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readaOp setting tokenheader to " << std::to_string(tokenheader) << std::endl;
 #endif
-		return AssignmentStatement::aOps::NoOp;
+		return auhp;
 	}
 
 	BinaryExpression::bOps readbOp(SymbolToken* st)
@@ -382,8 +379,30 @@ class Parser
 
 		AssignmentStatement::aOps aesop = readaOp();
 
-
 		ASTNode* rvalue = readExp(tokenheader, there);
+
+		/*
+		The way we handle the assign-and-op operators is basically just perceiving them as being equivalent to "id = id op rvalue" or whatever.
+		*/
+		switch (aesop)
+		{
+		case(AssignmentStatement::aOps::Assign):
+			break;
+		case(AssignmentStatement::aOps::AssignAdd):
+			rvalue = new BinaryExpression(BinaryExpression::bOps::Add, id, rvalue);
+			break;
+		case(AssignmentStatement::aOps::AssignSubtract):
+			rvalue = new BinaryExpression(BinaryExpression::bOps::Subtract, id, rvalue);
+			break;
+		case(AssignmentStatement::aOps::AssignMultiply):
+			rvalue = new BinaryExpression(BinaryExpression::bOps::Multiply, id, rvalue);
+			break;
+		case(AssignmentStatement::aOps::AssignDivide):
+			rvalue = new BinaryExpression(BinaryExpression::bOps::Divide, id, rvalue);
+			break;
+		default:
+			break;
+		}
 
 		return new AssignmentStatement(id, rvalue, aesop);
 	}
@@ -546,7 +565,7 @@ class Parser
 				if (!count)
 				{
 					//std::cout << "I return " << std::to_string(where);
-					return where;
+					return static_cast<int>(where);
 				}
 			}
 		}

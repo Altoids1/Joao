@@ -21,8 +21,8 @@ CFLAGS  = -g -Wall
 default: joao
 
 # To create the executable file count we need the object files
-joao:  AST.o Directory.o Interpreter.o main.o math.o string.o table.o Object.o Parser.o Program.o Scanner.o
-	$(CC) $(CFLAGS) -o joao AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o
+joao:  AST.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Table.o
+	$(CC) $(CFLAGS) -o joao AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o
 
 AST.o: AST.cpp Forward.h AST.h Object.h Interpreter.h Parser.h Table.h
 	$(CC) $(CFLAGS) -c AST.cpp
@@ -36,14 +36,17 @@ Interpreter.o: Interpreter.cpp Forward.h AST.h Interpreter.h
 main.o: main.cpp Forward.h AST.h Interpreter.h Object.h Parser.h
 	$(CC) $(CFLAGS) -c main.cpp
 	
+file.o: ./nativefuncs/file.cpp Program.h Object.h Table.h
+	$(CC) $(CFLAGS) -c ./nativefuncs/file.cpp
+	
 math.o: ./nativefuncs/math.cpp Program.h
 	$(CC) $(CFLAGS) -c ./nativefuncs/math.cpp
 
 string.o: ./nativefuncs/string.cpp Program.h
 	$(CC) $(CFLAGS) -c ./nativefuncs/string.cpp
 
-table.o: ./nativefuncs/table.cpp Program.h
-	$(CC) $(CFLAGS) -c ./nativefuncs/table.cpp
+tablelib.o: ./nativefuncs/tablelib.cpp Program.h Object.h
+	$(CC) $(CFLAGS) -c ./nativefuncs/tablelib.cpp
 
 Object.o: Object.cpp Object.h Interpreter.h Parser.h Table.h
 	$(CC) $(CFLAGS) -c Object.cpp
@@ -56,6 +59,9 @@ Program.o: Program.cpp Program.h
 
 Scanner.o:  Scanner.cpp Scanner.h 
 	$(CC) $(CFLAGS) -c Scanner.cpp
+	
+Table.o: Table.cpp Table.h Interpreter.h
+	$(CC) $(CFLAGS) -c Table.cpp
 
 # To start over from scratch, type 'make clean'.  This
 # removes the executable file, as well as old .o object

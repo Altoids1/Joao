@@ -7,7 +7,7 @@
 
 class Interpreter
 {
-	Program* prog;
+	Program* prog = nullptr;
 
 	//The global scope of variables.
 	Scopelet<Value> globalscope;
@@ -22,9 +22,10 @@ public:
 	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.
 
 	Interpreter();
+	Interpreter(Program&);
 
 	//Executes the given program. Assumes program already knows about it's parent interp.
-	Value execute(Program&);
+	Value execute(Program&, Value&);
 
 	//Gets function by Directory name.
 	Function* get_func(std::string funkname, ASTNode* caller, bool loud = true);
@@ -47,24 +48,27 @@ public:
 
 	//Construct an object and return it as a Value.
 	Value makeObject(std::string,std::vector<ASTNode*>&,ASTNode*);
+	
+	//Constructs an anonymous table with no derived classes and returns it.
+	Value makeBaseTable( std::vector<Value>, std::unordered_map<std::string,Value>, ASTNode*);
 
 	void RuntimeError()
 	{
 		std::cout << "RUNTIME_ERROR: UNKNOWN!";
+#ifdef EXIT_ON_RUNTIME
 		exit(1);
+#endif
 	}
-	void RuntimeError(ASTNode* a, std::string what)
-	{
-		//This is just a basic setup while everything else is fleshed out.
-		std::cout << "RUNTIME_ERROR: " << what << "\n";
-
-		exit(1);
-	}
+	
+	void RuntimeError(ASTNode*, std::string);
+	
 	void RuntimeError(ASTNode& a, std::string what)
 	{
 		//This is just a basic setup while everything else is fleshed out.
 		std::cout <<"RUNTIME_ERROR: " << what << "\n";
+#ifdef EXIT_ON_RUNTIME
 		exit(1);
+#endif
 	}
 
 	//Pushes a new blockstack and objstack layer
