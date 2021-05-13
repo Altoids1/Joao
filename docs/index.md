@@ -1,12 +1,13 @@
 # Documentation for João v1.1.0
 
-Welcome to João!
-
 <img src="https://user-images.githubusercontent.com/29939414/114955666-c9ffe700-9e22-11eb-95fd-649fd2ef250b.png">
+
+**Note:** This documentation is a work-in-progress. Several features are underdocumented, or not documented at all. In addition, new features may be added to the language over time, which may not coincide with an update to this documentation.
 
 ## Index
 
 [1. Getting Started](GettingStarted.md)
+[2. Types and Values](TypesValues.md)
 
 ## License
 

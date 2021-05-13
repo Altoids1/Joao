@@ -81,18 +81,14 @@ The ``/`` before the variable's name is used to indicate that it is a **Global V
 
 Variable names, as well as class and function names and whatever else, can be any string of letters, digits, and underscores, as long as it does not begin with a digit. Examples include:
 
-> idea
-
-> jester
-
-> variable10
-
-> \_i
-
-> aFunCamelCaseVariable
-
-> \_GILBERTO
-
+```
+idea
+jester
+variable10
+_i
+aFunCamelCaseVariable
+_GILBERTO
+```
 
 These identifiers are **case-sensitive**. This means that ``A`` and ``a`` are treated as different identifiers by João, and can mean different things.
 
@@ -100,17 +96,16 @@ As of João v1.1, Only ASCII letters are available for identifiers. This is a bu
 
 The following words are *reserved* by the language, to be used as **Keywords** for particular actions that can be done by the language, and so cannot be used as identifiers:
 
-> if elseif else
+```
+if elseif else
+for while
+return break
+Value Object Number String Boolean local
+true false null
+include require
+```
 
-> for while
-
-> return break
-
-> Value Object Number String Boolean local
-
-> true false null
-
-> include require
+Since João is case-sensitive, it is possible (albeit discouraged) to use identifiers such as IF or oBJECT without technically using a reserved word.
 
 ## Comments
 
@@ -121,7 +116,7 @@ To create a comment which exists on a single line of code, you can write ``##`` 
 ```python
 /main()
 {
-	Value what = 3; ## I am a comment!
+	/what = 3; ## I am a comment!
 	print(what);
 }
 ```
