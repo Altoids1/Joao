@@ -55,9 +55,9 @@ João is a programming language, and so, unsurprisingly, you can make **programs
 
 Often, very large programs have an issue of organizing all their code in a reasonable and human-readible way, even when the code expands to become millions of lines of text long. João's solution to that problem is to use some behavior inherited form the concept of a **Directory.**
 
-João is, in some sense, a **directory-oriented langauge.** This is to mean that much of the structure of your program is organized into something analogous to the directories of some file system, like the files on a Windows or Linux computer.
+João is, in some sense, a **directory-oriented language.** This is to mean that much of the structure of your program is organized into something analogous to the directories of some file system, like the files on a Windows or Linux computer.
 
-These directories can contain **classes** and **functions**. For example, ``/main()`` is a *function* which is supposed to be the start of your program; when your program is first ran, the code within ``/main()`` is the first, and sometimes only, code that is ran. An example of how ``/main()`` looks is featured above in the first two code examples.
+These directories can contain **classes** and **functions**. For example, ``/main()`` is a *function* which is supposed to be the start of your program; when your program is first run, the code within ``/main()`` is the first, and sometimes only, code that is ran. An example of how ``/main()`` looks is featured above in the first two code examples.
 
 # 1.2 - Global Variables
 
@@ -77,15 +77,20 @@ The ``/`` before the variable's name is used to indicate that it is a **Global V
 
 # 1.3 - Lexical Conventions
 
-### Naming things
+## Naming things
 
 Variable names, as well as class and function names and whatever else, can be any string of letters, digits, and underscores, as long as it does not begin with a digit. Examples include:
 
 > idea
+
 > jester
+
 > variable10
+
 > \_i
+
 > aFunCamelCaseVariable
+
 > \_GILBERTO
 
 
@@ -96,13 +101,18 @@ As of João v1.1, Only ASCII letters are available for identifiers. This is a bu
 The following words are *reserved* by the language, to be used as **Keywords** for particular actions that can be done by the language, and so cannot be used as identifiers:
 
 > if elseif else
+
 > for while
+
 > return break
+
 > Value Object Number String Boolean local
+
 > true false null
+
 > include require
 
-### Comments
+## Comments
 
 **Comments** are text which is not part of the program itself, but written into the code so as to, typically, provide some information written in English (or whatever) that helps you (or someone else) understand your code better.
 

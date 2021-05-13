@@ -1,0 +1,43 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+
+h1, h2, h3, h4, h5, h6
+{
+	color: #f03030;
+}
+
+header h1
+{
+	color: #f03030;
+}
+
+header
+{
+	border-bottom: 2px dashed #f03030;
+	margin: 0 0 5px 0;
+}
+
+pre
+{
+	color: #f03030;
+}
+
+p
+{
+	font-family: sans-serif;
+}
+
+strong
+{
+	color: #f03030;
+	
+}
+
+section
+{
+	margin: 0 0 0 0;
+}
+
