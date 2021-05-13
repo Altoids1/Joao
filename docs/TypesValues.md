@@ -164,29 +164,23 @@ The second argument, ``start_blank``, is by default ``false``. If set to ``true`
 Returns a Boolean which is ``true`` if opening the file succeeded, and ``false`` if it failed.`
 
 
-<div class="funcdef">
 **/file/lines()**
 
 Returns a table which is a list of every single line of text within the (supposed) text file currently open, for possible iteration.
 
 If no file is open, the function returns ``null`` instead.
-</div>
 
-<div class="funcdef">
 **/file/write(String text)**
 
 Writes a given string of text into the file currently opened.
 
 Returns ``true`` if successful and ``null`` if no file is open.
-</div>
 
-<div class="funcdef">
 **/file/close()**
 
 Closes the file's stream, thereby disconnecting it from João. Useful if you're interested in having another program read the file while João is still running.
 
 Returns ``true`` if it worked, and ``null`` if no file is open or the file is already closed.
-</div>
 
 # 2.4 - Tables
 
