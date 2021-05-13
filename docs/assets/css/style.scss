@@ -30,14 +30,35 @@ p
 	font-family: sans-serif;
 }
 
-strong
-{
-	color: #f03030;
-	
-}
-
 section
 {
 	margin: 0 0 0 0;
 }
 
+code.highlighter-rouge
+{
+    color: #eeee00;
+}
+
+strong
+{
+    color: #f0be00;
+}
+
+th
+{
+    border-bottom: 1px dashed #f00303;
+}
+
+table
+{
+
+    border: 1px dashed #f00303;
+}
+
+funcdef
+{
+    border: 1px #f00303;
+    background-color: #4a4a4a;
+    box-shadow: 5px 10px;
+}

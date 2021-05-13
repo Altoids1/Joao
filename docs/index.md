@@ -7,6 +7,7 @@
 ## Index
 
 [1. Getting Started](GettingStarted.md)
+
 [2. Types and Values](TypesValues.md)
 
 ## License
