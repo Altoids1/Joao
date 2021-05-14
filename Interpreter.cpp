@@ -109,7 +109,7 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 	}
 
 	//Give up. How the hell did we even fail to set it in globalscope?
-	RuntimeError(*setter, "Unable to override value of variable named " + varname + "!");
+	RuntimeError(setter, "Unable to override value of variable named " + varname + "!");
 }
 
 Value Interpreter::get_var(std::string varname, ASTNode *getter)
@@ -136,7 +136,7 @@ Value Interpreter::get_var(std::string varname, ASTNode *getter)
 	}
 
 	//Give up :(
-	RuntimeError(*getter,"Unable to access variable named " + varname + "!");
+	RuntimeError(getter,"Unable to access variable named " + varname + "!");
 	return Value();
 }
 
@@ -158,7 +158,7 @@ Function* Interpreter::get_func(std::string funkname, ASTNode *caller, bool loud
 	}
 
 	if(loud)
-		RuntimeError(*caller,"Failed to find function named " + funkname + "!");
+		RuntimeError(caller,"Failed to find function named " + funkname + "!");
 	return nullptr;
 }
 

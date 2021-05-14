@@ -52,7 +52,7 @@ std::string Value::typestring()
 
 Value ASTNode::resolve(Interpreter& interp)
 {
-	interp.RuntimeError(*this, "Attempted to resolve() an abstract ASTNode! (Type:" + class_name()  + ")");
+	interp.RuntimeError(this, "Attempted to resolve() an abstract ASTNode! (Type:" + class_name()  + ")");
 	return Value();
 }
 
@@ -222,7 +222,7 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 
 	if (t_op != aOps::Assign)
 	{
-		interp.RuntimeError(*this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
 	}
 
 	if (!typecheck(rhs_val))
@@ -280,7 +280,7 @@ Value UnaryExpression::resolve(Interpreter& interp)
 			return Value(static_cast<Table*>(rhs.t_value.as_object_ptr)->length());
 	//Rolls over into the default error case on length failure
 	default:
-		interp.RuntimeError(*this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
+		interp.RuntimeError(this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
 		return Value();
 	}
 }
@@ -590,7 +590,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	}
 
 	default:
-		interp.RuntimeError(*this, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
+		interp.RuntimeError(this, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
 		return Value();
 	}
 }
@@ -710,13 +710,13 @@ Value NativeFunction::resolve(Interpreter& interp)
 		case(static_cast<Value::JoaoInt>((Program::ErrorCode::NoError))): // An expected null, function returned successfully.
 			break;
 		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
-			interp.RuntimeError(*this, "Args of improper type given to NativeFunction!");
+			interp.RuntimeError(this, "Args of improper type given to NativeFunction!");
 			break;
 		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
-			interp.RuntimeError(*this, "Not enough args provided to NativeFunction!");
+			interp.RuntimeError(this, "Not enough args provided to NativeFunction!");
 			break;
 		default:
-			interp.RuntimeError(*this, "Unknown RuntimeError in NativeFunction!");
+			interp.RuntimeError(this, "Unknown RuntimeError in NativeFunction!");
 		}
 	}
 	return result; // Woag.
@@ -725,7 +725,7 @@ Value NativeFunction::resolve(Interpreter& interp)
 Value NativeMethod::resolve(Interpreter& interp)
 {
 	if(!obj && !is_static)
-		interp.RuntimeError(*this, "Cannot call NativeMethod without an Object!");
+		interp.RuntimeError(this, "Cannot call NativeMethod without an Object!");
 
 	Value result = lambda(t_args,obj);
 	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
@@ -735,13 +735,13 @@ Value NativeMethod::resolve(Interpreter& interp)
 		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
 			break;
 		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
-			interp.RuntimeError(*this, "Args of improper type given to NativeMethod!");
+			interp.RuntimeError(this, "Args of improper type given to NativeMethod!");
 			break;
 		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
-			interp.RuntimeError(*this, "Not enough args provided to NativeMethod!");
+			interp.RuntimeError(this, "Not enough args provided to NativeMethod!");
 			break;
 		default:
-			interp.RuntimeError(*this, "Unknown RuntimeError in NativeMethod!");
+			interp.RuntimeError(this, "Unknown RuntimeError in NativeMethod!");
 		}
 	}
 	return result; // Woag.
@@ -833,7 +833,7 @@ Value WhileBlock::resolve(Interpreter& interp)
 {
 	interp.push_block("while");
 	if(!condition) // if condition not defined
-		interp.RuntimeError(*this, "Missing condition in WhileBlock!");
+		interp.RuntimeError(this, "Missing condition in WhileBlock!");
 	/*
 	if (!(condition->resolve(interp)))
 	{

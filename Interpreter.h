@@ -61,15 +61,6 @@ public:
 	}
 	
 	void RuntimeError(ASTNode*, std::string);
-	
-	void RuntimeError(ASTNode& a, std::string what)
-	{
-		//This is just a basic setup while everything else is fleshed out.
-		std::cout <<"RUNTIME_ERROR: " << what << "\n";
-#ifdef EXIT_ON_RUNTIME
-		exit(1);
-#endif
-	}
 
 	//Pushes a new blockstack and objstack layer
 	void push_stack(std::string name = "", Object* obj = nullptr)
