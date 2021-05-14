@@ -9,6 +9,9 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	//Basically stores global functions, perhaps also static methods if we're feeling fancy.
 	std::unordered_map<std::string, Function*> definedFunctions;
 
+	//Methods. Separate from definedFunctions so that they are not in globalscope at runtime.
+	std::unordered_map<std::string, Function*> definedMethods;
+
 	//THE
 	//
 	//THE ENTIRE OBJECT TREE (FLATTENED)
@@ -34,11 +37,11 @@ public:
 	{
 		myinterp = &interp;
 	}
-	void construct_natives();
+	std::unordered_map<std::string, ObjectType*> construct_natives();
 	void construct_math_library();
 	void construct_string_library();
-	void construct_table_library();
-	void construct_file_library();
+	ObjectType* construct_table_library();
+	ObjectType* construct_file_library();
 
 	void dump()
 	{
@@ -66,7 +69,12 @@ public:
 
 		definedFunctions[name] = f;
 	}
-
+	void set_meth(std::string name, Function* f)
+	{
+		if (name.find_first_of('/') != std::string::npos)
+			name = Directory::lastword(name);
+		definedMethods[name] = f;
+	}
 	
 	//FIXME: I don't want Program to have any friends!! >:(
 	friend class Interpreter;

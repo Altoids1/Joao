@@ -2,12 +2,12 @@
 #include "../Object.h"
 #include "../Table.h"
 
-void Program::construct_table_library()
+ObjectType* Program::construct_table_library()
 {
-	definedObjTypes["/table"] = new ObjectType("/table");
-	definedObjTypes["/table"]->is_table_type = true;
+	ObjectType* table = new ObjectType("/table");
+	table->is_table_type = true;
 	
-	definedObjTypes["/table"]->set_typemethod_raw("#constructor",new NativeMethod("#constructor",[](std::vector<Value> args, Object* obj){
+	table->set_typemethod_raw("#constructor",new NativeMethod("#constructor",[](std::vector<Value> args, Object* obj){
 		
 		Table* t = static_cast<Table*>(obj);
 
@@ -18,7 +18,7 @@ void Program::construct_table_library()
 
 		return Value(obj); // If anything.
 	}));
-	definedObjTypes["/table"]->set_typemethod_raw("implode",new NativeMethod("implode",[](std::vector<Value> args, Object* obj){
+	table->set_typemethod_raw("implode",new NativeMethod("implode",[](std::vector<Value> args, Object* obj){
 		Table* t = static_cast<Table*>(obj);
 
 		std::string sep = ", ";
@@ -57,7 +57,7 @@ void Program::construct_table_library()
 	}));
 
 
-	definedObjTypes["/table"]->set_typemethod_raw("insert",new NativeMethod("insert",[](std::vector<Value> args, Object* obj){
+	table->set_typemethod_raw("insert",new NativeMethod("insert",[](std::vector<Value> args, Object* obj){
 		if(args.size() < 2)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		if(args[0].t_vType != Value::vType::Integer)
@@ -85,7 +85,7 @@ void Program::construct_table_library()
 		}
 		return Value();
 	}));
-	definedObjTypes["/table"]->set_typemethod_raw("remove",new NativeMethod("remove",[](std::vector<Value> args, Object* obj){
+	table->set_typemethod_raw("remove",new NativeMethod("remove",[](std::vector<Value> args, Object* obj){
 		if(args.size() < 1)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		if(args[0].t_vType != Value::vType::Integer)
@@ -106,6 +106,8 @@ void Program::construct_table_library()
 		t->t_array.erase(t->t_array.begin() + index);
 		return Value();
 	}));
+
+	return table;
 }
 
 #undef NATIVE_FUNC_TABLE

@@ -54,7 +54,7 @@ tablelib.o: ./nativefuncs/tablelib.cpp Program.h Object.h
 Object.o: Object.cpp Object.h Interpreter.h Parser.h Table.h
 	$(CC) $(CFLAGS) -c Object.cpp
 
-Parser.o: Parser.cpp Parser.h Object.h Directory.h
+Parser.o: Parser.cpp Parser.h Object.h Directory.h ObjectTree.h
 	$(CC) $(CFLAGS) -c Parser.cpp
 
 Program.o: Program.cpp Program.h

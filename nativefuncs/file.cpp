@@ -4,7 +4,7 @@
 
 //#define NATIVE_FUNC_TABLE(name) static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
 
-void Program::construct_file_library()
+ObjectType* Program::construct_file_library()
 {
 	Metatable* __mt = new Metatable();
 
@@ -114,5 +114,5 @@ void Program::construct_file_library()
 		return Value(true);
 	}));
 
-	definedObjTypes["/file"] = new ObjectType("/file", __mt);
+	return (new ObjectType("/file", __mt));
 }

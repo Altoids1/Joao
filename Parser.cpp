@@ -1,6 +1,7 @@
 #include "Parser.h"
-#include "Object.h"
 #include "Directory.h"
+#include "Object.h"
+#include "ObjectTree.h"
 
 #define SYMBOL_ENUMS(a,b) ((a << 9) | b)
 
@@ -76,12 +77,15 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			}
 
 
-			std::vector<Expression*> bluh = readBlock(BlockType::Function,close+1, static_cast<int>(tokens.size()-1));
+			std::vector<Expression*> funcblock = readBlock(BlockType::Function,close+1, static_cast<int>(tokens.size()-1));
 			--tokenheader;
 
-			Function* func = new Function(dir_name, bluh, pirate_noise, t->line);
+			Function* func = new Function(dir_name, funcblock, pirate_noise, t->line);
 
-			t_program.set_func(dir_name, func);
+			if (Directory::DotDot(dir_name) == "/") // If this is a classless function in the globalscope
+				t_program.set_func(dir_name, func);
+			else // This be a method! Avast!
+				t_program.set_meth(dir_name, func);
 
 			continue;
 		}
@@ -132,11 +136,11 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	Additionally, this doesn't allow for correct overloading of the /table class.
 	*/
 
-	//Step 1. Get a list of all classes that exist in some way
-	std::unordered_map<std::string, ObjectType*> list_of_types;
-	std::unordered_map<std::string, bool> list_of_funcs; // Not as used here, mostly for the ParserError
+	//Step 0. Define any weird native classes that might exist (so the user may overload them with novel behavior)
 
-	std::unordered_map<std::string, Function*> fdefs = t_program.definedFunctions;
+	//Step 1. Get a list of all classes that exist in some way
+	std::unordered_map<std::string, ObjectType*> list_of_types = t_program.construct_natives();
+	std::unordered_map<std::string, bool> list_of_funcs; // Not as used here, mostly for the ParserError
 
 	for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
 	{
@@ -153,7 +157,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 		list_of_types[cdstr] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
 	}
-	for (auto it = fdefs.begin(); it != fdefs.end(); ++it) // Ask all the functions
+	for (auto it = t_program.definedMethods.begin(); it != t_program.definedMethods.end(); ++it) // Ask all the functions
 	{
 		Function* fptr = it->second;
 
@@ -169,11 +173,6 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 		list_of_funcs[function_fullname] = true;
 
 		std::string dir_f = Directory::DotDot(function_fullname);
-
-		if (dir_f == "" || dir_f == "/") // I don't trust std::string.empty()
-		{
-			continue;
-		}
 		
 		if (!list_of_types.count(dir_f)) // If our type doesn't exist
 		{
@@ -188,54 +187,21 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 	}
 
-	for (auto Klass = list_of_types.begin(); Klass != list_of_types.end(); ++Klass)
+	ObjectTree joao; //Wow, it's the real João Gaming!
+	for (auto it = list_of_types.begin(); it != list_of_types.end(); ++it)
 	{
-		for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
-		{
-			ClassDefinition* cdptr = *it;
-			std::string cdstr = cdptr->direct;
-
-			if (cdstr == Klass->first || !Directory::is_base_of(cdstr,Klass->first))
-				continue;
-
-			cdptr->append_properties(*this, Klass->second);
-		}
-		for (auto it = fdefs.begin(); it != fdefs.end(); ++it) // Ask all the functions
-		{
-			Function* fptr = it->second;
-
-			std::string function_fullname = it->second->get_name();
-			std::string function_shortname = it->first;
-			std::string dir_f = Directory::DotDot(function_fullname);
-
-			if (dir_f == "" || dir_f == "/") // I don't trust std::string.empty()
-			{
-				continue;
-			}
-
-			if (dir_f == Klass->first || !Directory::is_base_of(dir_f, Klass->first))
-				continue;
-
-			Klass->second->set_typemethod(*this, function_shortname, fptr);
-		}
+		joao.append(it->second);
 	}
 
 
 #ifdef LOUD_AST
-	std::cout << "Here's my class tree:\n";
-	for (auto it = list_of_types.begin(); it != list_of_types.end(); ++it)
-	{
-		std::cout << it->first << std::endl;
-	}
+	std::cout << "----\nClass Tree:\n";
+	joao.dump();
+	std::cout << "----\n";
 #endif
-	//2. Generate inheritences and stash them in the hashtables for easier retrieval
-		//FIXME
-	
-	//3. dump eet
-
 
 	t_program.definedObjTypes = list_of_types;
-	t_program.construct_natives();
+	
 
 	return;
 }

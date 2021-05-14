@@ -60,6 +60,8 @@ class ObjectType // Stores the default methods and properties of this type of Ob
 	std::unordered_map<std::string, Value> typeproperties;
 	Metatable* mt = nullptr;
 public:
+	
+	std::string get_name() const { return object_type; };
 	bool is_table_type = false;
 	ObjectType(std::string n)
 		:object_type(n)
@@ -100,6 +102,8 @@ public:
 	void set_typeproperty(Parser&,std::string, Value);
 	void set_typemethod(Parser&, std::string, Function*);
 	void set_typemethod_raw(std::string, Function*);
+
+	friend class ObjectTree;
 };
 
 /*
