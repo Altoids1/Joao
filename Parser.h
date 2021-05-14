@@ -9,6 +9,7 @@ class Parser
 {
 	Program t_program;
 	std::vector<Token*> tokens;
+	const bool is_interactive;
 	
 	/*
 	Here's how this is gonna work:
@@ -593,7 +594,8 @@ protected:
 	void generate_object_tree(std::vector<ClassDefinition*>&);
 public:
 	Parser(Scanner&t)
-		:tokens(t.tokens)
+		:is_interactive(t.is_interactive)
+		,tokens(t.tokens)
 		,lowest_ops(t.lowest_ops)
 	{
 	}
@@ -610,13 +612,13 @@ public:
 			std::cout << t->dump();
 		else
 			std::cout << "ERROR_ERROR: No Token pointer provided to ParserError()!\n";
-		exit(1);
-	}
-	void ParserError(Token& t, std::string what)
-	{
-		//This is just a basic setup while everything else is fleshed out.
-		std::cout << "PARSER_ERROR: " << what << "\n";
-		exit(1);
+
+#ifdef EXIT_ON_PARSETIME
+		if (!is_interactive)
+			exit(1);
+		else
+			t_program.is_malformed = true;
+#endif
 	}
 	Program parse();
 };

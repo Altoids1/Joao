@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Args.cpp" />
     <ClCompile Include="AST.cpp" />
     <ClCompile Include="Directory.cpp" />
     <ClCompile Include="Interpreter.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="Table.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Args.h" />
     <ClInclude Include="AST.h" />
     <ClInclude Include="Directory.h" />
     <ClInclude Include="Forward.h" />

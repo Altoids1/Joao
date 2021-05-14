@@ -361,3 +361,4 @@ MigrationBackup/
 #*.vcxproj
 #*.vcxproj.filters
 testprograms/debug.jao
+__joao_interactive

@@ -23,6 +23,9 @@ public:
 		BadArgType,
 		NotEnoughArgs
 	};
+
+	bool is_malformed = false;
+
 	Program()
 	{
 		//Construct all the native functions

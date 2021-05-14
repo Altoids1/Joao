@@ -24,8 +24,11 @@ CFLAGS = -g $(WARNINGS)
 default: joao
 
 # To create the executable file count we need the object files
-joao:  AST.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Table.o
-	$(CC) $(CFLAGS) -o joao AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o
+joao:  Args.o AST.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Table.o
+	$(CC) $(CFLAGS) -o joao Args.o AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o
+
+Args.o: Args.h Scanner.h Parser.h Interpreter.h
+	$(CC) $(CFLAGS) -c Args.cpp
 
 AST.o: AST.cpp Forward.h AST.h Object.h Interpreter.h Parser.h Table.h
 	$(CC) $(CFLAGS) -c AST.cpp
@@ -36,7 +39,7 @@ Directory.o: Directory.cpp Forward.h Directory.h
 Interpreter.o: Interpreter.cpp Forward.h AST.h Interpreter.h
 	$(CC) $(CFLAGS) -c Interpreter.cpp
 
-main.o: main.cpp Forward.h AST.h Interpreter.h Object.h Parser.h
+main.o: main.cpp Forward.h AST.h Interpreter.h Object.h Parser.h Args.h
 	$(CC) $(CFLAGS) -c main.cpp
 	
 file.o: ./nativefuncs/file.cpp Program.h Object.h Table.h

@@ -5,12 +5,14 @@
 #include "Table.h"
 
 Interpreter::Interpreter()
+	:is_interactive(false)
 {
 
 }
 
 //Fair warning: In this context Interpreter doesn't ensure that its Program will not be garbage collected in a higher scope.
-Interpreter::Interpreter(Program& p)
+Interpreter::Interpreter(Program& p, bool interact = false)
+	:is_interactive(interact)
 {
 	prog = &p;
 	p.set_interp(*this);
@@ -35,9 +37,8 @@ Value Interpreter::execute(Program& program, Value& jarg)
 
 void Interpreter::RuntimeError(ASTNode* a, std::string what)
 {
-	std::cout << "RUNTIME_ERROR: " << what << "\n";
-	
 	std::cout << "- - - - - - - - - - - - - - - -\n";
+	std::cout << "RUNTIME_ERROR: " << what << "\n";
 	
 	//Stack dump
 	std::string whatfunk;
@@ -63,8 +64,10 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 	std::cout << "\nRuntime in " << blockscope.top()->get_back_name() << ", a " << whatfunk << std::endl;
 
 #ifdef EXIT_ON_RUNTIME
-	exit(1);
+	if(!is_interactive)
+		exit(1);
 #endif
+	did_error = true;
 }
 
 void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
@@ -295,7 +298,11 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 
 	return Value(prog->definedObjTypes[str]->makeObject(*this, eval_args));
 }
-
+Value Interpreter::makeBaseTable()
+{
+	std::vector<Value> dumb_ref; // Hate this language, why even have a distinction between rvalues and lvalues
+	return Value(prog->definedObjTypes["/table"]->makeObject(*this, dumb_ref));
+}
 
 Value Interpreter::makeBaseTable( std::vector<Value> elements, std::unordered_map<std::string,Value> entries, ASTNode* maker = nullptr)
 {

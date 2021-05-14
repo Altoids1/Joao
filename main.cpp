@@ -14,20 +14,40 @@ Somewhat dynamically typed but lets not get too angsty about it
 #include "Interpreter.h"
 #include "Object.h"
 #include "Parser.h"
+#include "Args.h"
 
 #include <chrono>
 
 int main(int argc, char** argv)
 {
-	Program parsed;
-	std::chrono::steady_clock::time_point t1;
 	
-	if (argc == 1)
+	std::string first_arg;
+
+
+	if (argc == 1 || (first_arg = argv[1]) == "-i" ) 
 	{
-		std::cout << "ERROR: No file provided for execution!\n";
-		exit(1);
+		Args::print_version();
+		Args::interactive_mode();
+		//std::cout << "ERROR: No file provided for execution!\n";
+		exit(0);
 	}
 
+	if (first_arg == "-v")
+	{
+		Args::print_version();
+		exit(0);
+	}
+
+	if (first_arg == "-h")
+	{
+		Args::print_help();
+		exit(0);
+	}
+
+
+	//Typical execution of a file
+	Program parsed;
+	std::chrono::steady_clock::time_point t1;
 	std::ifstream file;
 	std::cout << "Opening file " << argv[1] << "...\n";
 	file.open(argv[1]);
@@ -49,7 +69,7 @@ int main(int argc, char** argv)
 
 	t1 = std::chrono::steady_clock::now();
 
-	Interpreter interpreter(parsed);
+	Interpreter interpreter(parsed,false);
 
 #ifdef LOUD_AST
 	parsed.dump();

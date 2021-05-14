@@ -442,6 +442,8 @@ class Scanner
 		SwappedEqOp
 	};
 
+	const bool is_interactive;
+
 	uint32_t linenum = 0;
 	uint32_t syntactic_linenum = 0;
 
@@ -525,7 +527,10 @@ class Scanner
 		}
 
 		std::cout << msg << std::endl << string::replace_all(line,'\t',' ') << std::endl << squiggly << std::endl;
-		exit(1);
+		if (!is_interactive)
+			exit(1);
+		else
+			is_malformed = true;
 	}
 	void append(Token* t)
 	{
@@ -643,14 +648,37 @@ class Scanner
 	}
 	
 public:
+	bool is_malformed = false;
+
 	Scanner()
+		:is_interactive(false)
+	{
+		
+	}
+	Scanner(bool interact)
+		:is_interactive(interact)
 	{
 
 	}
 	Scanner(uint32_t synline)
-		:syntactic_linenum(synline)
+		:is_interactive(false)
+		,syntactic_linenum(synline)
 	{
 
+	}
+
+	
+	//A wrapper for scan(std::ifstream) that """"casts"""" the fstream into an ifstream. Made for interactive mode.
+	void scan(std::fstream& fist, const char* filename)
+	{
+		std::fstream::fmtflags drapes = fist.flags(); // Does the carpet match?
+		fist.close();
+
+		std::ifstream new_handle = std::ifstream(filename); // Did you know fstreams don't keep track of what their filename was? Very strange!
+
+		scan(new_handle);
+
+		fist.open(filename, drapes);
 	}
 
 	//Reads in an ifstream line-by-line as an ASCII text file which is supposed to contain João code.
