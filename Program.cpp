@@ -8,7 +8,7 @@
 	#include "./nativefuncs/file.cpp"
 #endif
 
-void Program::construct_natives()
+std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 {
 	//TEXT MANIPULATION
 	definedFunctions["print"] = new NativeFunction("print", [](std::vector<Value> args) // Lua-style print() function
@@ -119,10 +119,12 @@ void Program::construct_natives()
 		return Value(7); // No I'm never removing this function fuck you
 	});
 
-
+	std::unordered_map<std::string, ObjectType*> cooked_classes;
 
 	construct_math_library();
 	construct_string_library();
-	construct_table_library();
-	construct_file_library();
+	cooked_classes["/table"] = construct_table_library();
+	cooked_classes["/file"] = construct_file_library();
+
+	return cooked_classes;
 }
