@@ -325,9 +325,76 @@ void Program::construct_math_library()
 		}
 	}));
 
-	definedFunctions["round"] = static_cast<Function*>(new NativeFunction("round", math::round)); // FIXME: Weird, should have its own define or... something
+	NATIVE_FUNC("random")
+	{
+		bool no_args;
 
-	//FIXME: Add random number generator functions here!
+		Value::JoaoInt lower;
+		Value::JoaoInt upper;
+		switch (args.size())
+		{
+		default:
+		case(2):
+			switch (args[1].t_vType)
+			{
+			case(Value::vType::Double):
+				upper = static_cast<Value::JoaoInt>(args[1].t_value.as_double);
+				break;
+			case(Value::vType::Integer):
+				upper = args[1].t_value.as_int;
+				break;
+			default:
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+			}
+			switch (args[0].t_vType)
+			{
+			case(Value::vType::Double):
+				lower = static_cast<Value::JoaoInt>(args[0].t_value.as_double);
+				break;
+			case(Value::vType::Integer):
+				lower = args[0].t_value.as_int;
+				break;
+			default:
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+			}
+			no_args = false;
+			break;
+		case(1):
+			switch (args[0].t_vType)
+			{
+			case(Value::vType::Double):
+				upper = static_cast<Value::JoaoInt>(args[0].t_value.as_double);
+				break;
+			case(Value::vType::Integer):
+				upper = args[0].t_value.as_int;
+				break;
+			default:
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+			}
+			lower = 1;
+			no_args = false;
+			break;
+		case(0):
+			no_args = true;
+		}
+
+		if (no_args)
+			return Value(((double)rand() / (RAND_MAX)));
+
+		return Value((rand() % (upper + 1 - lower)) + lower);
+	}));
+
+	NATIVE_FUNC("randomseed")
+	{
+		if(!args.size())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
+
+		srand(reinterpret_cast<unsigned int>(args[0].t_value.as_object_ptr)); // Who cares
+
+		return Value();
+	}));
+
+	definedFunctions["round"] = static_cast<Function*>(new NativeFunction("round", math::round)); // FIXME: Weird, should have its own define or... something
 
 	NATIVE_FUNC("sin")
 	{

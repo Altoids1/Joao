@@ -85,6 +85,16 @@ ObjectType* Program::construct_table_library()
 		}
 		return Value();
 	}));
+
+	table->set_typemethod_raw("pick", new NativeMethod("pick", [](std::vector<Value> args, Object* obj) {
+		Table* t = static_cast<Table*>(obj);
+
+		if (!t->t_array.size())
+			return Value();
+
+		return Value(t->t_array[rand() % t->t_array.size()]);
+	}));
+
 	table->set_typemethod_raw("remove",new NativeMethod("remove",[](std::vector<Value> args, Object* obj){
 		if(args.size() < 1)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
