@@ -67,7 +67,7 @@ class ObjectTree
 		}
 		for (Node* child : inheriter->children)
 		{
-			propagate_downstream(base, inheriter);
+			propagate_downstream(base, child);
 		}
 	}
 
