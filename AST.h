@@ -61,7 +61,6 @@ public:
 		std::string* our_str = new std::string(s);
 		t_value.as_string_ptr = our_str;
 		t_vType = vType::String;
-		//std::cout << "Construction successful: " + *(t_value.as_string_ptr);
 	}
 	Value(Object* o)
 	{

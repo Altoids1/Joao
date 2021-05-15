@@ -16,6 +16,7 @@ Interpreter::Interpreter(Program& p, bool interact = false)
 {
 	prog = &p;
 	p.set_interp(*this);
+	globalscope = p.globals;
 }
 
 Value Interpreter::execute(Program& program, Value& jarg)

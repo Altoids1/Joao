@@ -7,7 +7,7 @@
 
 void Args::print_version()
 {
-	std::cout << "Joao v1.1.0\tCopyright (C) 2021 Altoids1 (mom-puter@hotmail.com)\n";
+	std::cout << "Joao v" << VERSION_STRING <<"\tCopyright (C) 2021 Altoids1 (mom-puter@hotmail.com)\n";
 }
 void Args::print_help()
 {

@@ -30,6 +30,11 @@
 #define EXIT_ON_PARSETIME // Uncomment if you want all parsetimes to cause João to exit(1).
 //The scanner always has to crash, it can't do anything otherwise, so no #define for you.
 
+//Version flags
+#define VERSION_MAJOR 1 // For when we break || add || fix something
+#define VERSION_MINOR 1 // For when we add || fix something
+#define VERSION_PATCH 0 // For when we fix something
+constexpr char VERSION_STRING[]{ VERSION_MAJOR + '0' , '.' , VERSION_MINOR + '0' , '.' , VERSION_PATCH + '0' , '\0'};
 
 //Forwarded Objects
 class Object;

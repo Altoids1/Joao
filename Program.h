@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Forward.h"
+#include "Scope.h"
 #include "AST.h"
 #include "Directory.h"
 
@@ -11,6 +12,8 @@ class Program // this is pretty much what Parser is supposed to output, and what
 
 	//Methods. Separate from definedFunctions so that they are not in globalscope at runtime.
 	std::unordered_map<std::string, Function*> definedMethods;
+
+	Scopelet<Value> globals;
 
 	//THE
 	//

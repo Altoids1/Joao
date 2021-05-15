@@ -39,6 +39,11 @@ void Program::construct_math_library()
 {
 	//MATHEMATICS
 
+	//GLOBAL VALUES
+	globals.table["PI"] = new Value(PI);
+	globals.table["EULER"] = new Value(MATH_E);
+
+	//GLOBAL FUNCTIONS
 	NATIVE_FUNC("abs")
 	{
 		Value arg = args[0];

@@ -10,6 +10,11 @@
 
 std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 {
+	globals.table["__VERSION"] = new Value(std::string(VERSION_STRING));
+	globals.table["__VERSION_MAJOR"] = new Value(VERSION_MAJOR);
+	globals.table["__VERSION_MINOR"] = new Value(VERSION_MINOR);
+	globals.table["__VERSION_PATCH"] = new Value(VERSION_PATCH);
+
 	//TEXT MANIPULATION
 	definedFunctions["print"] = new NativeFunction("print", [](std::vector<Value> args) // Lua-style print() function
 	{
