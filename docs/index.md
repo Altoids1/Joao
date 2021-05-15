@@ -10,6 +10,8 @@
 
 [2. Types and Values](TypesValues.md)
 
+[3. Expressions](Expressions.md)
+
 ## License
 
-João has an open-source license featured [here](https://github.com/Altoids1/Joao/blob/main/LICENSE). All content offered by this documentation, and this repository in general, are all distributed under this license.
+João has an open-source license featured [here](https://github.com/Altoids1/Joao/blob/main/LICENSE). This documentation uses a different license, featured [here](https://github.com/Altoids1/Joao/blob/main/docs/LICENSE).
