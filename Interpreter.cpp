@@ -74,10 +74,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
 {
 	Scope<Value>* varscope = blockscope.top();
-	
-	if (varscope->get_front(varname))
-		RuntimeError(setter, "Cannot initialize the same variable at the same blockscope multiple times!");
-
+	//std::cout << "Setting variable " + varname + " to value " + std::to_string(val.t_value.as_int) + "\n";
 	varscope->set(varname, val);
 }
 
