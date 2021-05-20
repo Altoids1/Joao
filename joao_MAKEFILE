@@ -24,8 +24,8 @@ CFLAGS = -g $(WARNINGS)
 default: joao
 
 # To create the executable file count we need the object files
-joao:  Args.o AST.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Table.o
-	$(CC) $(CFLAGS) -o joao Args.o AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o
+joao:  Args.o AST.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Scope.o Table.o
+	$(CC) $(CFLAGS) -o joao Args.o AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Scope.o Table.o
 
 Args.o: Args.h Scanner.h Parser.h Interpreter.h
 	$(CC) $(CFLAGS) -c Args.cpp
@@ -65,6 +65,9 @@ Program.o: Program.cpp Program.h
 
 Scanner.o:  Scanner.cpp Scanner.h 
 	$(CC) $(CFLAGS) -c Scanner.cpp
+
+Scope.o: Scope.cpp Scope.h GarbageCollector.h
+	$(CC) $(CFLAGS) -c Scope.cpp
 	
 Table.o: Table.cpp Table.h Interpreter.h
 	$(CC) $(CFLAGS) -c Table.cpp
@@ -74,4 +77,4 @@ Table.o: Table.cpp Table.h Interpreter.h
 # files and *~ backup files:
 #
 clean: 
-	$(RM) joao *.o *~
+	rm joao *.o

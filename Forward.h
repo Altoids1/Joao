@@ -23,6 +23,8 @@
 #define LOUD_AST // Uncomment if you want it to dump the AST before executing it.
 //#define PRINT_MAIN_RETURN_VAL // Uncomment if you want it to print the return value of main().
 
+#define LOUD_GC // Uncomment if you want the garbage collector to tell you when it deallocs things
+
 #endif
 
 //Config flags
@@ -48,3 +50,4 @@ class Value;
 class Interpreter;
 class Parser;
 
+class GarbageCollector;

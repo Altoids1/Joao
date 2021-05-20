@@ -3,10 +3,12 @@
 #include "Directory.h"
 #include "AST.h"
 #include "Program.h"
+#include "GarbageCollector.h"
 #include "Scope.h"
 
 class Interpreter
 {
+
 	Program* prog = nullptr;
 
 	//The global scope of variables.
@@ -20,6 +22,7 @@ class Interpreter
 
 	const bool is_interactive;
 public:
+	GarbageCollector gc;
 	bool did_error = false;
 	int BREAK_COUNTER = 0; // An integer flag used to break (perhaps several levels) out of one or several blocks (which are not Function blocks)
 	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.

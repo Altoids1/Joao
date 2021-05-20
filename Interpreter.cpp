@@ -78,6 +78,15 @@ void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
 	if (varscope->get_front(varname))
 		RuntimeError(setter, "Cannot initialize the same variable at the same blockscope multiple times!");
 
+	if (val.t_vType == Value::vType::Object)
+	{
+		gc.add_ref(val.t_value.as_object_ptr, Value::vType::Object);
+	}
+	else if (val.t_vType == Value::vType::String)
+	{
+		gc.add_ref(val.t_value.as_string_ptr, Value::vType::String);
+	}
+
 	varscope->set(varname, val);
 }
 

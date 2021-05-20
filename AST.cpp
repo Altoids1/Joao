@@ -8,6 +8,22 @@
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
+Value::Value(std::string& s, Interpreter& interp)
+{
+	std::string* our_str = new std::string(s);
+	t_value.as_string_ptr = our_str;
+	t_vType = vType::String;
+
+	interp.gc.add_ref(static_cast<void*>(our_str), vType::String);
+}
+
+Value::Value(Object* o, Interpreter& interp)
+{
+	t_value.as_object_ptr = o;
+	t_vType = vType::Object;
+	interp.gc.add_ref(static_cast<void*>(o), vType::Object);
+}
+
 std::string Value::to_string()
 {
 	switch (t_vType)
@@ -47,6 +63,18 @@ std::string Value::typestring()
 		return "Object";
 	default:
 		return "UNKNOWN!!";
+	}
+}
+
+void Value::qdel(GarbageCollector& gc)
+{
+	if (t_vType == vType::Object)
+	{
+		gc.remove_ref(t_value.as_object_ptr);
+	}
+	else if (t_vType == vType::String)
+	{
+		gc.remove_ref(t_value.as_string_ptr);
 	}
 }
 

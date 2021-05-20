@@ -29,14 +29,8 @@ class Scope {
 	Scopelet<_Ty>* top_scope = nullptr; //The backmost scoplet of the stack.
 
 public:
-	static void blank_table(Scopelet<_Ty>* sc)
-	{
-		for (auto it = sc->table.begin(); it != sc->table.end(); ++it)
-		{
-			delete it->second; // Hopefully this works, heh.
-		}
-		sc->table = {};
-	}
+	static void blank_table(Scopelet<_Ty>*);
+	static void blank_table(Scopelet<_Ty>*, GarbageCollector&);
 
 	Scope(std::string sc)
 	{
@@ -129,6 +123,22 @@ public:
 		Scopelet<_Ty>* popped = stack.front();
 
 		blank_table(popped);
+		delete popped;
+
+		stack.pop_front();
+	}
+
+	void pop(GarbageCollector& gc)
+	{
+		if (top_scope == stack.front()) // Attempting to delete the base stack
+		{
+			std::cout << "WEIRD_ERROR: Attempted to delete backmost stack of a Scope!";
+			return; // fails.
+		}
+
+		Scopelet<_Ty>* popped = stack.front();
+
+		blank_table(popped, gc);
 		delete popped;
 
 		stack.pop_front();

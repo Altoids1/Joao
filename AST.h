@@ -26,7 +26,7 @@ public:
 		Object* as_object_ptr;
 	}t_value;
 
-	//Constructors
+	/* Garbage-collection malcompliant constructors */
 	Value()
 	{
 		t_value.as_int = 0;
@@ -68,6 +68,13 @@ public:
 		t_vType = vType::Object;
 	}
 
+
+	/* Garbage-collection compliant constructors */
+
+	Value(std::string&, Interpreter&);
+
+	Value(Object*, Interpreter&);
+
 	Value(Value::vType vt, int errcode)
 	{
 		if (vt != Value::vType::Null)
@@ -92,6 +99,10 @@ public:
 			return true; // Just return true.
 		}
 	}
+
+	//Handles informing the GC about this value leaving scope or whatever.
+	//Can't be part of operator-delete or a destructor because it needs a good handle on interp.
+	void qdel(GarbageCollector&);
 
 	std::string to_string();
 	std::string typestring();
