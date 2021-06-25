@@ -11,7 +11,7 @@ Value Table::at(Interpreter& interp, Value index)
 		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
 		return Value();
 	case(Value::vType::String): // Just use our properties, innit?
-		return get_property(interp, *index.t_value.as_string_ptr);
+		return get_property(interp, *index.strget());
 	case(Value::vType::Integer):
 		array_index = index.t_value.as_int;
 		break;
@@ -31,7 +31,7 @@ Value Table::at(Interpreter& interp, Value index)
 	return t_array[array_index];
 }
 
-void Table::at_set(Interpreter& interp, Value index, Value& newval)
+void Table::at_set(Interpreter& interp, Value index, const Value& newval)
 {
 	Value::JoaoInt array_index;
 
@@ -43,7 +43,7 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 	case(Value::vType::String): // Just use our properties, innit?
 	{
 		//Should be analogous to set_property, except it *makes no check as to whether this property is something our ObjectType has*!!
-		std::string str = *index.t_value.as_string_ptr;
+		std::string str = *index.strget();
 		if (properties.count(str))
 		{
 			properties.erase(str);
@@ -71,7 +71,8 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 
 	if (array_index >= static_cast<Value::JoaoInt>(t_array.size()))
 	{
-		t_array.resize(static_cast<size_t>(array_index) + 1, Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
+		return;
+		t_array.resize(static_cast<size_t>(array_index) + 1,Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
 	}
 	t_array[array_index] = newval;
 }

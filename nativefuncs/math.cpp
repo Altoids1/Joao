@@ -394,7 +394,7 @@ void Program::construct_math_library()
 		if(!args.size())
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 
-		srand(reinterpret_cast<uint64_t>(args[0].t_value.as_object_ptr)); // Who cares
+		srand(static_cast<uint64_t>(args[0].t_value.as_int)); // Who cares
 
 		return Value();
 	}));

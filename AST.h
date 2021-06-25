@@ -5,97 +5,7 @@
 
 #include "Forward.h"
 #include "SharedEnums.h"
-
-class Value { // A general pseudo-typeless Value used to store data within the programming language.
-public:
-	using JoaoInt = int;
-	enum class vType : uint8_t {
-		Null,
-		Bool,
-		Integer,
-		Double,
-		String,
-		Object
-	}t_vType{ vType::Null };
-
-	union {
-		bool as_bool;
-		JoaoInt as_int;
-		double as_double;
-		std::string* as_string_ptr;
-		Object* as_object_ptr;
-	}t_value;
-
-	//Constructors
-	Value()
-	{
-		t_value.as_int = 0;
-	}
-	Value(int64_t i)
-	{
-		t_value.as_int = static_cast<JoaoInt>(i);
-		t_vType = vType::Integer;
-	}
-	Value(size_t i)
-	{
-		t_value.as_int = static_cast<JoaoInt>(i);
-		t_vType = vType::Integer;
-	}
-	Value(int i)
-	{
-		t_value.as_int = i;
-		t_vType = vType::Integer;
-	}
-	Value(double d)
-	{
-		t_value.as_double = d;
-		t_vType = vType::Double;
-	}
-	Value(bool b)
-	{
-		t_value.as_bool = b;
-		t_vType = vType::Bool;
-	}
-	Value(std::string s)
-	{
-		std::string* our_str = new std::string(s);
-		t_value.as_string_ptr = our_str;
-		t_vType = vType::String;
-	}
-	Value(Object* o)
-	{
-		t_value.as_object_ptr = o;
-		t_vType = vType::Object;
-	}
-
-	Value(Value::vType vt, int errcode)
-	{
-		if (vt != Value::vType::Null)
-			return;
-
-		t_value.as_int = static_cast<JoaoInt>(errcode);
-	}
-
-	explicit operator bool() const { // Q-q-quadruple keyword!!
-		//std::cout << "Casting to bool...\n";
-		switch (t_vType)
-		{
-		case(vType::Null):
-			return false;
-		case(vType::Bool):
-			return t_value.as_bool;
-		case(vType::Integer):
-			return t_value.as_int;
-		case(vType::Double):
-			return t_value.as_double;
-		default: // If it's a more complicated vType
-			return true; // Just return true.
-		}
-	}
-
-	std::string to_string();
-	std::string typestring();
-};
+#include "Value.h"
 
 //Used during assignment, member access, and method/function calling. Stores a handle to either
 //1. the name of a localish variable that needs to be get_var()'d
@@ -179,7 +89,7 @@ public:
 class Literal : public ASTNode { // A node which denotes a plain ol' literal.
 	Value heldval;
 public:
-	Literal(Value V)
+	Literal(const Value& V)
 		:heldval(V)
 	{
 		//std::cout << "Constructing literal...\n";

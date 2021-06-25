@@ -95,7 +95,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Object):
-			return Value(arg.t_value.as_object_ptr->is_table());
+			return Value(arg.objget()->is_table());
 		default:
 			return Value(false);
 		}
@@ -116,7 +116,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		if(arg.t_vType != Value::vType::Object)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
-		return Value(arg.t_value.as_object_ptr->object_type);
+		return Value(arg.objget()->object_type);
 	});
 	
 	definedFunctions["void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud"] = new NativeFunction("void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud", [](std::vector<Value> args)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Forward.h"
+#include "Value.h"
 #include "AST.h"
 
 class Object 

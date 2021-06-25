@@ -14,7 +14,7 @@ void Program::construct_string_library()
 		if(hay.t_vType != Value::vType::String || needle.t_vType != Value::vType::String)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		
-		size_t cpp_result = hay.t_value.as_string_ptr->find(*needle.t_value.as_string_ptr);
+		size_t cpp_result = hay.strget()->find(*needle.strget());
 		if (cpp_result == std::string::npos)
 			return Value();
 
@@ -32,12 +32,12 @@ void Program::construct_string_library()
 		if (repetition_legitimizes.t_vType != Value::vType::String || repnum.t_vType != Value::vType::Integer)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
-		std::string str = *repetition_legitimizes.t_value.as_string_ptr;
+		std::string str = *repetition_legitimizes.strget();
 
 		int64_t times = repnum.t_value.as_int;
 		for (int64_t i = 1; i < times; ++i)
 		{
-			str += *repetition_legitimizes.t_value.as_string_ptr;
+			str += *repetition_legitimizes.strget();
 		}
 
 		return Value(str);
@@ -53,7 +53,7 @@ void Program::construct_string_library()
 		if (record.t_vType != Value::vType::String)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
-		std::string oldstr = *record.t_value.as_string_ptr;
+		std::string oldstr = *record.strget();
 		std::string str = "";
 
 		for (auto it = oldstr.rbegin(); it != oldstr.rend(); ++it)
@@ -76,9 +76,7 @@ void Program::construct_string_library()
 		if (hay.t_vType != Value::vType::String || start.t_vType != Value::vType::Integer || stop.t_vType != Value::vType::Integer)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
-		std::string str = *hay.t_value.as_string_ptr;
-
-		return Value(str.substr(start.t_value.as_int,stop.t_value.as_int - start.t_value.as_int + 1));
+		return Value(hay.strget()->substr(start.t_value.as_int,stop.t_value.as_int - start.t_value.as_int + 1));
 	}));
 }
 

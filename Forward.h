@@ -9,6 +9,7 @@
 #include <forward_list>
 #include <list>
 #include <stack>
+#include <memory>
 
 #ifdef __GNUG__
 	#include <cmath>

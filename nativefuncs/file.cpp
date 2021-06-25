@@ -42,7 +42,7 @@ ObjectType* Program::construct_file_library()
 			delete our_file;
 		}
 
-		std::string filename = *first.t_value.as_string_ptr;
+		const std::string& filename = *first.strget();
 
 		
 

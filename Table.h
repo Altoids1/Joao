@@ -29,7 +29,7 @@ public:
 
 
 	Value at(Interpreter&, Value);
-	void at_set(Interpreter&, Value, Value&);
+	void at_set(Interpreter&, Value, const Value&);
 
 	size_t length() { return t_array.size(); }
 	bool virtual is_table() override { return true; }

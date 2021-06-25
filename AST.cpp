@@ -8,48 +8,6 @@
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
-std::string Value::to_string()
-{
-	switch (t_vType)
-	{
-	case(vType::Null):
-		return "NULL";
-	case(vType::Bool):
-		return std::to_string(t_value.as_bool);
-	case(vType::Integer):
-		return std::to_string(t_value.as_int);
-	case(vType::Double):
-		return std::to_string(t_value.as_double);
-	case(vType::String):
-		return *(t_value.as_string_ptr);
-	case(vType::Object):
-		return t_value.as_object_ptr->dump();
-	default:
-		return "???";
-	}
-}
-
-std::string Value::typestring()
-{
-	switch (t_vType)
-	{
-	case(vType::Null):
-		return "NULL";
-	case(vType::Bool):
-		return "Boolean";
-	case(vType::Integer):
-		return "Integer";
-	case(vType::Double):
-		return "Double";
-	case(vType::String):
-		return "String";
-	case(vType::Object):
-		return "Object";
-	default:
-		return "UNKNOWN!!";
-	}
-}
-
 Value ASTNode::resolve(Interpreter& interp)
 {
 	interp.RuntimeError(this, "Attempted to resolve() an abstract ASTNode! (Type:" + class_name()  + ")");
@@ -160,7 +118,7 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 				interp.RuntimeError(this, "Cannot acquire member of non-object Value!");
 				return Value();
 			}
-			objptr = val.t_value.as_object_ptr;
+			objptr = val.objget();
 			break;
 		}
 		case(Handle::HType::Global):
@@ -171,7 +129,7 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 				interp.RuntimeError(this, "Cannot acquire member of non-object global Value!");
 				return Value();
 			}
-			objptr = val.t_value.as_object_ptr;
+			objptr = val.objget();
 			break;
 		}
 		case(Handle::HType::Parent):
@@ -182,7 +140,7 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 				interp.RuntimeError(this, "Cannot acquire member of non-object global Value!");
 				return Value();
 			}
-			objptr = val.t_value.as_object_ptr;
+			objptr = val.objget();
 			break;
 		}
 		default:
@@ -274,10 +232,10 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	}
 	//LENGTH
 	case(UN_ENUMS(uOps::Length, Value::vType::String)):
-		return Value(rhs.t_value.as_string_ptr->size());
+		return Value(rhs.strget()->size());
 	case(UN_ENUMS(uOps::Length, Value::vType::Object)):
-		if (rhs.t_value.as_object_ptr->is_table())
-			return Value(static_cast<Table*>(rhs.t_value.as_object_ptr)->length());
+		if (rhs.objget()->is_table())
+			return Value(static_cast<Table*>(rhs.objget())->length());
 	//Rolls over into the default error case on length failure
 	default:
 		interp.RuntimeError(this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
@@ -540,52 +498,52 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	//STRING & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::String)):
 	{
-		std::string newstr = *(lhs.t_value.as_string_ptr) + *(rhs.t_value.as_string_ptr);
+		std::string newstr = *lhs.strget() + *rhs.strget();
 		return Value(newstr);
 	}
 	case(BIN_ENUMS(bOps::Equals, Value::vType::String, Value::vType::String)):
 	{
-		return Value(*(lhs.t_value.as_string_ptr) == *(rhs.t_value.as_string_ptr));
+		return Value(*lhs.strget() == *rhs.strget());
 	}
 	case(BIN_ENUMS(bOps::Greater, Value::vType::String, Value::vType::String)):
 	{
-		return Value(*(lhs.t_value.as_string_ptr) > *(rhs.t_value.as_string_ptr));
+		return Value(*lhs.strget() > *rhs.strget());
 	}
 	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::String, Value::vType::String)):
 	{
-		return Value(*(lhs.t_value.as_string_ptr) >= * (rhs.t_value.as_string_ptr));
+		return Value(*lhs.strget() >= *rhs.strget());
 	}
 	case(BIN_ENUMS(bOps::LessEquals, Value::vType::String, Value::vType::String)):
 	{
-		return Value(*(lhs.t_value.as_string_ptr) <= *(rhs.t_value.as_string_ptr));
+		return Value(*lhs.strget() <= *rhs.strget());
 	}
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::String, Value::vType::String)):
 	{
-		return Value(*(lhs.t_value.as_string_ptr) < *(rhs.t_value.as_string_ptr));
+		return Value(*lhs.strget() < *rhs.strget());
 	}
 
 	//STRING & INT
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Integer)):
 	{
-		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_int);
+		std::string newstr = *lhs.strget() + std::to_string(rhs.t_value.as_int);
 		return Value(newstr);
 	}
 	//INT & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::String)):
 	{
-		std::string newstr = std::to_string(lhs.t_value.as_int) + *(rhs.t_value.as_string_ptr);
+		std::string newstr = std::to_string(lhs.t_value.as_int) + *rhs.strget();
 		return Value(newstr);
 	}
 	//STRING & DOUBLE
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Double)):
 	{
-		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_double);
+		std::string newstr = *lhs.strget() + std::to_string(rhs.t_value.as_double);
 		return Value(newstr);
 	}
 	//DOUBLE & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::String)):
 	{
-		std::string newstr = std::to_string(lhs.t_value.as_double) + *(rhs.t_value.as_string_ptr);
+		std::string newstr = std::to_string(lhs.t_value.as_double) + *rhs.strget();
 		return Value(newstr);
 	}
 
@@ -901,7 +859,7 @@ Value MemberAccess::resolve(Interpreter& interp)
 			interp.RuntimeError(this, "Cannot access method of non-object Value!");
 			return Value();
 		}
-		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
+		return vuh.objget()->get_property(interp, bk.name);
 	}
 	case(Handle::HType::Global):
 	{
@@ -911,7 +869,7 @@ Value MemberAccess::resolve(Interpreter& interp)
 			interp.RuntimeError(this, "Cannot access method of non-object Value!");
 			return Value();
 		}
-		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
+		return vuh.objget()->get_property(interp, bk.name);
 	}
 	case(Handle::HType::Parent):
 	{
@@ -921,7 +879,7 @@ Value MemberAccess::resolve(Interpreter& interp)
 			interp.RuntimeError(this, "Cannot access method of non-object Value!");
 			return Value();
 		}
-		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
+		return vuh.objget()->get_property(interp, bk.name);
 	}
 	}
 
@@ -969,9 +927,9 @@ Handle MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 		definitely something to consider overhauling for v1.1 or v1.2.
 		*/
 
-		bk.is_function = vuh.t_value.as_object_ptr->get_method(interp, bk.name);
+		bk.is_function = vuh.objget()->get_method(interp, bk.name);
 
-		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
+		return Handle(vuh.objget(), bk.name, bk.is_function);
 
 	}
 	case(Handle::HType::Global): // A globalscope object
@@ -982,7 +940,7 @@ Handle MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 			interp.RuntimeError(this, "Cannot access method of non-object Value!");
 			return Handle();
 		}
-		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
+		return Handle(vuh.objget(), bk.name, bk.is_function);
 	}
 	case(Handle::HType::Parent):
 	{
@@ -992,7 +950,7 @@ Handle MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 			interp.RuntimeError(this, "Cannot access method of non-object Value!");
 			return Handle();
 		}
-		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
+		return Handle(vuh.objget(), bk.name, bk.is_function);
 	}
 	}
 
@@ -1095,10 +1053,10 @@ Value IndexAccess::resolve(Interpreter& interp)
 			return Value();
 		}
 
-		return Value(std::string({ lhs.t_value.as_string_ptr->at(rhs.t_value.as_int) })); // It's lines like these that remind me why I want to make my own programming language in the first place. Happy 1000th line, by the way!
+		return Value(std::string({ lhs.strget()->at(rhs.t_value.as_int) })); // It's lines like these that remind me why I want to make my own programming language in the first place. Happy 1000th line, by the way!
 	case(Value::vType::Object):
 	{
-		Object* obj = lhs.t_value.as_object_ptr;
+		Object* obj = lhs.objget();
 		if (obj->is_table())
 		{
 			Table* la_table = static_cast<Table*>(obj);
@@ -1111,7 +1069,7 @@ Value IndexAccess::resolve(Interpreter& interp)
 				interp.RuntimeError(this, "Cannot index into an Object with a Value of type " + rhs.typestring() + "!");
 				return Value();
 			}
-			return obj->get_property(interp, *rhs.t_value.as_string_ptr);
+			return obj->get_property(interp, *rhs.strget());
 		}
 		
 	}
@@ -1135,14 +1093,14 @@ Handle IndexAccess::handle(Interpreter& interp)
 		interp.RuntimeError(this, "Cannot get handle of anything except object properties!");
 	}
 
-	Object* obj = lhs.t_value.as_object_ptr;
+	Object* obj = lhs.objget();
 	if(!obj->is_table())
 		return MemberAccess(container, index).handle(interp); //FIXME: This is so fucked up but it makes so much sense; main issue is that runtimes will report themselves strangely
 
 	switch (rhs.t_vType)
 	{
 	case(Value::vType::String):
-		return Handle(obj, *rhs.t_value.as_string_ptr);
+		return Handle(obj, *rhs.strget());
 	case(Value::vType::Integer):
 	{
 		return Handle(static_cast<Table*>(obj), rhs.t_value.as_int);
