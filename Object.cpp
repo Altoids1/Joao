@@ -91,6 +91,7 @@ Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>& args)
 		fuh->give_args(interp, args, o);
 		fuh->resolve(interp);
 	}
+	interp.gc.add_ref(o);
 	return o;
 }
 

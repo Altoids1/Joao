@@ -4,6 +4,7 @@
 #include "AST.h"
 #include "Program.h"
 #include "Scope.h"
+#include "GarbageOverseer.h"
 
 class Interpreter
 {
@@ -20,6 +21,8 @@ class Interpreter
 
 	const bool is_interactive;
 public:
+	GarbageOverseer gc;
+
 	bool did_error = false;
 	int BREAK_COUNTER = 0; // An integer flag used to break (perhaps several levels) out of one or several blocks (which are not Function blocks)
 	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.
@@ -67,10 +70,45 @@ public:
 	
 	void RuntimeError(ASTNode*, std::string);
 
+
+	void push_block(std::string name = "")
+	{
+		Scope<Value>* scuh = blockscope.top();
+		scuh->push(name);
+	}
+	void pop_block()
+	{
+		/*
+		We have to do something kinda dirty to make sure that any Object-referencing values are properly garbage-collected by this.
+		This is partially a problem incited by the fact that Scope is a templated class and ergo can't really do the spicy with Value the way we can.
+		*/
+		Scope<Value>* scuh = blockscope.top();
+
+		Scopelet<Value>* poppable = scuh->getBottomScopelet();
+		const std::unordered_map<std::string, Value*>& fnuh = poppable->table;
+		for (auto it = fnuh.begin(); it != fnuh.end(); ++it)
+		{
+			if (it->second->t_vType == Value::vType::Object)
+			{
+				gc.remove_ref(it->second->t_value.as_obj_ptr);
+			}
+			else if (it->second->t_vType == Value::vType::String)
+			{
+				gc.remove_ref(it->second->t_value.as_str_ptr);
+			}
+		}
+
+		scuh->pop();
+	}
+
 	//Pushes a new blockstack and objstack layer
 	void push_stack(std::string name = "", Object* obj = nullptr)
 	{
 		blockscope.push(new Scope<Value>(name));
+		if (obj)
+		{
+			gc.add_ref(obj); // Being on the stack counts as a reference to it, I guess.
+		}
 		objectscope.push(obj);
 	}
 
@@ -78,9 +116,18 @@ public:
 	void pop_stack()
 	{
 		Scope<Value>* scuh = blockscope.top();
-		blockscope.pop();
+		while (!scuh->isThin())
+		{
+			pop_block();
+		}
 		delete scuh;
-
+		blockscope.pop();
+		
+		Object* top = objectscope.top();
+		if(top)
+		{
+			gc.remove_ref(top);
+		}
 		objectscope.pop();
 	}
 
@@ -96,14 +143,10 @@ public:
 		globalscope.table[name] = new Value(val);
 	}
 
-	void push_block(std::string name = "")
+	std::string* makeString(const std::string& cpy)
 	{
-		Scope<Value>* scuh = blockscope.top();
-		scuh->push(name);
-	}
-	void pop_block()
-	{
-		Scope<Value>* scuh = blockscope.top();
-		scuh->pop();
+		std::string* ptr = new std::string(cpy);
+		gc.add_ref(ptr);
+		return ptr;
 	}
 };

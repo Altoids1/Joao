@@ -310,7 +310,9 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		//Bitwise :(
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Double)):
-		return Value(std::to_string(lhs.t_value.as_double) + std::to_string(rhs.t_value.as_double));
+	{
+		return Value(interp.makeString(std::to_string(lhs.t_value.as_double) + std::to_string(rhs.t_value.as_double)));
+	}
 	//
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::Double, Value::vType::Double)):
 		return Value(lhs.t_value.as_double < rhs.t_value.as_double);
@@ -355,7 +357,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		//Bitwise :(
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Integer)):
-		return Value(std::to_string(lhs.t_value.as_double) + std::to_string(rhs.t_value.as_int));
+		return Value(interp.makeString(std::to_string(lhs.t_value.as_double) + std::to_string(rhs.t_value.as_int)));
 	//
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::Double, Value::vType::Integer)):
 		return Value(lhs.t_value.as_double < rhs.t_value.as_int);
@@ -401,7 +403,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 		//TODO: Bitwise stuff with doubles, too
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::Double)):
-		return Value(std::to_string(lhs.t_value.as_int) + std::to_string(rhs.t_value.as_double));
+		return Value(interp.makeString(std::to_string(lhs.t_value.as_int) + std::to_string(rhs.t_value.as_double)));
 	//
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::Integer, Value::vType::Double)):
 		return Value(lhs.t_value.as_int < rhs.t_value.as_double);
@@ -502,7 +504,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::String)):
 	{
 		std::string newstr = *lhs.strget() + *rhs.strget();
-		return Value(newstr);
+		return Value(interp.makeString(newstr));
 	}
 	case(BIN_ENUMS(bOps::Equals, Value::vType::String, Value::vType::String)):
 	{
@@ -529,25 +531,25 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Integer)):
 	{
 		std::string newstr = *lhs.strget() + std::to_string(rhs.t_value.as_int);
-		return Value(newstr);
+		return Value(interp.makeString(newstr));
 	}
 	//INT & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::String)):
 	{
 		std::string newstr = std::to_string(lhs.t_value.as_int) + *rhs.strget();
-		return Value(newstr);
+		return Value(interp.makeString(newstr));
 	}
 	//STRING & DOUBLE
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Double)):
 	{
 		std::string newstr = *lhs.strget() + std::to_string(rhs.t_value.as_double);
-		return Value(newstr);
+		return Value(interp.makeString(newstr));
 	}
 	//DOUBLE & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::String)):
 	{
 		std::string newstr = std::to_string(lhs.t_value.as_double) + *rhs.strget();
-		return Value(newstr);
+		return Value(interp.makeString(newstr));
 	}
 
 	default:

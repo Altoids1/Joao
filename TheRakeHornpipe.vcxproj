@@ -143,6 +143,7 @@
     <ClCompile Include="Args.cpp" />
     <ClCompile Include="AST.cpp" />
     <ClCompile Include="Directory.cpp" />
+    <ClCompile Include="GarbageOverseer.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="nativefuncs\file.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="AST.h" />
     <ClInclude Include="Directory.h" />
     <ClInclude Include="Forward.h" />
+    <ClInclude Include="GarbageOverseer.h" />
     <ClInclude Include="Interpreter.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="ObjectTree.h" />

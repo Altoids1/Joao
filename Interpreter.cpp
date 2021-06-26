@@ -75,6 +75,12 @@ void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
 {
 	Scope<Value>* varscope = blockscope.top();
 	//std::cout << "Setting variable " + varname + " to value " + std::to_string(val.t_value.as_int) + "\n";
+
+	if (val.t_vType == Value::vType::String) // This is a bit weird, as it's assymmetric with how Object garbage collection is handled, but I don't really know how to handle this otherwise
+	{
+		gc.add_ref(val.t_value.as_str_ptr);
+	}
+
 	varscope->set(varname, val);
 }
 
@@ -293,7 +299,6 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 	{
 		eval_args.push_back(args[i]->resolve(*this));
 	}
-
 	return Value(prog->definedObjTypes[str]->makeObject(*this, eval_args));
 }
 Value Interpreter::makeBaseTable()

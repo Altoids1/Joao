@@ -1,11 +1,15 @@
 #include "Value.h"
 #include "Object.h"
 
-std::unordered_map<Object*, std::shared_ptr<Object>*> Value::known_objptrs;
-
-Value::Value(std::string s)
+Value::Value(const std::string& s) // Memory-leaky, not to be used by the interpreter
 {
-	strptr = std::make_shared<std::string>(s);
+	t_value.as_str_ptr = new std::string(s);
+	t_vType = vType::String;
+}
+
+Value::Value(std::string* s)
+{
+	t_value.as_str_ptr = s;
 	t_vType = vType::String;
 }
 
@@ -15,28 +19,8 @@ and the current (kinda crap) memory management system in-place can result in mul
 */
 Value::Value(Object* o)
 {
-	if (known_objptrs.count(o))
-	{
-		objptr = *known_objptrs.at(o);
-	}
-	else
-	{
-		objptr = std::shared_ptr<Object>(o);
-
-	}
+	t_value.as_obj_ptr = o;
 	t_vType = vType::Object;
-}
-Value::~Value()
-{
-	if (objptr.use_count() == 1)
-	{
-		std::cout << "I'm about to delete this object:\t" << objptr->dump();
-	}
-	if (strptr.use_count() == 1)
-	{
-		std::cout << "I'm about to delete this string:\t" << *strptr;
-	}
-	std::cout << "*Yoda Scream*\n";
 }
 
 std::string Value::to_string()
@@ -52,6 +36,7 @@ std::string Value::to_string()
 	case(vType::Double):
 		return std::to_string(t_value.as_double);
 	case(vType::String):
+		//std::cout << *t_value.as_str_ptr;
 		return *strget();
 	case(vType::Object):
 		return objget()->dump();

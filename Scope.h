@@ -133,15 +133,27 @@ public:
 
 		stack.pop_front();
 	}
+	bool isThin() const { return stack.front() == top_scope; }
 
-	/*
-	So this function is kinda interesting.
-	The default structure of this thing is to be used as a sort of "linked list" that does these (expensive!) recursive calls to find things.
-	This function allows the conversion of the linked list into one big, fat hashtable that stores everything in strings that have a directory structure,
-	with the names of each directory being the Scope::scopename things of each Scope.
-	*/
-	std::unordered_map<std::string, _Ty*>* squish()
+	~Scope()
 	{
+		if (stack.front() != top_scope)
+		{
+			std::cout << "WEIRD_ERROR: Attempted to delete Scope with more than one scopelet on its stack!";
+			exit(1);
+			return; // fails.
+		}
 
+		Scopelet<_Ty>* popped = top_scope;
+
+		blank_table(popped);
+		delete popped;
+
+		stack.pop_front();
+	}
+
+	Scopelet<_Ty>* getBottomScopelet()
+	{
+		return stack.front();
 	}
 };

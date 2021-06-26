@@ -20,18 +20,17 @@ public:
 		bool as_bool;
 		JoaoInt as_int;
 		double as_double;
+		Object* as_obj_ptr;
+		std::string* as_str_ptr;
 	}t_value;
-	std::shared_ptr<std::string> strptr;
-	std::shared_ptr<Object> objptr;
-	
 
 	Object* objget() const
 	{
-		return objptr.get();
+		return t_value.as_obj_ptr;
 	}
 	std::string* strget() const
 	{
-		return strptr.get();
+		return t_value.as_str_ptr;
 	}
 
 	//Constructors
@@ -65,9 +64,10 @@ public:
 		t_vType = vType::Bool;
 	}
 
-	Value(std::string);
+	Value(const std::string&);
 
 	Value(Object*);
+	Value(std::string*);
 
 	Value(Value::vType vt, int errcode)
 	{
