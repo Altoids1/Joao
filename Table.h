@@ -28,7 +28,7 @@ public:
 	}
 
 
-	Value at(Interpreter&, Value);
+	Value& at(Interpreter&, Value);
 	void at_set(Interpreter&, Value, Value&);
 
 	size_t length() { return t_array.size(); }

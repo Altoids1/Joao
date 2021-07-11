@@ -40,14 +40,16 @@ public:
 	//Override the value of an already-existing variable at the lowest scope available.
 	void override_var(std::string, Value, ASTNode*);
 	//Get variable at the lowest scope available.
-	Value get_var(std::string, ASTNode*);
+	Value& get_var(std::string, ASTNode*);
 	bool has_var(std::string, ASTNode*);
 
+
+	Object* get_objectscope() const { return objectscope.top(); }
 	///Objectscope
 	Value get_property(std::string, ASTNode*);
 	void set_property(std::string, Value, ASTNode*);
 	Value grand_property(unsigned int, std::string, ASTNode*);
-	Handle grand_handle(unsigned int, std::string, ASTNode*);
+	Value& grand_handle(unsigned int, std::string, ASTNode*);
 
 	//Construct an object and return it as a Value.
 	Value makeObject(std::string,std::vector<ASTNode*>&,ASTNode*);
@@ -85,7 +87,7 @@ public:
 	}
 
 
-	Value get_global(std::string name, ASTNode* getter)
+	Value& get_global(std::string name, ASTNode* getter)
 	{
 		if (!globalscope.table.count(name))
 			RuntimeError(getter, "Unable to access global value: " + name);

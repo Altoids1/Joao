@@ -15,7 +15,8 @@ public:
 		Integer,
 		Double,
 		String,
-		Object
+		Object,
+		Function // Functions as first-class values isn't 100% in yet and there's a lot of degenerate circumstances with this type.
 	}t_vType{ vType::Null };
 
 	union {
@@ -24,6 +25,7 @@ public:
 		double as_double;
 		std::string* as_string_ptr;
 		Object* as_object_ptr;
+		Function* as_function_ptr;
 	}t_value;
 
 	//Constructors
@@ -67,6 +69,11 @@ public:
 		t_value.as_object_ptr = o;
 		t_vType = vType::Object;
 	}
+	Value(Function* f)
+	{
+		t_value.as_function_ptr = f;
+		t_vType = vType::Function;
+	}
 
 	Value(Value::vType vt, int errcode)
 	{
@@ -97,60 +104,6 @@ public:
 	std::string typestring();
 };
 
-//Used during assignment, member access, and method/function calling. Stores a handle to either
-//1. the name of a localish variable that needs to be get_var()'d
-//2. the name of a property/method of the objectscope
-//3. the name of a global/function in globalscope
-//4. a pointer to an object someplace
-struct Handle
-{
-	std::string name;
-	size_t index = -1; // FIXME: Really it'd be better if Handle just stored a Value instead of the both of these but that's neither here nor there at the moment
-
-	bool is_function = false;
-	union
-	{
-		Table* table;
-		Object* obj;
-		ObjectType* objtype;
-	}data;
-	enum class HType {
-		Invalid,
-		Name, // A locally-scoped name
-		Parent, // A reference to a parent method/property
-		Global, // A reference to a global method/property
-		Obj, // Object-property/method pair
-		ObjType // ObjectType-property/method pair
-	} type;
-	Handle()
-	{
-		name = "?????";
-		type = HType::Invalid;
-	}
-	Handle(std::string& n)
-	{
-		name = n;
-		type = HType::Name;
-	}
-	Handle(Object* o, std::string& property, bool is_method = false) // An object pointer and its property
-	{
-		data.obj = o;
-		name = property;
-		is_function = is_method;
-		type = HType::Obj;
-	}
-	Handle(Table* t, size_t ind)
-	{
-		data.table = t;
-		index = ind;
-		type = HType::Obj; // hehe
-	}
-	void qdel()
-	{
-		return;
-	}
-};
-
 class ASTNode // ASTNodes are abstract symbols which together form a "flow chart" tree of symbols that the parser creates from the text that the interpreter then interprets.
 {
 
@@ -165,11 +118,9 @@ public:
 	// Attempts to collapse this symbol in a constant and scope-less manner. Bool determines if it throws an error when this fails or not.
 	virtual Value const_resolve(Parser&, bool);
 
-	// Returns a Handle, typically used in the context of resolving a complex assignment, i.e. 'apple.taste.type = "succulent"'
-	virtual Handle handle(Interpreter&);
-
-	// Returns a Handle in a constant and scope-less manner. Will always throw an error if there's an error, which for most ASTNodes there would be.
-	virtual Handle const_handle(Parser&);
+	// Returns a reference to whatever Value this ASTNode points to, if any, which you can freely use the operator= on to set it to some new value.
+	// Mostly to be used by AssignmentStatement and friends.
+	virtual Value& handle(Interpreter&);
 
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + class_name() + "\n"; } // Used for debugging
 
@@ -212,8 +163,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
-	virtual Handle handle(Interpreter&) override;
-	virtual Handle const_handle(Parser& parse) override { return Handle(t_name); }
+	virtual Value& handle(Interpreter&) override;
 	
 	virtual const std::string class_name() const override { return "Identifier"; }
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name + "\n"; }
@@ -294,6 +244,8 @@ class LocalAssignmentStatement final : public AssignmentStatement // "Value x = 
 		return true;
 	}
 public:
+
+
 	LocalAssignmentStatement(Identifier* i, ASTNode* r, aOps o, LocalType localtype, int linenum = 0)
 		:AssignmentStatement(i,r,o)
 		,ty(localtype)
@@ -507,7 +459,7 @@ public:
 	CallExpression(ASTNode* f, std::vector<ASTNode*> arr, int linenum = 0)
 		:func_expr(f)
 		,args(arr) // Arr!!
-{
+	{
 		my_line = linenum;
 
 	}
@@ -542,14 +494,16 @@ protected:
 	std::vector<std::string> t_argnames;
 	//std::vector<Expression> args;
 	std::string t_name; // My name
-	Object* obj = nullptr;
+	Object* obj = nullptr; // I don't know.
 
 	Function()
 	{
 
 	}
 public:
-	std::string get_name() { return t_name; };
+	
+	std::string get_name() { return t_name; }
+	Object* get_obj() const { return obj; }
 	void set_obj(Object* o) { obj = o; };
 	Function(std::string name, Expression* expr)
 	{
@@ -821,7 +775,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 
-	virtual Handle handle(Interpreter&) override;
+	virtual Value& handle(Interpreter&) override;
 
 	virtual const std::string class_name() const override { return "MemberAccess"; }
 	virtual std::string dump(int indent)
@@ -917,7 +871,7 @@ public:
 		return std::string(indent, ' ') + "ParentAccess, property: " + prop + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
-	virtual Handle handle(Interpreter&) override;
+	virtual Value& handle(Interpreter&) override;
 };
 
 class GrandparentAccess : public ASTNode
@@ -939,7 +893,7 @@ public:
 		return std::string(indent, ' ') + "GrandparentAccess, property: " + prop + "; depth: " + std::to_string(depth) + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
-	virtual Handle handle(Interpreter&) override;
+	virtual Value& handle(Interpreter&) override;
 };
 
 class GlobalAccess : public ASTNode
@@ -959,7 +913,7 @@ public:
 		return std::string(indent, ' ') + "GlobalAccess, property: " + var + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
-	virtual Handle handle(Interpreter&) override;
+	virtual Value& handle(Interpreter&) override;
 };
 
 // a[i] and all that
@@ -978,7 +932,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
-	virtual Handle handle(Interpreter&) override;
+	virtual Value& handle(Interpreter&) override;
 
 	virtual const std::string class_name() const override { return "IndexAccess"; }
 	virtual std::string dump(int indent) override

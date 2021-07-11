@@ -1,7 +1,7 @@
 #include "Table.h"
 #include "Interpreter.h"
 
-Value Table::at(Interpreter& interp, Value index)
+Value& Table::at(Interpreter& interp, Value index)
 {
 	Value::JoaoInt array_index;
 
@@ -9,9 +9,9 @@ Value Table::at(Interpreter& interp, Value index)
 	{
 	default:
 		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
-		return Value();
+		return *(new Value(Value::vType::Null, 1));
 	case(Value::vType::String): // Just use our properties, innit?
-		return get_property(interp, *index.t_value.as_string_ptr);
+		return *(has_property(interp, *index.t_value.as_string_ptr));
 	case(Value::vType::Integer):
 		array_index = index.t_value.as_int;
 		break;
@@ -25,10 +25,10 @@ Value Table::at(Interpreter& interp, Value index)
 	if (array_index < 0 || array_index >= static_cast<Value::JoaoInt>(t_array.size()))
 	{
 		interp.RuntimeError(nullptr, "Index was out-of-bounds of array!");
-		return Value();
+		return *(new Value(Value::vType::Null, 1));
 	}
 
-	return t_array[array_index];
+	return t_array.at(array_index);
 }
 
 void Table::at_set(Interpreter& interp, Value index, Value& newval)
