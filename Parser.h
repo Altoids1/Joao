@@ -339,30 +339,48 @@ class Parser
 		if (tokenheader+1 > there) // If we can't access at least 2 more tokens
 			return scoped_access; // Just return the scoped_access find.
 		//Now lets check for property or element
-		Token* propeller = tokens[tokenheader]; // PROPerty or ELLERment. I guess. Shut up.
+		int where = tokenheader;
+		for(; where <= there; ++where) // This is all here to handle repetitive Member and Index accesses.
+		{
+			Token* propeller = tokens[where]; // PROPerty or ELLERment. I guess. Shut up.
 
-		switch (propeller->class_enum())
-		{
-		case(Token::cEnum::MemberToken):
-			++tokenheader;
-			return new MemberAccess(scoped_access, readVarAccess(tokenheader, there)); // I'm *pretty* sure this ends up being left-associative.
-		case(Token::cEnum::PairSymbolToken):
-		{
-			PairSymbolToken pst = *static_cast<PairSymbolToken*>(propeller);
-			if (pst.t_pOp == PairSymbolToken::pairOp::Bracket)
+			switch (propeller->class_enum())
 			{
-				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Bracket, tokenheader + 1);
-				IndexAccess* ack = new IndexAccess(scoped_access, readExp(tokenheader + 1, yonder - 1));
-				tokenheader = yonder + 1;
-				return ack;
-
+			case(Token::cEnum::MemberToken):
+			{
+				++where;
+				//return new MemberAccess(scoped_access, readVarAccess(tokenheader, there)); // Doing just this would end up being right-associative, which for our purposes would be annoying to deal with interpreter-side.
+				//So we're going to do something else.
+				if (tokens[where]->class_enum() != Token::cEnum::WordToken)
+				{
+					ParserError(tokens[where], "Unexpected Token when reading MemberAccess!");
+				}
+				scoped_access = new MemberAccess(scoped_access, new Identifier(static_cast<WordToken*>(tokens[where])->word));
+				continue;
 			}
-			//If it's a parenthesis then we're probably about to do a function call but, that's none of *our* business in readVarAccess() so just return
-			return scoped_access;
+			case(Token::cEnum::PairSymbolToken):
+			{
+				PairSymbolToken pst = *static_cast<PairSymbolToken*>(propeller);
+				if (pst.t_pOp == PairSymbolToken::pairOp::Bracket)
+				{
+					int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Bracket, where + 1);
+					scoped_access = new IndexAccess(scoped_access, readExp(where + 1, yonder - 1));
+					where = yonder;
+					continue;
+
+				}
+				//If it's a parenthesis then we're probably about to do a function call but, that's none of *our* business in readVarAccess() so just return
+				--where; // Make sure that hypothetical paren handler can actually see the paren
+				goto ACCESS_END;
+			}
+			default: // I dunno what this is, just return what you have and hope the higher stacks know what it is
+				--where;
+				goto ACCESS_END;
+			}
 		}
-		default: // I dunno what this is, just return what you have and hope the higher stacks know what it is
-			return scoped_access;
-		}
+ACCESS_END:
+		tokenheader = where + 1;
+		return scoped_access;
 	}
 
 	/*

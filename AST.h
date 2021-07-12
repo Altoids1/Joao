@@ -775,13 +775,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
-	Value rresolve(Interpreter&, Value&);
-
 	virtual Value& handle(Interpreter&) override;
-
-	//A special-snowflake thing for MemberAccess that helps it handle long, complex member access chains, like "a.b.c.d.e.f" and so on
-	//it treats the incoming Value ref as if it were its front node.
-	Value& rhandle(Interpreter&, Value&);
 
 	virtual const std::string class_name() const override { return "MemberAccess"; }
 	virtual std::string dump(int indent)
@@ -938,11 +932,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
-	Value rresolve(Interpreter&, Value&);
 	virtual Value& handle(Interpreter&) override;
-
-	//See MemberAccess's similar function
-	Value& rhandle(Interpreter&, Value&);
 
 	virtual const std::string class_name() const override { return "IndexAccess"; }
 	virtual std::string dump(int indent) override
