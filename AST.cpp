@@ -986,7 +986,7 @@ Value GlobalAccess::resolve(Interpreter& interp)
 
 Value& GlobalAccess::handle(Interpreter& interp)
 {
-	return interp.get_global(var, this);
+	return *interp.has_global(var, this);
 }
 
 

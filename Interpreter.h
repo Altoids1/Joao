@@ -86,11 +86,27 @@ public:
 		objectscope.pop();
 	}
 
+	//Like get_global but returns the pointer instead, and quietly allocates a new global when you ask for one it hasn't seen before.
+	Value* has_global(std::string name, ASTNode* getter)
+	{
+		if (!globalscope.table.count(name))
+		{
+			globalscope.table[name] = new Value();
+			return globalscope.table[name];
+		}
+
+		return globalscope.table.at(name);
+	}
 
 	Value& get_global(std::string name, ASTNode* getter)
 	{
 		if (!globalscope.table.count(name))
-			RuntimeError(getter, "Unable to access global value: " + name);
+		{
+			RuntimeError(getter, "Unable to access global value: " + name); // Works, just returns null and yells.
+			globalscope.table[name] = new Value();
+			return *globalscope.table[name];
+		}
+			
 		return *globalscope.table.at(name);
 	}
 	void set_global(std::string name, Value& val, ASTNode* setter)
