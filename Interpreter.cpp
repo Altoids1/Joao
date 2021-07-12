@@ -53,7 +53,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 	}
 	
 	std::cout << "Line number: ";
-	if(a->my_line)
+	if(a && a->my_line)
 	{
 		std::cout << std::to_string(a->my_line);
 	}
