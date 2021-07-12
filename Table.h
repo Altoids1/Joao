@@ -27,9 +27,20 @@ public:
 
 	}
 
+	//Returns the value stored at this index, or NULL and a runtime if it cannot be found.
+	Value at(Interpreter&, Value);
+	
+	//Gets a handle to the value pointed to by this index. Quietly creates a reference to a null Value if it cannot be found.
+	Value& at_ref(Interpreter&, Value);
 
-	Value& at(Interpreter&, Value);
+	//Sets the value pointed to by index to the value referenced by the second.
 	void at_set(Interpreter&, Value, Value&);
+
+	//Handle a resize of the array such that it can now store new_index.
+	void resize(Value::JoaoInt new_index)
+	{
+		t_array.resize(static_cast<size_t>(new_index) + 1, Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
+	}
 
 	size_t length() { return t_array.size(); }
 	bool virtual is_table() override { return true; }

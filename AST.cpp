@@ -945,5 +945,5 @@ Value& IndexAccess::handle(Interpreter& interp)
 	if(!obj->is_table())
 		return MemberAccess(container, index).handle(interp); //FIXME: This is so fucked up but it makes so much sense; main issue is that runtimes will report themselves strangely
 	//So it's a table then
-	return static_cast<Table*>(obj)->at(interp, rhs);
+	return static_cast<Table*>(obj)->at_ref(interp, rhs);
 }
