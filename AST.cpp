@@ -772,52 +772,148 @@ Value BreakStatement::resolve(Interpreter& interp)
 Value MemberAccess::resolve(Interpreter& interp)
 {
 	Value& fr = front->handle(interp);
-	
+
 	if (fr.t_vType != Value::vType::Object)
 	{
 		interp.RuntimeError(this, "Attempted to do MemberAccess on non-Object Value!");
 		return Value();
 	}
 
-	//Has to always be a plain string handle
-
-	if (back->class_name() != "Identifier")
+	return rresolve(interp, fr);
+}
+Value MemberAccess::rresolve(Interpreter& interp, Value& fr)
+{
+	if (back->class_name() == "MemberAccess") // This is chained member access, a.b.c.d
 	{
-		interp.RuntimeError(this, "Cannot access non-identifier member from Object!");
-		return Value();
+		//Then we're actually going to do something fancy via rhandle().
+		//Now, the AST actually generates this a little bit oddly, with the "b" identifier embedded as the second operand of the higher-up memberaccess
+		//fret not though; we can recover it and then pass it onwards down the MemberAccess chain.
+
+		MemberAccess* mback = static_cast<MemberAccess*>(back);
+
+		if (mback->front->class_name() != "Identifier")
+		{
+			interp.RuntimeError(this, "Unimplemented or illegal MemberAccess with second operand of type " + back->class_name() + "!");
+			return Value();
+		}
+
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(mback->front)->get_str());
+		if (!v)
+		{
+			interp.RuntimeError(this, "MemberAccess failed because member '" + static_cast<Identifier*>(mback->front)->get_str() + "' does not exist!");
+			return Value();
+		}
+
+		return mback->rresolve(interp, *v); // Gross, recursion.
+	}
+	else if (back->class_name() == "IndexAccess") // Handles member-and-index access mixing, a.b.c[0]
+	{ // Similar vibes to the MemberAccess handler to be honest
+		IndexAccess* iback = static_cast<IndexAccess*>(back);
+
+		if (iback->container->class_name() != "Identifier")
+		{
+			interp.RuntimeError(this, "Unimplemented or illegal MemberAccess with second operand of type " + back->class_name() + "!");
+			return Value();
+		}
+
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(iback->container)->get_str());
+		if (!v) // if not a real member
+		{
+			interp.RuntimeError(this, "IndexAccess failed because member '" + static_cast<Identifier*>(iback->container)->get_str() + "' does not exist in object!");
+			return Value();
+		}
+		else if (v->t_vType != Value::vType::Object && v->t_vType != Value::vType::String)
+		{
+			interp.RuntimeError(this, "IndexAccess failed because member '" + static_cast<Identifier*>(iback->container)->get_str() + "' is not an indexable Value!");
+			return Value();
+		}
+
+		return iback->rresolve(interp, *v); // Gross, recursion.
+	}
+	else if (back->class_name() == "Identifier")
+	{
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
+		if (v) return *v;
+		return Value(fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str()));
 	}
 
-	Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
-	if (v) return *v;
-
-
-	return Value(fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str()));
+	// This is something confusing, then
+	interp.RuntimeError(this, "Unimplemented MemberAccess with second operand of type " + back->class_name() + "!");
+	return Value();
 }
 
 Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to MemberAccess::resolve(). Could be merged somehow?
 {
 	Value& fr = front->handle(interp);
-
+	return rhandle(interp, fr);
+}
+Value& MemberAccess::rhandle(Interpreter& interp, Value& fr) // Tons of similar code to MemberAccess::resolve(). Could be merged somehow?
+{
 	if (fr.t_vType != Value::vType::Object)
 	{
 		interp.RuntimeError(this, "Attempted to do MemberAccess on non-Object Value!");
 		return *(new Value(Value::vType::Null, 1));
 	}
 
-	//Has to always be a plain string handle
-
-	if (back->class_name() != "Identifier")
+	if (back->class_name() == "MemberAccess") // This is chained member access, a.b.c.d
 	{
-		interp.RuntimeError(this, "Cannot access non-identifier member from Object!");
-		return *(new Value(Value::vType::Null, 1));
+		//Then we're actually going to do something fancy via rhandle().
+		//Now, the AST actually generates this a little bit oddly, with the "b" identifier embedded as the second operand of the higher-up memberaccess
+		//fret not though; we can recover it and then pass it onwards down the MemberAccess chain.
+
+		MemberAccess* mback = static_cast<MemberAccess*>(back);
+
+		if (mback->front->class_name() != "Identifier")
+		{
+			interp.RuntimeError(this, "Unimplemented or illegal MemberAccess with second operand of type " + back->class_name() + "!");
+			return *(new Value(Value::vType::Null, 1));
+		}
+
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(mback->front)->get_str());
+		if (!v)
+		{
+			interp.RuntimeError(this, "MemberAccess failed because member '" + static_cast<Identifier*>(mback->front)->get_str() + "' does not exist!");
+			return *(new Value(Value::vType::Null, 1));
+		}
+
+		return mback->rhandle(interp, *v); // Gross, recursion.
+	}
+	else if (back->class_name() == "IndexAccess") // Handles member-and-index access mixing, a.b.c[0]
+	{ // Similar vibes to the MemberAccess handler to be honest
+		IndexAccess* iback = static_cast<IndexAccess*>(back);
+
+		if (iback->container->class_name() != "Identifier")
+		{
+			interp.RuntimeError(this, "Unimplemented or illegal MemberAccess with second operand of type " + back->class_name() + "!");
+			return *(new Value(Value::vType::Null, 1));
+		}
+
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(iback->container)->get_str());
+		if (!v) // if not a real member
+		{
+			interp.RuntimeError(this, "IndexAccess failed because member '" + static_cast<Identifier*>(iback->container)->get_str() + "' does not exist in object!");
+			return *(new Value(Value::vType::Null, 1));
+		}
+		else if (v->t_vType != Value::vType::Object && v->t_vType != Value::vType::String)
+		{
+			interp.RuntimeError(this, "IndexAccess failed because member '" + static_cast<Identifier*>(iback->container)->get_str() + "' is not an indexable Value!");
+			return *(new Value(Value::vType::Null, 1));
+		}
+
+		return iback->rhandle(interp, *v); // Gross, recursion.
+	}
+	else if (back->class_name() == "Identifier") 
+	{
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
+		if (v) return *v;
+
+
+		return *(new Value(fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str())));
 	}
 
-	Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
-	if (v) return *v;
-
-
-	return *(new Value(fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str())));
-
+	// This is something confusing, then
+	interp.RuntimeError(this, "Unimplemented MemberAccess with second operand of type " + back->class_name() + "!");
+	return *(new Value(Value::vType::Null, 1));
 }
 
 std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
@@ -893,9 +989,15 @@ Value& GlobalAccess::handle(Interpreter& interp)
 	return interp.get_global(var, this);
 }
 
+
+
 Value IndexAccess::resolve(Interpreter& interp)
 {
 	Value& lhs = container->handle(interp);
+	return rresolve(interp, lhs);
+}
+Value IndexAccess::rresolve(Interpreter& interp, Value& lhs)
+{
 	Value rhs = index->resolve(interp);
 
 	switch (lhs.t_vType)
@@ -934,6 +1036,10 @@ Value IndexAccess::resolve(Interpreter& interp)
 Value& IndexAccess::handle(Interpreter& interp)
 {
 	Value& lhs = container->handle(interp);
+	return rhandle(interp, lhs);
+}
+Value& IndexAccess::rhandle(Interpreter& interp, Value& lhs)
+{
 	Value rhs = index->resolve(interp);
 
 	if (lhs.t_vType != Value::vType::Object) // FIXME: Allow for index-based setting of string data
@@ -942,7 +1048,7 @@ Value& IndexAccess::handle(Interpreter& interp)
 	}
 
 	Object* obj = lhs.t_value.as_object_ptr;
-	if(!obj->is_table())
+	if (!obj->is_table())
 		return MemberAccess(container, index).handle(interp); //FIXME: This is so fucked up but it makes so much sense; main issue is that runtimes will report themselves strangely
 	//So it's a table then
 	return static_cast<Table*>(obj)->at_ref(interp, rhs);
