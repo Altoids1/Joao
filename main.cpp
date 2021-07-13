@@ -35,7 +35,8 @@ int main(int argc, char** argv)
 {
 	
 	std::vector<Args::Flags> flags;
-	std::string filestr = Args::read_args(flags,argc,argv);
+	int file_start = -1;
+	std::string filestr = Args::read_args(flags,argc,argv,file_start);
 	bool print_main_result = false;
 #ifdef _DEBUG
 	bool print_execution_times = true;
@@ -104,7 +105,7 @@ int main(int argc, char** argv)
 	
 	//Lets populate the arguments to /main()
 	std::vector<Value> joao_args;
-	for(int i = 2; i < argc; ++i)
+	for(int i = file_start+1; i < argc; ++i)
 	{
 		joao_args.push_back(Value(std::string(argv[i])));
 	}

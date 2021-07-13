@@ -14,7 +14,7 @@ namespace Args
 	};
 
 	//Returns the string which is the actual filename.
-	std::string read_args(std::vector<Flags>& v, int argc, char** argv);
+	std::string read_args(std::vector<Flags>& v, int argc, char** argv, int& file_start);
 
 	void print_version();
 	void print_help();

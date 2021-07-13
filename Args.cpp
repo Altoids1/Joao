@@ -9,7 +9,7 @@
 #define _strcmpi strcasecmp
 #endif
 
-std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv)
+std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv, int& file_start)
 {
 	for (int i = 1; i < argc; ++i)
 	{
@@ -40,6 +40,7 @@ std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv)
 		}
 
 		//If this isn't any of these argless flags then I guess it's the file
+		file_start = i;
 		return std::string(argv[i]);
 	}
 	return std::string();
