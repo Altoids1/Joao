@@ -500,12 +500,12 @@ class Scanner
 			msg = "SCANNER_ERROR: Malformed String!";
 			break;
 		case(ScanError::MalformedLongComment):
-			msg = "SCANNER_ERROR: Long comments cannot begin on lines containing functional code!";
+			msg = "SCANNER_ERROR: Long comments cannot start nor end on lines containing functional code!";
 			/*
 			Picky? Yes.
 
-			Good for code structure? Definitely; I don't like the idea of having to read random fucking longcomments in the middle of code,
-			just makes the Parser slower to accomodate horrendous style.
+			Good for code structure? Definitely; I don't like the idea of having to read random fucking longcomments in the middle of code.
+			It makes the Scanner slower, just for the sake of accomodating horrendous style.
 			*/
 			break;
 		case(ScanError::MalformedDirectory):
@@ -607,6 +607,21 @@ class Scanner
 	int readWord(int);
 	int readComment(int,std::ifstream&);
 	int readSlash(int,std::ifstream&);
+	
+	//Checks if the portion of the string starting at $start and ending at $end is all whitespace.
+	//DOES NOT CHECK IF the index args are valid for the string given.
+	bool is_whitespace(const std::string& str, int start, int end)
+	{
+		for (int i = start; i <= end; ++i)
+		{
+			char c = str[i];
+			if (c != ' ' && c != '\t') // This should be somewhat similar to the TOKEN_SEPARATOR macro in Scanner.cpp.
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 
 	static std::string precedence_tostring(OperationPrecedence op)
 	{

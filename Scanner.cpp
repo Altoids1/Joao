@@ -320,6 +320,7 @@ int Scanner::readWord(int it)
 	return it;
 }
 
+//it here points to the 3rd character of comment, including the hashes. If it's '#' then it's a longcomment (or an attempt at one)
 int Scanner::readComment(int it,std::ifstream& ifst)
 {
 
@@ -328,7 +329,7 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 
 	//Else, we are now in the readlongcomment zone
 
-	if (it != 2)
+	if (it != 2 && !is_whitespace(line,0,it-3))
 		ScannerError(it, ScanError::MalformedLongComment);
 
 	do
@@ -337,11 +338,18 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 
 		if (line.substr(0, 3) == "###") // Found the closing longcomment
 		{
-			break;
+			return static_cast<int>(line.length());
 		}
-
+		size_t index = line.find("###");
+		if (index != std::string::npos)
+		{
+			if (index + 3 < line.length() && !is_whitespace(line, index + 3, line.length() - 1))
+			{
+				ScannerError(index, ScanError::MalformedLongComment);
+			}
+			return index + 3;
+		}
 	} while (!ifst.eof());
-	return static_cast<int>(line.length());
 }
 
 
