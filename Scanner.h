@@ -432,6 +432,7 @@ class Scanner
 	enum class ScanError {
 		Unknown,
 		UnterminatedString,
+		UnterminatedLongComment,
 		UnknownCharacter,
 		MalformedNumber,
 		MalformedString,
@@ -489,6 +490,9 @@ class Scanner
 		{
 		case(ScanError::UnterminatedString):
 			msg =  "SCANNER_ERROR: Unterminated String!";
+			break;
+		case(ScanError::UnterminatedLongComment):
+			msg = "SCANNER_ERROR: Unterminated long comment!";
 			break;
 		case(ScanError::UnknownCharacter):
 			msg = "SCANNER_ERROR: Unknown character!\nCharacter is: " + std::to_string(int(line[column_num]));

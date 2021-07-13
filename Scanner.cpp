@@ -350,6 +350,7 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 			return index + 3;
 		}
 	} while (!ifst.eof());
+	ScannerError(0, ScanError::UnterminatedLongComment);
 }
 
 
