@@ -11,7 +11,7 @@ Value Table::at(Interpreter& interp, Value index)
 		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
 		return Value();
 	case(Value::vType::String): // Just use our properties, innit?
-		return get_property(interp, *index.t_value.as_string_ptr);
+		return *(has_property(interp, *index.t_value.as_string_ptr));
 	case(Value::vType::Integer):
 		array_index = index.t_value.as_int;
 		break;
@@ -28,7 +28,36 @@ Value Table::at(Interpreter& interp, Value index)
 		return Value();
 	}
 
-	return t_array[array_index];
+	return t_array.at(array_index);
+}
+
+Value& Table::at_ref(Interpreter& interp, Value index)
+{
+	Value::JoaoInt array_index;
+
+	switch (index.t_vType)
+	{
+	default:
+		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
+		return Value::dev_null;
+	case(Value::vType::String): // Just use our properties, innit?
+		return *(has_property(interp, *index.t_value.as_string_ptr));
+	case(Value::vType::Integer):
+		array_index = index.t_value.as_int;
+		break;
+	case(Value::vType::Double): //Dude. You can't use a raw-ass double to index. That's fucking stupid. You're stupid.
+		//I'm rounding this while glaring at you sternly.
+		array_index = math::round({ index }).t_value.as_int;
+		break;
+	}
+	//Should be able to safely assert by this point that array_index has been set to something.
+
+	if (array_index >= static_cast<Value::JoaoInt>(t_array.size()))
+	{
+		resize(array_index);
+	}
+
+	return t_array.at(array_index);
 }
 
 void Table::at_set(Interpreter& interp, Value index, Value& newval)
@@ -71,7 +100,7 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 
 	if (array_index >= static_cast<Value::JoaoInt>(t_array.size()))
 	{
-		t_array.resize(static_cast<size_t>(array_index) + 1, Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
+		resize(array_index);
 	}
 	t_array[array_index] = newval;
 }

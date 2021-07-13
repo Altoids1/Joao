@@ -8,6 +8,9 @@
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
+
+Value Value::dev_null = Value();
+
 std::string Value::to_string()
 {
 	switch (t_vType)
@@ -65,16 +68,10 @@ Value ASTNode::const_resolve(Parser& parse, bool loudfail)
 	return Value();
 }
 
-Handle ASTNode::handle(Interpreter& interp)
+Value& ASTNode::handle(Interpreter& interp)
 {
 	interp.RuntimeError(this, "Attempted to turn " + class_name() + " into a variable handle!");
-	return Handle();
-}
-
-Handle ASTNode::const_handle(Parser& parse)
-{
-	parse.ParserError(nullptr, "Attempted to const_handle() an abstract ASTNode! (Type:" + class_name() + ")");
-	return Handle();
+	return Value::dev_null; // Memory leak woooo
 }
 
 
@@ -97,16 +94,19 @@ Value Identifier::resolve(Interpreter& interp)
 	return interp.get_var(t_name,this);
 }
 
-Handle Identifier::handle(Interpreter& interp)
+Value& Identifier::handle(Interpreter& interp)
 {
 	//We actually have to evaluate here whether or not the identifier present is pointing to a function or not, at the current scope.
 
-	Handle hndl;
-	hndl.type = Handle::HType::Name;
-	hndl.name = t_name;
-	hndl.is_function = interp.get_func(t_name,this,false);
-
-	return hndl;
+	Function* funky = interp.get_func(t_name,this,false);
+	if (funky)
+	{
+		return *(new Value(funky)); // memory leak woo
+	}
+	else
+	{
+		return interp.get_var(t_name, this);
+	}
 }
 
 
@@ -115,102 +115,17 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 {
 	Value rhs_val = rhs->resolve(interp);
 
+	Value& lhs_val = id->handle(interp);
 
-	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
+	if (lhs_val.t_vType == Value::vType::Function)
+	{
+		std::cout << "WARNING: Overwriting a Value which stores a function pointer!\n";
+	}
 
-	/*
 	//While we do know our own assignment, we don't actually use that information in the AST (as of 7th May 2021)
 	//That's assumed to be handled by the parser.
-	if (t_op != aOps::Assign)
-	{
-		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + std::to_string(static_cast<int>(t_op)));
-		return rhs_val;
-	}
-	*/
 
-	//FIXME: This should really just be a switch statement.
-	if (id->class_name() == "Identifier")
-	{
-		Identifier* idfr = static_cast<Identifier*>(id);
-		interp.override_var(idfr->get_str(), rhs_val, this);
-	}
-	else if (id->class_name() == "GlobalAccess")
-	{
-		interp.set_global(static_cast<GlobalAccess*>(id)->var, rhs_val, this);
-	}
-	else if (id->class_name() == "ParentAccess")
-	{
-		interp.set_property(static_cast<ParentAccess*>(id)->prop, rhs_val, this);
-	}
-	else if (id->class_name() == "MemberAccess" || id->class_name() == "IndexAccess")
-	{
-		Handle hndl = id->handle(interp);
-		Object* objptr;
-
-		switch (hndl.type)
-		{
-		case(Handle::HType::Obj):
-			objptr = hndl.data.obj;
-			break;
-		case(Handle::HType::Name):
-		{
-			Value val = interp.get_var(hndl.name, this);
-			if (val.t_vType != Value::vType::Object)
-			{
-				interp.RuntimeError(this, "Cannot acquire member of non-object Value!");
-				return Value();
-			}
-			objptr = val.t_value.as_object_ptr;
-			break;
-		}
-		case(Handle::HType::Global):
-		{
-			Value val = interp.get_global(hndl.name, this);
-			if (val.t_vType != Value::vType::Object)
-			{
-				interp.RuntimeError(this, "Cannot acquire member of non-object global Value!");
-				return Value();
-			}
-			objptr = val.t_value.as_object_ptr;
-			break;
-		}
-		case(Handle::HType::Parent):
-		{
-			Value val = interp.get_property(hndl.name, this);
-			if (val.t_vType != Value::vType::Object)
-			{
-				interp.RuntimeError(this, "Cannot acquire member of non-object global Value!");
-				return Value();
-			}
-			objptr = val.t_value.as_object_ptr;
-			break;
-		}
-		default:
-			interp.RuntimeError(this, "Unknown Handle type returned during MemberAccess!");
-			return Value();
-		}
-
-		if(id->class_name() == "MemberAccess")
-			objptr->set_property(interp, hndl.name, rhs_val);
-		else // IndexAccess
-		{
-			if (objptr->is_table())
-			{
-				if (hndl.index == -1)
-					static_cast<Table*>(objptr)->at_set(interp, Value(hndl.name), rhs_val);
-				else
-					static_cast<Table*>(objptr)->at_set(interp, Value(hndl.index), rhs_val);
-			}
-			else
-			{
-				objptr->set_property(interp, hndl.name, rhs_val);
-			}
-		}
-	}
-	else
-	{
-		interp.RuntimeError(this, "Unknown or underimplemented handleable ASTNode found at runtime!");
-	}
+	lhs_val = rhs_val;
 
 	return rhs_val; // If anything.
 }
@@ -288,13 +203,7 @@ Value UnaryExpression::resolve(Interpreter& interp)
 std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
 {
 	//step 1. get string
-	Handle huh = id->const_handle(parser);
-
-	if (huh.type != Handle::HType::Name)
-		parser.ParserError(nullptr, "Illegitimate Handle given for property in class definition!");
-
-	std::string suh = huh.name;
-	huh.qdel();
+	std::string suh = static_cast<Identifier*>(id)->get_str();
 
 	//step 2. get value
 	Value ruh = rhs->const_resolve(parser, true);
@@ -669,13 +578,14 @@ Value Function::resolve(Interpreter & interp)
 
 Value CallExpression::resolve(Interpreter& interp)
 {
-	Handle hndl = func_expr->handle(interp);
-	if (!hndl.is_function)
+	Value func = func_expr->handle(interp);
+	if (func.t_vType != Value::vType::Function)
 	{
 		interp.RuntimeError(this, "Attempted to call something that isn't a function or method!");
 		return Value();
 	}
 
+	Function* fptr = func.t_value.as_function_ptr;
 	std::vector<Value> vargs;
 	for (auto it = args.begin(); it != args.end(); ++it)
 	{
@@ -683,21 +593,14 @@ Value CallExpression::resolve(Interpreter& interp)
 		vargs.push_back(e->resolve(interp));
 	}
 
-	if (hndl.type == Handle::HType::Name) // locally-scopped function call
+	Object* obj = fptr->get_obj();
+	if (obj)
 	{
-		Function* ourfunc = interp.get_func(hndl.name, this);
-		ourfunc->give_args(interp, vargs);
-		return ourfunc->resolve(interp);
-	}
-	else if (hndl.type == Handle::HType::Obj) // Call to a specific object
-	{
-		Object* obj = hndl.data.obj;
-		return obj->call_method(interp, hndl.name, vargs);
+		return obj->call_method(interp, Directory::lastword(fptr->get_name()), vargs);
 	}
 
-	
-	interp.RuntimeError(this, "Failed to execute CallExpression!");
-	return Value();
+	fptr->give_args(interp, vargs);
+	return fptr->resolve(interp);
 }
 
 Value NativeFunction::resolve(Interpreter& interp)
@@ -866,140 +769,50 @@ Value BreakStatement::resolve(Interpreter& interp)
 
 Value MemberAccess::resolve(Interpreter& interp)
 {
-	Handle fr = front->handle(interp);
-	
-	//Has to always be a plain string handle
-	Handle bk = back->handle(interp);
+	Value& fr = front->handle(interp);
 
-	if (bk.type != Handle::HType::Name)
+	if (fr.t_vType != Value::vType::Object)
 	{
-		interp.RuntimeError(this, "Cannot do MemberAccess with non-string property name!");
+		interp.RuntimeError(this, "Attempted to do MemberAccess on non-Object Value!");
 		return Value();
 	}
-	if (bk.is_function)
+	if (back->class_name() == "Identifier") // This should pretty much always be the case.
 	{
-		interp.RuntimeError(this, "MemberAccess cannot return Function pointers in this implementation!"); // Soon.
-		return Value();
-	}
-	if (fr.is_function)
-	{
-		interp.RuntimeError(this, "Illegal attempt to access members of a function or method!");
-		return Value();
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
+		if (v) return *v;
+		return Value(fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str()));
 	}
 
-	switch (fr.type)
-	{
-	default:
-		interp.RuntimeError(this, "Unknown or underimplemented HandleType used during MemberAccess!");
-	case(Handle::HType::Invalid):
-		return Value();
-	case(Handle::HType::Name):
-	{
-		Value vuh = interp.get_var(fr.name, this);
-		if (vuh.t_vType != Value::vType::Object)
-		{
-			interp.RuntimeError(this, "Cannot access method of non-object Value!");
-			return Value();
-		}
-		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
-	}
-	case(Handle::HType::Global):
-	{
-		Value vuh = interp.get_global(fr.name, this);
-		if (vuh.t_vType != Value::vType::Object)
-		{
-			interp.RuntimeError(this, "Cannot access method of non-object Value!");
-			return Value();
-		}
-		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
-	}
-	case(Handle::HType::Parent):
-	{
-		Value vuh = interp.get_property(fr.name, this);
-		if (vuh.t_vType != Value::vType::Object)
-		{
-			interp.RuntimeError(this, "Cannot access method of non-object Value!");
-			return Value();
-		}
-		return vuh.t_value.as_object_ptr->get_property(interp, bk.name);
-	}
-	}
-
-
-	interp.RuntimeError(this, "Unimplemented MemberAccess detected at runtime!");
+	// This is something confusing, then
+	interp.RuntimeError(this, "Unimplemented MemberAccess with second operand of type " + back->class_name() + "!");
 	return Value();
 }
 
-Handle MemberAccess::handle(Interpreter& interp) // Tons of similar code to MemberAccess::resolve(). Could be merged somehow?
+Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to MemberAccess::resolve(). Could be merged somehow?
 {
-	Handle fr = front->handle(interp);
-	//Has to always be a plain string handle
-	Handle bk = back->handle(interp);
-
-	if (bk.type != Handle::HType::Name)
+	Value& fr = front->handle(interp);
+	if (fr.t_vType != Value::vType::Object)
 	{
-		interp.RuntimeError(this, "Cannot do MemberAccess with non-string property name!");
-		return Handle();
+		interp.RuntimeError(this, "Attempted to do MemberAccess on non-Object Value!");
+		return Value::dev_null;
 	}
-	if (fr.is_function)
+	if (back->class_name() == "Identifier")
 	{
-		interp.RuntimeError(this, "Illegal attempt to access members of a function or method!");
-		return Handle();
-	}
-
-	switch (fr.type)
-	{
-	default:
-		interp.RuntimeError(this, "Unknown or underimplemented HandleType used during MemberAccess!");
-	case(Handle::HType::Invalid):
-		return Handle();
-	case(Handle::HType::Name): // A localscoped name of an object
-	{
-		Value vuh = interp.get_var(fr.name, this);
-		if (vuh.t_vType != Value::vType::Object) // Has to be an object
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
+		if (v) return *v;
+		Function* meth = fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str());
+		if (!meth)
 		{
-			interp.RuntimeError(this, "Cannot access method of non-object Value!");
-			return Handle();
+			interp.RuntimeError(this, "MemberAccess failed because member does not exist!");
+			return Value::dev_null;
 		}
-		/*
-		So we can't actually trust bk's understanding of whether or not it is a function,
-		since it may be a function of this object, but not visible in objectscope nor globalscope.
-
-		Honestly the whole Handle system right now is a bit hackish and could be improved to improve performance and reduce complexity;
-		definitely something to consider overhauling for v1.1 or v1.2.
-		*/
-
-		bk.is_function = vuh.t_value.as_object_ptr->get_method(interp, bk.name);
-
-		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
-
-	}
-	case(Handle::HType::Global): // A globalscope object
-	{
-		Value vuh = interp.get_global(fr.name, this);
-		if (vuh.t_vType != Value::vType::Object)
-		{
-			interp.RuntimeError(this, "Cannot access method of non-object Value!");
-			return Handle();
-		}
-		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
-	}
-	case(Handle::HType::Parent):
-	{
-		Value vuh = interp.get_property(fr.name, this);
-		if (vuh.t_vType != Value::vType::Object)
-		{
-			interp.RuntimeError(this, "Cannot access method of non-object Value!");
-			return Handle();
-		}
-		return Handle(vuh.t_value.as_object_ptr, bk.name, bk.is_function);
-	}
+		meth->set_obj(fr.t_value.as_object_ptr);
+		return *(new Value(meth));
 	}
 
-
-	interp.RuntimeError(this, "Unimplemented MemberAccess detected at runtime!");
-	return Handle();
-
+	// This is something confusing, then
+	interp.RuntimeError(this, "Unimplemented MemberAccess with second operand of type " + back->class_name() + "!");
+	return Value::dev_null;
 }
 
 std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
@@ -1039,19 +852,23 @@ Value ParentAccess::resolve(Interpreter& interp)
 	return interp.get_property(prop,this);
 }
 
-Handle ParentAccess::handle(Interpreter& interp)
+Value& ParentAccess::handle(Interpreter& interp)
 {
-	Handle hdl;
-	hdl.name = prop;
-	hdl.type = Handle::HType::Parent;
-	return hdl;
+	Object* o = interp.get_objectscope();
+	if (!o)
+	{
+		interp.RuntimeError(this, "Cannot do ParentAccess in classless function!");
+		return Value::dev_null;
+	}
+
+	return *(o->has_property(interp,prop));
 }
 
 Value GrandparentAccess::resolve(Interpreter& interp)
 {
 	return interp.grand_property(depth, prop, this);
 }
-Handle GrandparentAccess::handle(Interpreter& interp)
+Value& GrandparentAccess::handle(Interpreter& interp)
 {
 /*
 	So we might be a function or a property.
@@ -1066,23 +883,18 @@ Value GlobalAccess::resolve(Interpreter& interp)
 	return interp.get_global(var, this);
 }
 
-Handle GlobalAccess::handle(Interpreter& interp)
+Value& GlobalAccess::handle(Interpreter& interp)
 {
-	Handle hdl;
-	hdl.name = var;
-	hdl.type = Handle::HType::Global;
-	return hdl;
+	return *interp.has_global(var, this);
 }
+
+
 
 Value IndexAccess::resolve(Interpreter& interp)
 {
-	Handle h_lhs = container->handle(interp);
+	Value& lhs = container->handle(interp);
 	Value rhs = index->resolve(interp);
 
-	if (h_lhs.type != Handle::HType::Name)
-		interp.RuntimeError(this, "Indexing is not fully implemented in all grammatical circumstances!");
-
-	Value lhs = interp.get_var(h_lhs.name, this);
 	switch (lhs.t_vType)
 	{
 	default:
@@ -1104,31 +916,22 @@ Value IndexAccess::resolve(Interpreter& interp)
 			Table* la_table = static_cast<Table*>(obj);
 			return la_table->at(interp, rhs);
 		}
-		else
+
+		if (rhs.t_vType != Value::vType::String)
 		{
-			if (rhs.t_vType != Value::vType::String)
-			{
-				interp.RuntimeError(this, "Cannot index into an Object with a Value of type " + rhs.typestring() + "!");
-				return Value();
-			}
-			return obj->get_property(interp, *rhs.t_value.as_string_ptr);
+			interp.RuntimeError(this, "Cannot index into an Object with a Value of type " + rhs.typestring() + "!");
+			return Value();
 		}
-		
+
+		return obj->get_property(interp, *rhs.t_value.as_string_ptr);
 	}
 	}
 }
 
-Handle IndexAccess::handle(Interpreter& interp)
+Value& IndexAccess::handle(Interpreter& interp)
 {
-	Handle h_lhs = container->handle(interp);
+	Value& lhs = container->handle(interp);
 	Value rhs = index->resolve(interp);
-
-	if (h_lhs.type != Handle::HType::Name)
-	{
-		interp.RuntimeError(this, "Attempted illegal or underimplemented indexing operation!");
-	}
-
-	Value lhs = interp.get_var(h_lhs.name, this);
 
 	if (lhs.t_vType != Value::vType::Object) // FIXME: Allow for index-based setting of string data
 	{
@@ -1136,20 +939,8 @@ Handle IndexAccess::handle(Interpreter& interp)
 	}
 
 	Object* obj = lhs.t_value.as_object_ptr;
-	if(!obj->is_table())
+	if (!obj->is_table())
 		return MemberAccess(container, index).handle(interp); //FIXME: This is so fucked up but it makes so much sense; main issue is that runtimes will report themselves strangely
-
-	switch (rhs.t_vType)
-	{
-	case(Value::vType::String):
-		return Handle(obj, *rhs.t_value.as_string_ptr);
-	case(Value::vType::Integer):
-	{
-		return Handle(static_cast<Table*>(obj), rhs.t_value.as_int);
-	}
-	default:
-		interp.RuntimeError(this, "Unexpected or underimplemented type for index into Table: " + rhs.typestring() + "!");
-		return Handle();
-	}
-
+	//So it's a table then
+	return static_cast<Table*>(obj)->at_ref(interp, rhs);
 }

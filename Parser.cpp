@@ -874,6 +874,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		}
 		case(Token::cEnum::WordToken):
 		case(Token::cEnum::DirectoryToken):
+		case(Token::cEnum::ParentToken):
 		//If the Grammar serves me right, this is either a varstat or a functioncall.
 		//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
 		{
