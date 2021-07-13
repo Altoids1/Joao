@@ -8,6 +8,9 @@
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
+
+Value Value::dev_null = Value();
+
 std::string Value::to_string()
 {
 	switch (t_vType)
@@ -68,7 +71,7 @@ Value ASTNode::const_resolve(Parser& parse, bool loudfail)
 Value& ASTNode::handle(Interpreter& interp)
 {
 	interp.RuntimeError(this, "Attempted to turn " + class_name() + " into a variable handle!");
-	return *(new Value(Value::vType::Null, 1));; // Memory leak woooo
+	return Value::dev_null; // Memory leak woooo
 }
 
 
@@ -114,11 +117,6 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 	Value& lhs_val = id->handle(interp);
 
-
-	if (lhs_val.t_vType == Value::vType::Null && lhs_val.t_value.as_int == 1)
-	{
-		return Value();
-	}
 	if (lhs_val.t_vType == Value::vType::Function)
 	{
 		std::cout << "WARNING: Overwriting a Value which stores a function pointer!\n";
@@ -796,7 +794,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	if (fr.t_vType != Value::vType::Object)
 	{
 		interp.RuntimeError(this, "Attempted to do MemberAccess on non-Object Value!");
-		return *(new Value(Value::vType::Null, 1));
+		return Value::dev_null;
 	}
 	if (back->class_name() == "Identifier")
 	{
@@ -806,7 +804,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 		if (!meth)
 		{
 			interp.RuntimeError(this, "MemberAccess failed because member does not exist!");
-			return *(new Value(Value::vType::Null, 1));
+			return Value::dev_null;
 		}
 		meth->set_obj(fr.t_value.as_object_ptr);
 		return *(new Value(meth));
@@ -814,7 +812,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 
 	// This is something confusing, then
 	interp.RuntimeError(this, "Unimplemented MemberAccess with second operand of type " + back->class_name() + "!");
-	return *(new Value(Value::vType::Null, 1));
+	return Value::dev_null;
 }
 
 std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
@@ -860,7 +858,7 @@ Value& ParentAccess::handle(Interpreter& interp)
 	if (!o)
 	{
 		interp.RuntimeError(this, "Cannot do ParentAccess in classless function!");
-		return *(new Value(Value::vType::Null, 1));
+		return Value::dev_null;
 	}
 
 	return *(o->has_property(interp,prop));

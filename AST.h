@@ -28,6 +28,8 @@ public:
 		Function* as_function_ptr;
 	}t_value;
 
+	static Value dev_null;
+
 	//Constructors
 	Value()
 	{

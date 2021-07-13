@@ -39,7 +39,7 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 	{
 	default:
 		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
-		return *(new Value(Value::vType::Null, 1));
+		return Value::dev_null;
 	case(Value::vType::String): // Just use our properties, innit?
 		return *(has_property(interp, *index.t_value.as_string_ptr));
 	case(Value::vType::Integer):

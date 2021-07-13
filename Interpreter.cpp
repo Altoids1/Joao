@@ -138,7 +138,7 @@ Value& Interpreter::get_var(std::string varname, ASTNode *getter)
 
 	//Give up :(
 	RuntimeError(getter,"Unable to access variable named " + varname + "!");
-	return *(new Value(Value::vType::Null, 1));; // memory leak woooo
+	return Value::dev_null;
 }
 
 Function* Interpreter::get_func(std::string funkname, ASTNode *caller, bool loud)
@@ -232,7 +232,7 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 	if (!obj)
 	{
 		RuntimeError(getter, "Cannot get grandparent handle in classless objectscope!");
-		return *(new Value(Value::vType::Null, 1));
+		return Value::dev_null;
 	}
 
 	std::string dir = obj->object_type;
@@ -244,13 +244,13 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 	if (dir == "/")
 	{
 		RuntimeError(getter, "Attempted to get grandparent handle of root directory!");
-		return *(new Value(Value::vType::Null, 1));
+		return Value::dev_null;
 	}
 
 	if (!prog->definedObjTypes.count(dir))
 	{
 		RuntimeError(getter, "Failed to find objecttype of type " + dir + " during handle() of GrandparentAccess!"); // This'll be a weird error to get once inheritence is functional
-		return *(new Value(Value::vType::Null, 1));
+		return Value::dev_null;
 	}
 
 	ObjectType* objt = prog->definedObjTypes.at(dir);
@@ -270,7 +270,7 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 	}
 
 	RuntimeError(getter, "Failed to get property of Parent objectscope!");
-	return *(new Value(Value::vType::Null, 1));
+	return Value::dev_null;
 }
 
 Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTNode* maker)
