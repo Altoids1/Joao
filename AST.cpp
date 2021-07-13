@@ -598,7 +598,7 @@ Value CallExpression::resolve(Interpreter& interp)
 	Object* obj = fptr->get_obj();
 	if (obj)
 	{
-		return obj->call_method(interp, fptr->get_name(), vargs);
+		return obj->call_method(interp, Directory::lastword(fptr->get_name()), vargs);
 	}
 
 	fptr->give_args(interp, vargs);
@@ -802,7 +802,14 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	{
 		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
 		if (v) return *v;
-		return *(new Value(fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str())));
+		Function* meth = fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str());
+		if (!meth)
+		{
+			interp.RuntimeError(this, "MemberAccess failed because member does not exist!");
+			return *(new Value(Value::vType::Null, 1));
+		}
+		meth->set_obj(fr.t_value.as_object_ptr);
+		return *(new Value(meth));
 	}
 
 	// This is something confusing, then
