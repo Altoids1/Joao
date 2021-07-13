@@ -18,30 +18,53 @@ Somewhat dynamically typed but lets not get too angsty about it
 
 #include <chrono>
 
+template <typename Ty_>
+bool has(const std::vector<Ty_>& v, const Ty_& value)
+{
+	for (Ty_ thing : v)
+	{
+		if (thing == value)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 int main(int argc, char** argv)
 {
 	
-	std::string first_arg;
-
-
-	if (argc == 1 || (first_arg = argv[1]) == "-i" ) 
+	std::vector<Args::Flags> flags;
+	std::string filestr = Args::read_args(flags,argc,argv);
+	bool print_main_result = false;
+#ifdef _DEBUG
+	bool print_execution_times = true;
+#else
+	bool print_execution_times = false;
+#endif
+	if ((flags.empty() && filestr.empty()) || has(flags,Args::Flags::Interactive)) 
 	{
 		Args::print_version();
 		Args::interactive_mode();
-		//std::cout << "ERROR: No file provided for execution!\n";
 		exit(0);
 	}
-
-	if (first_arg == "-v")
+	if (has(flags, Args::Flags::Version))
 	{
 		Args::print_version();
-		exit(0);
 	}
-
-	if (first_arg == "-h")
+	if (has(flags, Args::Flags::Help))
 	{
 		Args::print_help();
 		exit(0);
+	}
+
+	if (has(flags, Args::Flags::Main))
+	{
+		print_main_result = true;
+	}
+	if (has(flags, Args::Flags::Executetime))
+	{
+		print_execution_times = true;
 	}
 
 
@@ -49,22 +72,24 @@ int main(int argc, char** argv)
 	Program parsed;
 	std::chrono::steady_clock::time_point t1;
 	std::ifstream file;
-	std::cout << "Opening file " << argv[1] << "...\n";
-	file.open(argv[1]);
+	std::cout << "Opening file " << filestr << "...\n";
+	file.open(filestr);
 	if (!file.good())
 	{
-		std::cout << "Unable to open file " << argv[1] << "!\n";
+		std::cout << "Unable to open file " << filestr << "!\n";
 		exit(1);
 	}
 	t1 = std::chrono::steady_clock::now();
 	Scanner scn;
 	scn.scan(file);
 	file.close();
-	std::cout << "Scanning took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
+	if(print_execution_times)
+		std::cout << "Scanning took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 	t1 = std::chrono::steady_clock::now();
 	Parser pears(scn);
 	parsed = pears.parse();
-	std::cout << "Parsing took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
+	if (print_execution_times)
+		std::cout << "Parsing took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 
 
 	t1 = std::chrono::steady_clock::now();
@@ -85,9 +110,12 @@ int main(int argc, char** argv)
 
 	//Execute!
 	Value v = interpreter.execute(parsed, jargs);
-
-	std::cout << "Execution took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
-
+	if (print_main_result)
+	{
+		std::cout << v.to_string();
+	}
+	if (print_execution_times)
+		std::cout << "Execution took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 #ifdef PRINT_MAIN_RETURN_VAL
 	std::cout << v.to_string();
 #endif

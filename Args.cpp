@@ -4,6 +4,41 @@
 #include "Parser.h"
 #include "Interpreter.h"
 
+std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv)
+{
+	for (int i = 1; i < argc; ++i)
+	{
+		if (_strcmpi(argv[i], "-i") == 0)
+		{
+			v.push_back(Flags::Interactive);
+			continue;
+		}
+		if (_strcmpi(argv[i], "-v") == 0)
+		{
+			v.push_back(Flags::Version);
+			continue;
+		}
+		if (_strcmpi(argv[i], "-h") == 0)
+		{
+			v.push_back(Flags::Help);
+			continue;
+		}
+		if (_strcmpi(argv[i], "-m") == 0)
+		{
+			v.push_back(Flags::Main);
+			continue;
+		}
+		if (_strcmpi(argv[i], "-e") == 0)
+		{
+			v.push_back(Flags::Executetime);
+			continue;
+		}
+
+		//If this isn't any of these argless flags then I guess it's the file
+		return std::string(argv[i]);
+	}
+	return std::string();
+}
 
 void Args::print_version()
 {
@@ -16,6 +51,8 @@ void Args::print_help()
 	std::cout << "  -v\tshow version information\n";
 	std::cout << "  -h\tshow help dialog\n";
 	std::cout << "  -i\tenter interactive mode\n";
+	std::cout << "  -m\tprints the output of /main() into stdout after program completion\n";
+	std::cout << "  -e\tprints the execution time. On by default when compiled with _DEBUG.\n";
 }
 
 //Tries to run the given chunk of strings as if they were all statements in the /main(){} of a program with nothing else in it.
