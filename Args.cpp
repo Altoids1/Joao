@@ -4,6 +4,11 @@
 #include "Parser.h"
 #include "Interpreter.h"
 
+#ifdef __linux__ && __GNUG__
+#include <strings.h>
+#define _strcmpi strcasecmp
+#endif
+
 std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv)
 {
 	for (int i = 1; i < argc; ++i)
