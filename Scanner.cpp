@@ -470,7 +470,9 @@ void Scanner::scan(std::ifstream& ifst)
 			std::string strfile = getString(start);
 
 			std::ifstream includedfile;
+#ifdef _DEBUG
 			std::cout << "Opening file " << strfile << "...\n";
+#endif
 			includedfile.open(strfile);
 			if (!includedfile.good())
 			{

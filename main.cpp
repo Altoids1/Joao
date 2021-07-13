@@ -72,7 +72,9 @@ int main(int argc, char** argv)
 	Program parsed;
 	std::chrono::steady_clock::time_point t1;
 	std::ifstream file;
+#ifdef _DEBUG
 	std::cout << "Opening file " << filestr << "...\n";
+#endif
 	file.open(filestr);
 	if (!file.good())
 	{
