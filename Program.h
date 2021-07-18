@@ -48,6 +48,7 @@ public:
 	void construct_string_library();
 	ObjectType* construct_table_library();
 	ObjectType* construct_file_library();
+	ObjectType* construct_error_library();
 
 	void dump()
 	{

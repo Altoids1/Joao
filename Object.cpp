@@ -22,10 +22,33 @@ Value Object::get_property(Interpreter& interp, std::string name)
 	interp.RuntimeError(nullptr, "Unable to access property of object!");
 	return Value();
 }
+Value Object::get_property_raw(std::string name)
+{
+	if (properties.count(name))
+		return properties.at(name);
+	if (base_properties->count(name))
+		return base_properties->at(name);
+	return Value();
+}
 void Object::set_property(Interpreter& interp, std::string name, Value rhs)
 {
 	if (base_properties->count(name) == 0)
 		interp.RuntimeError(nullptr, "Unable to access property of object!");
+
+	if (properties.count(name))
+	{
+		properties.erase(name);
+		properties[name] = rhs;
+	}
+	else
+	{
+		properties[name] = rhs;
+	}
+}
+void Object::set_property_raw(std::string name, Value rhs)
+{
+	if (base_properties->count(name) == 0)
+		return;
 
 	if (properties.count(name))
 	{
@@ -122,6 +145,11 @@ void ObjectType::set_typeproperty(Parser& parse, std::string name, Value v)
 		parse.ParserError(nullptr, "Duplicate property of ObjectType detected!");
 	}
 
+	typeproperties[name] = v;
+}
+
+void ObjectType::set_typeproperty_raw(std::string name, Value v)
+{
 	typeproperties[name] = v;
 }
 

@@ -130,6 +130,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 	construct_string_library();
 	cooked_classes["/table"] = construct_table_library();
 	cooked_classes["/file"] = construct_file_library();
+	cooked_classes["/error"] = construct_error_library();
 
 	return cooked_classes;
 }
