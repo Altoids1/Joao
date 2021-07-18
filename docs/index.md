@@ -1,4 +1,4 @@
-# Documentation for João v1.1.0
+# Documentation for João v1.2.0
 
 <img src="https://user-images.githubusercontent.com/29939414/114955666-c9ffe700-9e22-11eb-95fd-649fd2ef250b.png">
 
@@ -11,6 +11,8 @@
 [2. Types and Values](TypesValues.md)
 
 [3. Expressions](Expressions.md)
+
+[4. Scope](Scope.md)
 
 ## License
 

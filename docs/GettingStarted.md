@@ -134,4 +134,4 @@ Olha que coisa mais linda, mais cheia de graça
 }
 ```
 
-Starting a long comment on anything but the very beginning of a line is forbidden.
+Starting a long comment on anything but the very beginning of a line (ignoring whitespace) is forbidden. Further, long comments cannot occur on the same line as functional code.

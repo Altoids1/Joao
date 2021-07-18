@@ -1,6 +1,6 @@
 # 3. Expressions
 
-**Expressions** are phrases that, once run, resolve to being a Value.
+**Expressions** are phrases that resolve to being a Value.
 
 Many things are expressions in João: **Numbers** and **Strings**, **Variables**, **function calls**, **Constructors**, as well as **unary** and **binary** operations of all of those things.
 
@@ -8,9 +8,9 @@ Many things are expressions in João: **Numbers** and **Strings**, **Variables**
 
 ### Arithmetic
 
-João is capable of any and all mathematics that one would expect to be able to do on a scientific calculator. As such, many common arithmetic operations are available, '+' (addition), '\*' multiplication, '/' (division), and others, which are listed in full later in this chapter.
+João is capable of any and all mathematics that one can do on a scientific calculator. As such, many common arithmetic operations are available, '+' (addition), '\*' multiplication, '/' (division), and others, which are listed in full later in this chapter.
 
-João distinguishes between two types of operations: **binary** (meaning that it is something with two, such as ``a + b``) and **unary** (meaning that it is something done on only one input, such as ``-a``).
+João distinguishes between two types of operations: **binary** (meaning that it is something with two inputs, such as ``a + b``) and **unary** (meaning that it is something done on only one input, such as ``-a``).
 
 ### Comparison
 
@@ -80,7 +80,8 @@ Operators | Associativity
 \< \<= \> \>= != | Left
 && \|\| ~~ | Left
 
-**Left** Associativity on this chart indicates that, when the operators of a given precedence are repeated (such as ``a + b + c`` or ``a \* b \/ c`` that the expression is evaluated from left to right. That is to say, that a + b + c is evaluated as (a + b) + c.
+**Left** Associativity on this chart indicates that, when the operators of a given precedence are repeated (such as ``a + b + c`` or ``a * b / c``
+ that the expression is evaluated from left to right. That is to say, that a + b + c is evaluated as (a + b) + c.
 
 **Right** Associativity is instead right-to-left. For instance, ``a ^ b ^ c`` is instead evaluated as a ^ (b ^ c). This is not meant to be confusing, but to correctly implement the user's expectation for what given operators (such as exponents) ought to do.
 
