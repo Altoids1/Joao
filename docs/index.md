@@ -4,6 +4,8 @@
 
 **Note:** This documentation is a work-in-progress. Several features are underdocumented, or not documented at all. In addition, new features may be added to the language over time, which may not coincide with an update to this documentation.
 
+**Nota:** Há uma tradução da documentaço em português [aqui](pt/GettingStarted.md)
+
 ## Index
 
 [1. Getting Started](GettingStarted.md)
