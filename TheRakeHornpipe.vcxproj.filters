@@ -60,6 +60,9 @@
     <ClCompile Include="Args.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="nativefuncs\error.cpp">
+      <Filter>Source Files\nativeLibrary</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AST.h">

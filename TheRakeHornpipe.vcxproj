@@ -155,6 +155,7 @@
     <ClCompile Include="Directory.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="nativefuncs\error.cpp" />
     <ClCompile Include="nativefuncs\file.cpp" />
     <ClCompile Include="nativefuncs\math.cpp" />
     <ClCompile Include="nativefuncs\string.cpp" />
