@@ -19,10 +19,10 @@ Variables declared in this way will persist until the block in which they were d
 {
 	if(true)
 	{
-		Value x = 6; // x exists within this if statement!
+		Value x = 6; ## x exists within this if statement!
 	}
-	//x no longer exists!
-	print(x); // This will throw a runtime!
+	##x no longer exists!
+	print(x); ## This will throw a runtime!
 }
 ```
 
@@ -127,4 +127,4 @@ When you invoke the name of a variable, such as one named ``my_variable``, João
 
 If all else fails, João gives a runtime and returns a value containing ``null``.
 
-If the scoping operators are used (such as ``../``, ``./``, and ``/``), then only the specific scope in question is attempted, and a ``null`` and runtime are returned upon failure to access.
+If the scoping operators are used (such as ``../``, ``./``, and ``/``), then the disambiguation process is skipped, and a ``null`` and runtime are returned upon failure to access at the explicitly-requested scope.

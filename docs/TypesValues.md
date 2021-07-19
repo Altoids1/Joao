@@ -83,7 +83,7 @@ Despite those automatic conversions, strings and numbers are different things. A
 
 # 2.2 - Objects
 
-**Objects** are the bread and butter of João. They use the directory system to organize groups of code and variables into organized groups which can be used together to form some greater, more complex thing.
+**Objects** are the bread and butter of João. They use the directory system to organize groups of code and variables into which can be used together to form some greater, more complex thing.
 
 Since their concept is a bit abstract, lets start with a concrete example. Lets say you want to make a video game, and ergo might want something that can store the state of a particular player. You may want to, on a player-by-player basis, store things like their health and position on the map. Here's an object-oriented way of storing such data:
 
