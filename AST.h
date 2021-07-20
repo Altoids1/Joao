@@ -662,7 +662,10 @@ public:
 		{
 			str += statements[i]->dump(indent + 1);
 		}
-
+		if (Elseif)
+		{
+			str += Elseif->dump(indent);
+		}
 		return str;
 	}
 };
