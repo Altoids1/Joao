@@ -39,7 +39,7 @@ Value Interpreter::execute(Program& program, Value& jarg)
 void Interpreter::RuntimeError(ASTNode* a, std::string what)
 {
 	std::cout << "- - - - - - - - - - - - - - - -\n";
-	std::cout << "RUNTIME_ERROR: " << what << "\n";
+	std::cout << "FATAL RUNTIME ERROR: " << what << "\n";
 	
 	//Stack dump
 	std::string whatfunk;
@@ -63,12 +63,15 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 	}
 	
 	std::cout << "\nRuntime in " << blockscope.top()->get_back_name() << ", a " << whatfunk << std::endl;
-
-#ifdef EXIT_ON_RUNTIME
 	if(!is_interactive)
 		exit(1);
-#endif
-	did_error = true;
+}
+
+void Interpreter::RuntimeError(ASTNode* node, ErrorCode err, const std::string& what)
+{
+
+	error = prog->definedObjTypes["/error"]->makeObject(*this, {Value(static_cast<int>(err)),Value(what)});
+	return;
 }
 
 void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
@@ -137,7 +140,7 @@ Value& Interpreter::get_var(std::string varname, ASTNode *getter)
 	}
 
 	//Give up :(
-	RuntimeError(getter,"Unable to access variable named " + varname + "!");
+	RuntimeError(getter, ErrorCode::BadAccess, "Unable to access variable named " + varname + "!");
 	return Value::dev_null;
 }
 
@@ -159,7 +162,7 @@ Function* Interpreter::get_func(std::string funkname, ASTNode *caller, bool loud
 	}
 
 	if(loud)
-		RuntimeError(caller,"Failed to find function named " + funkname + "!");
+		RuntimeError(caller, ErrorCode::BadAccess, "Failed to find function named " + funkname + "!");
 	return nullptr;
 }
 
@@ -170,7 +173,7 @@ Value Interpreter::get_property(std::string str, ASTNode* getter)
 	{
 		return obj->get_property(*this,str);
 	}
-	RuntimeError(getter, "Failed to get property of Parent objectscope!");
+	RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to get property of Parent objectscope!");
 	return Value();
 }
 
@@ -183,7 +186,7 @@ void Interpreter::set_property(std::string str, Value val, ASTNode* getter)
 		obj->set_property(*this, str, val);
 		return;
 	}
-	RuntimeError(getter, "Failed to set property of Parent objectscope!");
+	RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to set property of Parent objectscope!");
 	return;
 }
 
@@ -192,7 +195,7 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 	Object* obj = objectscope.top();
 	if (!obj)
 	{
-		RuntimeError(getter, "Cannot get grandparent property in classless objectscope!");
+		RuntimeError(getter, ErrorCode::BadMemberAccess, "Cannot get grandparent property in classless objectscope!");
 		return Value();
 	}
 
@@ -204,26 +207,18 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 	}
 	if (dir == "/")
 	{
-		RuntimeError(getter, "Attempted to get grandparent of root directory!");
+		RuntimeError(getter, ErrorCode::BadMemberAccess, "Attempted to get grandparent of root directory!");
 		return Value();
 	}
 
 	if (!prog->definedObjTypes.count(dir))
 	{
-		RuntimeError(getter, "Failed to find objecttype of type " + dir + " during GrandparentAccess!"); // This'll be a weird error to get once inheritence is functional
+		RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to find objecttype of type " + dir + " during GrandparentAccess!"); // This'll be a weird error to get once inheritence is functional
 		return Value();
 	}
 
 	ObjectType* objt = prog->definedObjTypes.at(dir);
 	return objt->get_typeproperty(*this, str, getter);
-	
-	
-	if (obj)
-	{
-		return obj->get_property(*this, str);
-	}
-	RuntimeError(getter, "Failed to get property of Parent objectscope!");
-	return Value();
 }
 
 Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* getter)
@@ -231,7 +226,7 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 	Object* obj = objectscope.top();
 	if (!obj)
 	{
-		RuntimeError(getter, "Cannot get grandparent handle in classless objectscope!");
+		RuntimeError(getter, ErrorCode::BadMemberAccess, "Cannot get grandparent handle in classless objectscope!");
 		return Value::dev_null;
 	}
 
@@ -243,13 +238,13 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 	}
 	if (dir == "/")
 	{
-		RuntimeError(getter, "Attempted to get grandparent handle of root directory!");
+		RuntimeError(getter, ErrorCode::BadMemberAccess, "Attempted to get grandparent handle of root directory!");
 		return Value::dev_null;
 	}
 
 	if (!prog->definedObjTypes.count(dir))
 	{
-		RuntimeError(getter, "Failed to find objecttype of type " + dir + " during handle() of GrandparentAccess!"); // This'll be a weird error to get once inheritence is functional
+		RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to find objecttype of type " + dir + " during GrandparentAccess!"); // This'll be a weird error to get once inheritence is functional
 		return Value::dev_null;
 	}
 
@@ -269,7 +264,7 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 		return *(new Value(fnuh));
 	}
 
-	RuntimeError(getter, "Failed to get property of Parent objectscope!");
+	RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to get property of Parent objectscope!");
 	return Value::dev_null;
 }
 

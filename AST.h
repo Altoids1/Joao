@@ -523,7 +523,7 @@ public:
 		t_argnames = sargs;
 		my_line = linenum;
 	}
-	void give_args(Interpreter&, std::vector<Value>&, Object*);
+	void give_args(Interpreter&, const std::vector<Value>&, Object*);
 	Function* append(Expression* expr)
 	{
 		statements.push_back(expr);

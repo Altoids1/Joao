@@ -96,7 +96,7 @@ bool Args::run_code_block(std::vector<std::string*>& statements)
 
 	dummy_file.close();
 	std::remove(file_name);
-	return !(interp.did_error);
+	return !(interp.error);
 }
 
 void Args::interactive_mode()

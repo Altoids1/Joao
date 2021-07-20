@@ -31,15 +31,15 @@ ObjectType* Program::construct_error_library()
 			obj->set_property_raw("what", args[1].to_string());
 		case(1):
 			if (args[0].t_vType != Value::vType::Integer && args[0].t_vType != Value::vType::Double)
-				return Value(false);
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			obj->set_property_raw("errcode", args[0]);
 		case(0):
 			break;
 		}
 
-		return Value(true); // If anything.
+		return Value(); // If anything.
 	}));
-	error->set_typemethod_raw("#to_string", new NativeMethod("#to_string", [](std::vector<Value> args, Object* obj) {
+	error->set_typemethod_raw("#tostring", new NativeMethod("#tostring", [](std::vector<Value> args, Object* obj) {
 		return obj->get_property_raw("what");
 	}));
 

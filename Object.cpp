@@ -19,7 +19,7 @@ Value Object::get_property(Interpreter& interp, std::string name)
 	if (base_properties->count(name))
 		return base_properties->at(name);
 	
-	interp.RuntimeError(nullptr, "Unable to access property of object!");
+	interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access property of object!");
 	return Value();
 }
 Value Object::get_property_raw(std::string name)
@@ -33,8 +33,10 @@ Value Object::get_property_raw(std::string name)
 void Object::set_property(Interpreter& interp, std::string name, Value rhs)
 {
 	if (base_properties->count(name) == 0)
-		interp.RuntimeError(nullptr, "Unable to access property of object!");
-
+	{
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access property of object!");
+		return;
+	}
 	if (properties.count(name))
 	{
 		properties.erase(name);
@@ -75,7 +77,7 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 	}
 	else
 	{
-		interp.RuntimeError(nullptr, "Unable to access method of object: " + name);
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access method of object: " + name);
 		return Value();
 	}
 	
@@ -100,7 +102,7 @@ Function* Object::get_method(Interpreter& interp, std::string name)
 
 /* Object Type */
 
-Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>& args)
+Object* ObjectType::makeObject(Interpreter& interp, const std::vector<Value>& args)
 {
 	Object* o;
 	if (is_table_type)
@@ -121,7 +123,7 @@ Value ObjectType::get_typeproperty(Interpreter& interp, std::string str, ASTNode
 {
 	if (!typeproperties.count(str))
 	{
-		interp.RuntimeError(getter, "Failed to access property " + str + " of grandparent " + object_type + "!");
+		interp.RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to access property " + str + " of grandparent " + object_type + "!");
 		return Value();
 	}
 	return typeproperties.at(str);

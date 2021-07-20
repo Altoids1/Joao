@@ -21,11 +21,6 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	std::unordered_map<std::string, ObjectType*> definedObjTypes;
 	Interpreter* myinterp{ nullptr };
 public:
-	enum class ErrorCode : int {
-		NoError,
-		BadArgType,
-		NotEnoughArgs
-	};
 
 	bool is_malformed = false;
 

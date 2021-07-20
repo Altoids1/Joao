@@ -84,7 +84,7 @@ public:
 	}
 
 	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
-	Object* makeObject(Interpreter&, std::vector<Value>&);
+	Object* makeObject(Interpreter&, const std::vector<Value>&);
 
 	Value get_typeproperty(Interpreter&, std::string, ASTNode*);
 
