@@ -206,7 +206,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	return;
 }
 
-//Here-there-update; updates through readlvalue.
+//Here-there-update; updates through readlvalue and readPower.
 ASTNode* Parser::readUnary(int here, int there)
 {
 	if (tokens[here]->class_enum() != Token::cEnum::SymbolToken)
@@ -518,6 +518,22 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 				
 				//ALL THIS ASSUMES LEFT-ASSOCIATIVITY, AS IN ((1 + 2) + 3) + 4
 
+				/*
+				So in some instances it's necessary to disambiguate whether a symbol is meant as a unary operation or a binary operation, such as with the minus sign (-).
+				The way that this is disambiguated is by determining if the symbol is at occurring at the very start of the expression, or immediately after another, different symbol;
+				"-A" and
+				"A+-B", for example.
+				readBinExp() doesn't really know or care about the distinction between these two things, but there does need to be the following special case to detect for a unary,
+				which is written generically in case other ambiguous unary/binary symbols are added to the language besides the minus symbol.
+				*/
+
+				if (here == where) // If this symbol occurred at the VERY start of this expression
+				{
+					//Then it's actually a unary operation I think
+					lhs = readUnary(here, there);
+					where = tokenheader - 1;
+					continue;
+				}
 
 				if (!lhs)
 				{
