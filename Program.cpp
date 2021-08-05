@@ -29,6 +29,25 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		std::cout << "\n";
 		return Value();
 	});
+	definedFunctions["input"] = new NativeFunction("input", [](std::vector<Value> args) // Analogous to Lua's io.read() function.
+	{
+		if (args.size())
+		{
+			const Value& arg = args[0];
+			if (arg.t_vType == Value::vType::Integer) // Attempts to read in a specific number of characters
+			{
+				char* str = new char[arg.t_value.as_int + 1];
+				std::cin.read(str, arg.t_value.as_int);
+				str[arg.t_value.as_int] = '\0'; // Just making absolutely sure that this is null-terminated
+				return Value(std::string(str));
+			}
+		}
+		std::string imp;
+		std::cin >> imp;
+		if(imp.empty())
+			return Value();
+		return Value(imp);
+	});
 	definedFunctions["tostring"] = new NativeFunction("tostring", [](std::vector<Value> args)
 	{
 		return Value(args[0].to_string());
