@@ -362,3 +362,11 @@ MigrationBackup/
 #*.vcxproj.filters
 testprograms/debug.jao
 __joao_interactive
+
+## Stupid VScode stuff
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+
+## binaries
+joao
+Joao.exe
