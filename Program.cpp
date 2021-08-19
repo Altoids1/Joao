@@ -6,6 +6,7 @@
 	#include "./nativefuncs/string.cpp"
 	#include "./nativefuncs/tablelib.cpp"
 	#include "./nativefuncs/file.cpp"
+	#include "./nativefuncs/error.cpp"
 #endif
 
 std::unordered_map<std::string,ObjectType*> Program::construct_natives()

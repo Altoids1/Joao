@@ -542,7 +542,7 @@ Value Function::resolve(Interpreter & interp)
 			{
 				Value ret = rt.resolve(interp); // Resolve it first
 				interp.pop_stack(); // THEN pop the stack
-
+				obj = nullptr; // Reset object
 				if (interp.BREAK_COUNTER)
 				{
 					interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
@@ -560,11 +560,19 @@ Value Function::resolve(Interpreter & interp)
 			{
 				interp.FORCE_RETURN = false;
 				interp.pop_stack();
+				obj = nullptr; // Reset object
 				if (interp.BREAK_COUNTER)
 				{
 					interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
 					interp.BREAK_COUNTER = 0;
 				}
+				return vuh;
+			}
+			if(interp.error) // Oh no, an uncaught runtime!
+			{
+				interp.pop_stack();
+				obj = nullptr; // Reset object
+				interp.UncaughtRuntime(interp.error);
 				return vuh;
 			}
 		}
@@ -653,9 +661,9 @@ Value NativeMethod::resolve(Interpreter& interp)
 	return result; // Woag.
 }
 
-Value Block::iterate_statements(Interpreter& interp)
+Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 {
-	for (auto it = statements.begin(); it != statements.end(); ++it)
+	for (auto it = state.begin(); it != state.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.
 		Expression* ptr = *it;
@@ -667,29 +675,34 @@ Value Block::iterate_statements(Interpreter& interp)
 			if (rt.has_expr) // If this actually has something to return
 			{
 				Value ret = rt.resolve(interp); // Get the return		
-				interp.pop_block(); // THEN pop the stack
+				//interp.pop_block(); // THEN pop the stack
 				return ret; // THEN return the value.
 			}
-			interp.pop_block();
+			//interp.pop_block();
 			return Value();
 		}
 		else if (ptr->class_name() == "BreakStatement")
 		{
 			ptr->resolve(interp);
-			interp.pop_block();
+			//interp.pop_block();
 			return Value();
 		}
 		else
 		{
 			Value vuh = ptr->resolve(interp); // I dunno.
-			if (interp.FORCE_RETURN)
+			if (interp.FORCE_RETURN || interp.error)
 			{
-				interp.pop_block();
+				//interp.pop_block();
 				return vuh;
 			}
 		}
 	}
 	return Value();
+}
+
+Value Block::iterate_statements(Interpreter& interp)
+{
+	iterate(statements,interp);
 }
 
 Value IfBlock::resolve(Interpreter& interp)
@@ -706,11 +719,9 @@ Value IfBlock::resolve(Interpreter& interp)
 
 	interp.push_block("if");
 	Value blockret = iterate_statements(interp);
-	
-	if (interp.FORCE_RETURN || interp.BREAK_COUNTER)
+	interp.pop_block();
+	if (interp.FORCE_RETURN || interp.BREAK_COUNTER || interp.error)
 		return blockret;
-	else
-		interp.pop_block();
 	return Value();
 }
 
@@ -725,10 +736,14 @@ Value ForBlock::resolve(Interpreter& interp)
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
 			return blockret;
 		}
-		if (interp.FORCE_RETURN)
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
 			return blockret;
+		}
 		increment->resolve(interp);
 	}
 	interp.pop_block();
@@ -747,11 +762,13 @@ Value WhileBlock::resolve(Interpreter& interp)
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1;
+			interp.pop_block();
 			return blockret;
 		}
-		if (interp.FORCE_RETURN)
+		if (interp.FORCE_RETURN || interp.error)
 		{
 			//std::cout << "Whileloop got to FORCE_RETURN!\n";
+			interp.pop_block();
 			return blockret;
 		}
 	}
@@ -951,4 +968,26 @@ Value& IndexAccess::handle(Interpreter& interp)
 		return MemberAccess(container, index).handle(interp); //FIXME: This is so fucked up but it makes so much sense; main issue is that runtimes will report themselves strangely
 	//So it's a table then
 	return static_cast<Table*>(obj)->at_ref(interp, rhs);
+}
+
+Value TryBlock::resolve(Interpreter& interp)
+{
+	interp.push_block("try");
+	Value ret = iterate_statements(interp);
+	interp.pop_block();
+	if(interp.error) // ah, we caught an error, cool
+	{
+		interp.push_block("catch");
+		interp.init_var(err_name,interp.error,this); // init the error parameter
+		interp.error = Value();
+		Value ret = iterate(catch_statements,interp);
+		if(interp.error)
+		{
+			interp.UncaughtRuntime(interp.error);
+		}
+		interp.pop_block();
+		return ret;
+	}
+	return ret;
+
 }

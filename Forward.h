@@ -14,6 +14,10 @@
 	#include <cmath>
 #endif
 
+#ifdef DEBUG
+#define _DEBUG
+#endif
+
 #ifdef _DEBUG
 
 //Debug flags

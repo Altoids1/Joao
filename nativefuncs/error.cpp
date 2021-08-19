@@ -32,7 +32,7 @@ ObjectType* Program::construct_error_library()
 		case(1):
 			if (args[0].t_vType != Value::vType::Integer && args[0].t_vType != Value::vType::Double)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-			obj->set_property_raw("errcode", args[0]);
+			obj->set_property_raw("code", args[0]);
 		case(0):
 			break;
 		}

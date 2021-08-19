@@ -76,6 +76,8 @@ public:
 	//Treated as a runtime which can be resumed from.
 	void RuntimeError(ASTNode* node, ErrorCode err, const std::string&);
 
+	void UncaughtRuntime(const Value& err);
+
 	//Pushes a new blockstack and objstack layer
 	void push_stack(std::string name = "", Object* obj = nullptr)
 	{

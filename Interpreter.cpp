@@ -67,11 +67,19 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 		exit(1);
 }
 
-void Interpreter::RuntimeError(ASTNode* node, ErrorCode err, const std::string& what)
+void Interpreter::RuntimeError(ASTNode* node, ErrorCode err,const std::string& what)
 {
-
-	error = prog->definedObjTypes["/error"]->makeObject(*this, {Value(static_cast<int>(err)),Value(what)});
+	Value str = Value(what);
+	error = Value(prog->definedObjTypes["/error"]->makeObject(*this, {Value(static_cast<int>(err)),str}));
+	assert(error.t_value.as_object_ptr->get_property_raw("what").t_vType == Value::vType::String);
 	return;
+}
+void Interpreter::UncaughtRuntime(const Value& err)
+{
+	std::cout << *(err.t_value.as_object_ptr->get_property(*this,"what").t_value.as_string_ptr);
+#ifdef EXIT_ON_RUNTIME
+	exit(1);
+#endif
 }
 
 void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
@@ -140,7 +148,7 @@ Value& Interpreter::get_var(std::string varname, ASTNode *getter)
 	}
 
 	//Give up :(
-	RuntimeError(getter, ErrorCode::BadAccess, "Unable to access variable named " + varname + "!");
+	RuntimeError(getter, ErrorCode::BadAccess, std::string("Unable to access variable named ") + varname + std::string("!"));
 	return Value::dev_null;
 }
 
