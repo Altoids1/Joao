@@ -702,7 +702,7 @@ Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 
 Value Block::iterate_statements(Interpreter& interp)
 {
-	iterate(statements,interp);
+	return iterate(statements,interp);
 }
 
 Value IfBlock::resolve(Interpreter& interp)

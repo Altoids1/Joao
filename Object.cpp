@@ -116,6 +116,8 @@ Object* ObjectType::makeObject(Interpreter& interp, const std::vector<Value>& ar
 		fuh->give_args(interp, args, o);
 		fuh->resolve(interp);
 	}
+
+
 	return o;
 }
 

@@ -4,6 +4,8 @@
 ObjectType* Program::construct_error_library()
 {
 	ObjectType* error = new ObjectType("/error");
+	error->set_typeproperty_raw("what", Value());
+	error->set_typeproperty_raw("code", Value());
 
 	/*
 	/error
@@ -28,7 +30,7 @@ ObjectType* Program::construct_error_library()
 		{
 		default:
 		case(2):
-			obj->set_property_raw("what", args[1].to_string());
+			obj->set_property_raw("what", args[1]);
 		case(1):
 			if (args[0].t_vType != Value::vType::Integer && args[0].t_vType != Value::vType::Double)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
