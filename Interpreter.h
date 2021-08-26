@@ -76,6 +76,10 @@ public:
 	//Treated as a runtime which can be resumed from.
 	void RuntimeError(ASTNode* node, ErrorCode err, const std::string&);
 
+	//RuntimeError as called by the Throw keyword
+	//This assumes that err_val has already been type-checked by someone higher up in the stack
+	void RuntimeError(ASTNode* node, Value& err_val);
+
 	void UncaughtRuntime(const Value& err);
 
 	//Pushes a new blockstack and objstack layer

@@ -991,3 +991,23 @@ Value TryBlock::resolve(Interpreter& interp)
 	return ret;
 
 }
+
+Value ThrowStatement::resolve(Interpreter& interp)
+{
+	if (!err_node)
+	{
+		interp.RuntimeError(this, ErrorCode::Unknown, "Exception thrown!");
+		return Value();
+	}
+
+	Value val = err_node->resolve(interp);
+	if (!val || val.t_vType != Value::vType::Object || val.t_value.as_object_ptr->object_type != "/error")
+	{
+		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "Throw keyword invoked with non-error operand!");
+		return Value();
+	}
+
+	interp.RuntimeError(this, val);
+
+	return Value(); // If anything.
+}

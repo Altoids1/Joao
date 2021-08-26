@@ -1007,3 +1007,23 @@ public:
 		return str;
 	}
 };
+
+class ThrowStatement : public Expression
+{
+	ASTNode* err_node; // Node that is supposed to be an error object
+public:
+	ThrowStatement(ASTNode* e)
+		:err_node(e)
+	{
+
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "Throw"; }
+
+	virtual std::string dump(int indent)
+	{
+		const std::string ind = std::string(indent, ' ');
+		return ind + "Throw\n" + err_node->dump(indent + 1);
+	}
+};

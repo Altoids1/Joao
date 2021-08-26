@@ -254,7 +254,8 @@ public:
 		Return,
 		Break,
 		Try,
-		Catch
+		Catch,
+		Throw
 	}t_key;
 
 	KeywordToken(uint32_t linenum, uint32_t sl, Key k)
@@ -465,7 +466,8 @@ class Scanner
 		{"return",KeywordToken::Key::Return},
 		{"break",KeywordToken::Key::Break},
 		{"try",KeywordToken::Key::Try},
-		{"catch",KeywordToken::Key::Catch}
+		{"catch",KeywordToken::Key::Catch},
+		{"throw",KeywordToken::Key::Throw}
 	};
 	const std::unordered_map<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},

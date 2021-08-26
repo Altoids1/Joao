@@ -875,6 +875,30 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				ParserError(t, "'catch' keyword found with no associated 'try' block!");
 				continue;
 			}
+			case(KeywordToken::Key::Throw):
+			{
+				++where; tokenheader = where;
+				/*
+				There's two possibilities for throw:
+				1. There's no error object operand and we're supposed to return a generic /error object.
+				2. There is an expression which we (the Parser) will assume somehow resolves towards being an /error object.
+				
+				Lets test for both.
+				*/
+				if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // #1
+				{
+					ASTs.push_back(new ThrowStatement(nullptr)); // we can't create a default /error object yet because the object tree has yet to be generated,
+					//so lets just have the interpreter handle it :)
+				}
+				else // #2
+				{
+					int yonder = find_first_semicolon(where + 1, there);
+					ASTs.push_back(new ThrowStatement(readExp(where, yonder-1)));
+					consume_semicolon();
+					where = tokenheader - 1;
+				}
+				continue;
+			}
 			default:
 				ParserError(t, "Unknown keyword!");
 				continue;
