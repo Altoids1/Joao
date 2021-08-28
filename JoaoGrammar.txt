@@ -19,6 +19,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	stat ::=  ';' |
 		varstat ';' |
 		functioncall ';' |
+		return [exp] ';' |
 		'break' [PositiveInteger] ';' |
 		'while(' exp '){' block '}' |
 		'if(' exp '){' block '}' {'elseif(' exp '){' block '}'} ['else(' exp '){' block '}'] |

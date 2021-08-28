@@ -879,10 +879,21 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 			case(KeywordToken::Key::Return):
 			{
 				++where; tokenheader = where; // Consume this return token
-				ReturnStatement* rs = new ReturnStatement(readExp(where, there-1), tokens[where]->line);
+				/*
+				Return can either have an expression, or no expression, in which case it returns null.
+				*/
+				ReturnStatement* rs;
+				if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // Return null
+				{
+					rs = new ReturnStatement(new Literal(Value()), tokens[where]->line);
+				}
+				else // Return stuff
+				{
+					rs = new ReturnStatement(readExp(where, there - 1), tokens[where]->line);
+					
+				}
 				ASTs.push_back(rs);
 				consume_semicolon();
-
 				where = tokenheader - 1;
 				continue;
 			}
