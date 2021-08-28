@@ -83,9 +83,7 @@ void Interpreter::RuntimeError(ASTNode* node, Value& err_val)
 void Interpreter::UncaughtRuntime(const Value& err)
 {
 	std::cout << *(err.t_value.as_object_ptr->get_property(*this,"what").t_value.as_string_ptr);
-#ifdef EXIT_ON_RUNTIME
-	exit(1);
-#endif
+	exit(err.t_value.as_object_ptr->get_property(*this, "code").t_value.as_int);
 }
 
 void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)

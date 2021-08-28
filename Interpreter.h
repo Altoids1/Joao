@@ -65,9 +65,7 @@ public:
 	void RuntimeError()
 	{
 		std::cout << "RUNTIME_ERROR: UNKNOWN!";
-#ifdef EXIT_ON_RUNTIME
 		exit(1);
-#endif
 	}
 	
 	//Treated as a special, fatal error.

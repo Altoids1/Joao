@@ -30,7 +30,7 @@
 #endif
 
 //Config flags
-#define EXIT_ON_RUNTIME // Uncomment if you want all runtimes to cause João to exit(1).
+//The Interpreter has a functioning error handling system, including an ability to exit with an error code, so no #define for you.
 #define EXIT_ON_PARSETIME // Uncomment if you want all parsetimes to cause João to exit(1).
 //The scanner always has to crash, it can't do anything otherwise, so no #define for you.
 
