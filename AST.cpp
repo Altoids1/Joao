@@ -457,6 +457,10 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	{
 		return Value(*(lhs.t_value.as_string_ptr) == *(rhs.t_value.as_string_ptr));
 	}
+	case(BIN_ENUMS(bOps::NotEquals, Value::vType::String, Value::vType::String)):
+	{
+		return Value(*(lhs.t_value.as_string_ptr) != *(rhs.t_value.as_string_ptr));
+	}
 	case(BIN_ENUMS(bOps::Greater, Value::vType::String, Value::vType::String)):
 	{
 		return Value(*(lhs.t_value.as_string_ptr) > *(rhs.t_value.as_string_ptr));
