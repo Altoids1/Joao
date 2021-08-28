@@ -8,7 +8,7 @@ Value Table::at(Interpreter& interp, Value index)
 	switch (index.t_vType)
 	{
 	default:
-		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Bad type used to index into Table!");
 		return Value();
 	case(Value::vType::String): // Just use our properties, innit?
 		return *(has_property(interp, *index.t_value.as_string_ptr));
@@ -24,7 +24,7 @@ Value Table::at(Interpreter& interp, Value index)
 
 	if (array_index < 0 || array_index >= static_cast<Value::JoaoInt>(t_array.size()))
 	{
-		interp.RuntimeError(nullptr, "Index was out-of-bounds of array!");
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Index was out-of-bounds of array!");
 		return Value();
 	}
 
@@ -38,7 +38,7 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 	switch (index.t_vType)
 	{
 	default:
-		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Bad type used to index into Table!");
 		return Value::dev_null;
 	case(Value::vType::String): // Just use our properties, innit?
 		return *(has_property(interp, *index.t_value.as_string_ptr));
@@ -67,7 +67,7 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 	switch (index.t_vType)
 	{
 	default:
-		interp.RuntimeError(nullptr, "Bad type used to index into Table!");
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Bad type used to index into Table!");
 		return;
 	case(Value::vType::String): // Just use our properties, innit?
 	{
@@ -94,7 +94,7 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 
 	if (array_index < 0)
 	{
-		interp.RuntimeError(nullptr, "Index cannot be negative in this implementation!"); //FIXME: Soon.
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Index cannot be negative in this implementation!"); //FIXME: Soon.
 		return;
 	}
 

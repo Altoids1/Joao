@@ -6,6 +6,7 @@
 	#include "./nativefuncs/string.cpp"
 	#include "./nativefuncs/tablelib.cpp"
 	#include "./nativefuncs/file.cpp"
+	#include "./nativefuncs/error.cpp"
 #endif
 
 std::unordered_map<std::string,ObjectType*> Program::construct_natives()
@@ -149,6 +150,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 	construct_string_library();
 	cooked_classes["/table"] = construct_table_library();
 	cooked_classes["/file"] = construct_file_library();
+	cooked_classes["/error"] = construct_error_library();
 
 	return cooked_classes;
 }

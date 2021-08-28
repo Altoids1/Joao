@@ -187,7 +187,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 	}
 
-	ObjectTree joao; //Wow, it's the real João Gaming!
+	ObjectTree joao; //Wow, it's the real Joï¿½o Gaming!
 	for (auto it = list_of_types.begin(); it != list_of_types.end(); ++it)
 	{
 		joao.append(it->second);
@@ -713,7 +713,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 
 				where = static_cast<int>(semicolon + 1);
 				semicolon = find_first_semicolon(where, yonder-1);
-				ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in João so putting one in a conditional is silly
+				ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in Joï¿½o so putting one in a conditional is silly
 				where = static_cast<int>(semicolon + 1);
 				ASTNode* inc;
 				if (find_aOp(where, yonder-1))
@@ -855,6 +855,27 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				//ParserError(t, "While-loops are not implemented!");
 				continue;
 			}
+			case(KeywordToken::Key::Try):
+			{
+				++where; tokenheader = where; // Consume this try token
+				std::vector<Expression*> try_block = readBlock(BlockType::Try, tokenheader, there);
+				Token* _catch = tokens[tokenheader];
+				if (_catch->class_enum() != Token::cEnum::KeywordToken || static_cast<KeywordToken*>(_catch)->t_key != KeywordToken::Key::Catch)
+				{
+					ParserError(_catch, "Unexpected token when 'catch' block was expected!");
+				}
+				++tokenheader;
+				std::cout << "I got here!\n";
+				consume_paren(true); // (
+				std::cout << "I got there!\n";
+				std::string err_name = readName(tokenheader);
+				consume_paren(false); // )
+				std::vector<Expression*> catch_block = readBlock(BlockType::Catch, tokenheader, there);
+
+				ASTs.push_back(new TryBlock(try_block, err_name, catch_block));
+				where = tokenheader - 1;
+				continue;
+			}
 			case(KeywordToken::Key::Return):
 			{
 				++where; tokenheader = where; // Consume this return token
@@ -863,6 +884,35 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				consume_semicolon();
 
 				where = tokenheader - 1;
+				continue;
+			}
+			case(KeywordToken::Key::Catch):
+			{
+				ParserError(t, "'catch' keyword found with no associated 'try' block!");
+				continue;
+			}
+			case(KeywordToken::Key::Throw):
+			{
+				++where; tokenheader = where;
+				/*
+				There's two possibilities for throw:
+				1. There's no error object operand and we're supposed to return a generic /error object.
+				2. There is an expression which we (the Parser) will assume somehow resolves towards being an /error object.
+				
+				Lets test for both.
+				*/
+				if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // #1
+				{
+					ASTs.push_back(new ThrowStatement(nullptr)); // we can't create a default /error object yet because the object tree has yet to be generated,
+					//so lets just have the interpreter handle it :)
+				}
+				else // #2
+				{
+					int yonder = find_first_semicolon(where + 1, there);
+					ASTs.push_back(new ThrowStatement(readExp(where, yonder-1)));
+					consume_semicolon();
+					where = tokenheader - 1;
+				}
 				continue;
 			}
 			default:

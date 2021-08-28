@@ -56,7 +56,9 @@ class Parser
 		Function,
 		While,
 		If,
-		For
+		For,
+		Try,
+		Catch
 	};
 
 	int tokenheader; // Which Token # are we on?
@@ -474,6 +476,7 @@ ACCESS_END:
 		return args;
 	}
 
+	//Updates tokenheader to be one token ahead of $here.
 	std::string readName(int here)
 	{
 #ifdef LOUD_TOKENHEADER
@@ -482,7 +485,7 @@ ACCESS_END:
 		Token* t = tokens[here];
 		if (t->class_enum() != Token::cEnum::WordToken)
 		{
-			ParserError(t, "Unexpected token WordToken was expected for Name!");
+			ParserError(t, "Unexpected token found when WordToken was expected for Name!");
 		}
 		tokenheader = here + 1;
 #ifdef LOUD_TOKENHEADER

@@ -71,7 +71,7 @@ Value ASTNode::const_resolve(Parser& parse, bool loudfail)
 Value& ASTNode::handle(Interpreter& interp)
 {
 	interp.RuntimeError(this, "Attempted to turn " + class_name() + " into a variable handle!");
-	return Value::dev_null; // Memory leak woooo
+	return Value::dev_null;
 }
 
 
@@ -138,11 +138,12 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 	if (t_op != aOps::Assign)
 	{
 		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+		return rhs_val; // If anything.
 	}
 
 	if (!typecheck(rhs_val))
 	{
-		interp.RuntimeError(this, "LocalAssignmentStatement failed typecheck!");
+		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "LocalAssignmentStatement failed typecheck!");
 		return rhs_val; //FIXME: I'm not sure whether or not I want this runtime to cause the assignment to completely fail like this, or not.
 	}
 	interp.init_var(static_cast<Identifier*>(id)->get_str(), rhs_val, this);
@@ -195,7 +196,7 @@ Value UnaryExpression::resolve(Interpreter& interp)
 			return Value(static_cast<Table*>(rhs.t_value.as_object_ptr)->length());
 	//Rolls over into the default error case on length failure
 	default:
-		interp.RuntimeError(this, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
+		interp.RuntimeError(this, ErrorCode::FailedOperation, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
 		return Value();
 	}
 }
@@ -499,13 +500,13 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	}
 
 	default:
-		interp.RuntimeError(this, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
+		interp.RuntimeError(this, ErrorCode::FailedOperation, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
 		return Value();
 	}
 }
 
 
-void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* o = nullptr)
+void Function::give_args(Interpreter& interp, const std::vector<Value>& args, Object* o = nullptr)
 {
 	if (o)
 	{
@@ -518,7 +519,6 @@ void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* 
 		{
 			t_args.push_back(Value());
 		}
-		//interp.RuntimeError(*this, "Insufficient amonut of arguments given!");
 	}
 }
 Value Function::resolve(Interpreter & interp)
@@ -542,10 +542,11 @@ Value Function::resolve(Interpreter & interp)
 			{
 				Value ret = rt.resolve(interp); // Resolve it first
 				interp.pop_stack(); // THEN pop the stack
-
+				obj = nullptr; // Reset object
 				if (interp.BREAK_COUNTER)
 				{
-					interp.RuntimeError(this, "Break statement integer too large!");
+					interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
+					interp.BREAK_COUNTER = 0;
 				}
 
 				return ret; // THEN return it
@@ -559,10 +560,19 @@ Value Function::resolve(Interpreter & interp)
 			{
 				interp.FORCE_RETURN = false;
 				interp.pop_stack();
+				obj = nullptr; // Reset object
 				if (interp.BREAK_COUNTER)
 				{
-					interp.RuntimeError(this, "Break statement integer too large!");
+					interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
+					interp.BREAK_COUNTER = 0;
 				}
+				return vuh;
+			}
+			if(interp.error) // Oh no, an uncaught runtime!
+			{
+				interp.pop_stack();
+				obj = nullptr; // Reset object
+				interp.UncaughtRuntime(interp.error);
 				return vuh;
 			}
 		}
@@ -571,7 +581,8 @@ Value Function::resolve(Interpreter & interp)
 	obj = nullptr; // Reset object
 	if (interp.BREAK_COUNTER)
 	{
-		interp.RuntimeError(this, "Break statement integer too large!");
+		interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
+		interp.BREAK_COUNTER = 0;
 	}
 	return returnValue;
 }
@@ -581,7 +592,7 @@ Value CallExpression::resolve(Interpreter& interp)
 	Value func = func_expr->handle(interp);
 	if (func.t_vType != Value::vType::Function)
 	{
-		interp.RuntimeError(this, "Attempted to call something that isn't a function or method!");
+		interp.RuntimeError(this, ErrorCode::BadCall, "Attempted to call something that isn't a function or method!");
 		return Value();
 	}
 
@@ -610,13 +621,13 @@ Value NativeFunction::resolve(Interpreter& interp)
 	{
 		switch (result.t_value.as_int)
 		{
-		case(static_cast<Value::JoaoInt>((Program::ErrorCode::NoError))): // An expected null, function returned successfully.
+		case(static_cast<Value::JoaoInt>((ErrorCode::NoError))): // An expected null, function returned successfully.
 			break;
-		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
-			interp.RuntimeError(this, "Args of improper type given to NativeFunction!");
+		case(static_cast<Value::JoaoInt>(ErrorCode::BadArgType)):
+			interp.RuntimeError(this, ErrorCode::BadArgType, "Args of improper type given to NativeFunction!");
 			break;
-		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
-			interp.RuntimeError(this, "Not enough args provided to NativeFunction!");
+		case(static_cast<Value::JoaoInt>(ErrorCode::NotEnoughArgs)):
+			interp.RuntimeError(this, ErrorCode::NotEnoughArgs, "Not enough args provided to NativeFunction!");
 			break;
 		default:
 			interp.RuntimeError(this, "Unknown RuntimeError in NativeFunction!");
@@ -635,13 +646,13 @@ Value NativeMethod::resolve(Interpreter& interp)
 	{
 		switch (result.t_value.as_int)
 		{
-		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NoError)): // An expected null, function returned successfully.
+		case(static_cast<Value::JoaoInt>(ErrorCode::NoError)): // An expected null, function returned successfully.
 			break;
-		case(static_cast<Value::JoaoInt>(Program::ErrorCode::BadArgType)):
-			interp.RuntimeError(this, "Args of improper type given to NativeMethod!");
+		case(static_cast<Value::JoaoInt>(ErrorCode::BadArgType)):
+			interp.RuntimeError(this, ErrorCode::BadArgType, "Args of improper type given to NativeMethod!");
 			break;
-		case(static_cast<Value::JoaoInt>(Program::ErrorCode::NotEnoughArgs)):
-			interp.RuntimeError(this, "Not enough args provided to NativeMethod!");
+		case(static_cast<Value::JoaoInt>(ErrorCode::NotEnoughArgs)):
+			interp.RuntimeError(this, ErrorCode::NotEnoughArgs, "Not enough args provided to NativeMethod!");
 			break;
 		default:
 			interp.RuntimeError(this, "Unknown RuntimeError in NativeMethod!");
@@ -650,9 +661,9 @@ Value NativeMethod::resolve(Interpreter& interp)
 	return result; // Woag.
 }
 
-Value Block::iterate_statements(Interpreter& interp)
+Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 {
-	for (auto it = statements.begin(); it != statements.end(); ++it)
+	for (auto it = state.begin(); it != state.end(); ++it)
 	{
 		//it is a pointer to a pointer to an Expression.
 		Expression* ptr = *it;
@@ -664,29 +675,34 @@ Value Block::iterate_statements(Interpreter& interp)
 			if (rt.has_expr) // If this actually has something to return
 			{
 				Value ret = rt.resolve(interp); // Get the return		
-				interp.pop_block(); // THEN pop the stack
+				//interp.pop_block(); // THEN pop the stack
 				return ret; // THEN return the value.
 			}
-			interp.pop_block();
+			//interp.pop_block();
 			return Value();
 		}
 		else if (ptr->class_name() == "BreakStatement")
 		{
 			ptr->resolve(interp);
-			interp.pop_block();
+			//interp.pop_block();
 			return Value();
 		}
 		else
 		{
 			Value vuh = ptr->resolve(interp); // I dunno.
-			if (interp.FORCE_RETURN)
+			if (interp.FORCE_RETURN || interp.error)
 			{
-				interp.pop_block();
+				//interp.pop_block();
 				return vuh;
 			}
 		}
 	}
 	return Value();
+}
+
+Value Block::iterate_statements(Interpreter& interp)
+{
+	return iterate(statements,interp);
 }
 
 Value IfBlock::resolve(Interpreter& interp)
@@ -703,11 +719,9 @@ Value IfBlock::resolve(Interpreter& interp)
 
 	interp.push_block("if");
 	Value blockret = iterate_statements(interp);
-	
-	if (interp.FORCE_RETURN || interp.BREAK_COUNTER)
+	interp.pop_block();
+	if (interp.FORCE_RETURN || interp.BREAK_COUNTER || interp.error)
 		return blockret;
-	else
-		interp.pop_block();
 	return Value();
 }
 
@@ -722,10 +736,14 @@ Value ForBlock::resolve(Interpreter& interp)
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
 			return blockret;
 		}
-		if (interp.FORCE_RETURN)
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
 			return blockret;
+		}
 		increment->resolve(interp);
 	}
 	interp.pop_block();
@@ -737,23 +755,20 @@ Value WhileBlock::resolve(Interpreter& interp)
 	interp.push_block("while");
 	if(!condition) // if condition not defined
 		interp.RuntimeError(this, "Missing condition in WhileBlock!");
-	/*
-	if (!(condition->resolve(interp)))
-	{
-		std::cout << "THIS! SENTENCE! IS! FALSE!dontthinkaboutitdontthinkaboutitdontthinkaboutitdontthinkaboutitdontthinkaboutit...\n"; // Have to inform the computer to not think about the paradox
-	}
-	*/
+
 	while (condition->resolve(interp))
 	{
 		Value blockret = iterate_statements(interp);
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1;
+			interp.pop_block();
 			return blockret;
 		}
-		if (interp.FORCE_RETURN)
+		if (interp.FORCE_RETURN || interp.error)
 		{
 			//std::cout << "Whileloop got to FORCE_RETURN!\n";
+			interp.pop_block();
 			return blockret;
 		}
 	}
@@ -773,7 +788,7 @@ Value MemberAccess::resolve(Interpreter& interp)
 
 	if (fr.t_vType != Value::vType::Object)
 	{
-		interp.RuntimeError(this, "Attempted to do MemberAccess on non-Object Value!");
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Attempted to do MemberAccess on non-Object Value!");
 		return Value();
 	}
 	if (back->class_name() == "Identifier") // This should pretty much always be the case.
@@ -793,7 +808,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	Value& fr = front->handle(interp);
 	if (fr.t_vType != Value::vType::Object)
 	{
-		interp.RuntimeError(this, "Attempted to do MemberAccess on non-Object Value!");
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Attempted to do MemberAccess on non-Object Value!");
 		return Value::dev_null;
 	}
 	if (back->class_name() == "Identifier")
@@ -803,7 +818,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 		Function* meth = fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str());
 		if (!meth)
 		{
-			interp.RuntimeError(this, "MemberAccess failed because member does not exist!");
+			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "MemberAccess failed because member does not exist!");
 			return Value::dev_null;
 		}
 		meth->set_obj(fr.t_value.as_object_ptr);
@@ -857,7 +872,7 @@ Value& ParentAccess::handle(Interpreter& interp)
 	Object* o = interp.get_objectscope();
 	if (!o)
 	{
-		interp.RuntimeError(this, "Cannot do ParentAccess in classless function!");
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot do ParentAccess in classless function!");
 		return Value::dev_null;
 	}
 
@@ -898,12 +913,12 @@ Value IndexAccess::resolve(Interpreter& interp)
 	switch (lhs.t_vType)
 	{
 	default:
-		interp.RuntimeError(this, "Attempted to index a Value of type " + lhs.typestring() + "!");
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Attempted to index a Value of type " + lhs.typestring() + "!");
 		return Value();
 	case(Value::vType::String):
 		if (rhs.t_vType != Value::vType::Integer)
 		{
-			interp.RuntimeError(this, "Cannot index into a String with a Value of type " + rhs.typestring() + "!");
+			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot index into a String with a Value of type " + rhs.typestring() + "!");
 			return Value();
 		}
 
@@ -919,7 +934,7 @@ Value IndexAccess::resolve(Interpreter& interp)
 
 		if (rhs.t_vType != Value::vType::String)
 		{
-			interp.RuntimeError(this, "Cannot index into an Object with a Value of type " + rhs.typestring() + "!");
+			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot index into an Object with a Value of type " + rhs.typestring() + "!");
 			return Value();
 		}
 
@@ -935,7 +950,17 @@ Value& IndexAccess::handle(Interpreter& interp)
 
 	if (lhs.t_vType != Value::vType::Object) // FIXME: Allow for index-based setting of string data
 	{
-		interp.RuntimeError(this, "Cannot get handle of anything except object properties!");
+		if (lhs.t_vType == Value::vType::String)
+		{
+			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot use string indices to set the values of specific characters!"); // TODO: You probably ought to be able to do this
+			return Value::dev_null;
+		}
+		else
+		{
+			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Attempted to index a Value of type " + lhs.typestring() + "!");
+			return Value::dev_null;
+		}
+		
 	}
 
 	Object* obj = lhs.t_value.as_object_ptr;
@@ -943,4 +968,46 @@ Value& IndexAccess::handle(Interpreter& interp)
 		return MemberAccess(container, index).handle(interp); //FIXME: This is so fucked up but it makes so much sense; main issue is that runtimes will report themselves strangely
 	//So it's a table then
 	return static_cast<Table*>(obj)->at_ref(interp, rhs);
+}
+
+Value TryBlock::resolve(Interpreter& interp)
+{
+	interp.push_block("try");
+	Value ret = iterate_statements(interp);
+	interp.pop_block();
+	if(interp.error) // ah, we caught an error, cool
+	{
+		interp.push_block("catch");
+		interp.init_var(err_name,interp.error,this); // init the error parameter
+		interp.error = Value();
+		Value ret = iterate(catch_statements,interp);
+		if(interp.error)
+		{
+			interp.UncaughtRuntime(interp.error);
+		}
+		interp.pop_block();
+		return ret;
+	}
+	return ret;
+
+}
+
+Value ThrowStatement::resolve(Interpreter& interp)
+{
+	if (!err_node)
+	{
+		interp.RuntimeError(this, ErrorCode::Unknown, "Exception thrown!");
+		return Value();
+	}
+
+	Value val = err_node->resolve(interp);
+	if (!val || val.t_vType != Value::vType::Object || val.t_value.as_object_ptr->object_type != "/error")
+	{
+		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "Throw keyword invoked with non-error operand!");
+		return Value();
+	}
+
+	interp.RuntimeError(this, val);
+
+	return Value(); // If anything.
 }

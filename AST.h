@@ -523,7 +523,7 @@ public:
 		t_argnames = sargs;
 		my_line = linenum;
 	}
-	void give_args(Interpreter&, std::vector<Value>&, Object*);
+	void give_args(Interpreter&, const std::vector<Value>&, Object*);
 	Function* append(Expression* expr)
 	{
 		statements.push_back(expr);
@@ -622,6 +622,21 @@ class Block : public Expression
 protected:
 	std::vector<Expression*> statements;
 
+	Block()
+	{
+
+	}
+	Block(const std::vector<Expression*>& s)
+		:statements(s)
+	{
+
+	}
+
+	//A more abstract function used for iterating over any arbitrary block of statements.
+	//It's strange, but necessary for a class that is this abstract.
+	Value iterate(const std::vector<Expression*>&, Interpreter&);
+
+	//Iterate over our statements specifically.
 	Value iterate_statements(Interpreter&);
 };
 
@@ -662,7 +677,10 @@ public:
 		{
 			str += statements[i]->dump(indent + 1);
 		}
-
+		if (Elseif)
+		{
+			str += Elseif->dump(indent);
+		}
 		return str;
 	}
 };
@@ -950,5 +968,62 @@ public:
 		str += ind + "]\n";
 
 		return str;
+	}
+};
+
+/*
+Runs the associated code within the Try and tosses it at Catch if an exception occurs.
+*/
+class TryBlock : public Block
+{
+	std::string err_name;
+	std::vector<Expression*> catch_statements; // TODO: Allow for multiple catchers based on error type :)
+public:
+	TryBlock(const std::vector<Expression*>& t, const std::string& err, const std::vector<Expression*>& c)
+		:Block(t)
+		,err_name(err)
+		,catch_statements(c)
+	{
+
+	}
+
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "TryBlock"; }
+
+	virtual std::string dump(int indent)
+	{
+		const std::string ind = std::string(indent, ' ');
+		std::string str = ind + "TryBlock\n";
+		for (size_t i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
+		str += ind + "?Catch: " + err_name + "\n";
+		for (size_t i = 0; i < catch_statements.size(); ++i)
+		{
+			str += catch_statements[i]->dump(indent + 1);
+		}
+		return str;
+	}
+};
+
+class ThrowStatement : public Expression
+{
+	ASTNode* err_node; // Node that is supposed to be an error object
+public:
+	ThrowStatement(ASTNode* e)
+		:err_node(e)
+	{
+
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "Throw"; }
+
+	virtual std::string dump(int indent)
+	{
+		const std::string ind = std::string(indent, ' ');
+		return ind + "Throw\n" + err_node->dump(indent + 1);
 	}
 };

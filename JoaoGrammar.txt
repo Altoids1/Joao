@@ -22,7 +22,10 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 		'break' [PositiveInteger] ';' |
 		'while(' exp '){' block '}' |
 		'if(' exp '){' block '}' {'elseif(' exp '){' block '}'} ['else(' exp '){' block '}'] |
-		'for('[varstat | exp] ';' [exp] ';' [varstat | exp] '){' block '}
+		'for('[varstat | exp] ';' [exp] ';' [varstat | exp] '){' block '}' |
+		'try{' block '}catch(' Name '){' block ')' |
+		'throw' [exp] ';'
+		
 	
 	init_var ::= ('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name
 	

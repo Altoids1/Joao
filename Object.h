@@ -17,7 +17,9 @@ public:
 
 	Value* has_property(Interpreter&, std::string);
 	Value get_property(Interpreter&, std::string);
+	Value get_property_raw(std::string);
 	void set_property(Interpreter&, std::string, Value);
+	void set_property_raw(std::string, Value);
 
 	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
 	Function* get_method(Interpreter&, std::string);
@@ -82,7 +84,7 @@ public:
 	}
 
 	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
-	Object* makeObject(Interpreter&, std::vector<Value>&);
+	Object* makeObject(Interpreter&, const std::vector<Value>&);
 
 	Value get_typeproperty(Interpreter&, std::string, ASTNode*);
 
@@ -100,6 +102,7 @@ public:
 
 	//Passed Parser-by-reference as the Interpreter should never be calling this; ObjectTypes are static at runtime (for now, anyways!)
 	void set_typeproperty(Parser&,std::string, Value);
+	void set_typeproperty_raw(std::string, Value);
 	void set_typemethod(Parser&, std::string, Function*);
 	void set_typemethod_raw(std::string, Function*);
 
