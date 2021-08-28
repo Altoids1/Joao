@@ -1,0 +1,58 @@
+/food
+{
+	Value taste = "Good";
+}
+
+
+/food/apple
+{
+	Value name = "Apple";
+	Value my_worm;
+}
+
+
+/food/apple/get_taste()
+{
+	if(my_worm)
+	{
+		return my_worm.taste;
+	}
+	else
+	{
+		return ./taste;
+	}
+}
+
+/worm
+{
+	Value name = "Stanley";
+	Value taste = "Awful";
+}
+
+/main()
+{
+	Number TEST_NUMBER = 4;
+
+	Value auh = /food/apple/New();
+	
+	if(auh.get_taste() != "Good")
+	{
+		throw /error/New(TEST_NUMBER,"Methods and properties failed!");
+	}
+	
+	auh.my_worm = /worm/New();
+	
+	if(auh.get_taste() != "Awful")
+	{
+		throw /error/New(TEST_NUMBER,"Accessing properties of Object type failed!");
+	}
+	
+	Object t = /table/New();
+	t[0] = /worm/New();
+	if(t[0].name != "Stanley")
+	{
+		throw /error/New(TEST_NUMBER,"Reference handling failed!");
+	}
+	
+	print("Test #" .. TEST_NUMBER .. " passed");
+}

@@ -1,0 +1,19 @@
+/foo()
+{
+	Value x = 2;
+	return x;
+}
+
+/main()
+{
+	Number TEST_NUMBER = 3;
+	if(foo() == 2)
+	{
+		Value number = foo();
+		if(number == 2)
+		{
+			return;
+		}
+	}
+	throw /error/New(3,"Functions failed!");
+}

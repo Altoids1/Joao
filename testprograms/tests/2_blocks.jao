@@ -1,0 +1,43 @@
+/main()
+{
+	Number TEST_NUMBER = 2;
+##If statements
+	Number bluh = 1;
+	if(bluh == 3)
+	{
+		throw /error/New(TEST_NUMBER,"If-statements failed!");
+	}
+	elseif(bluh == 2)
+	{
+		throw /error/New(TEST_NUMBER,"If-statements failed!");
+	}
+	else
+	{
+		bluh = 0;
+	}
+
+
+##For loops
+	Number n = 0;
+	for(Value x = 0; x < 20; x+=1)
+	{
+		n += 1;
+	}
+	if(n != 20)
+	{
+		throw /error/New(TEST_NUMBER,"For loops failed!");
+	}
+	
+	
+##While loops
+	Number m = 1;
+	while(n < 0)
+	{
+		m *= 2;
+		n -= 1;
+	}
+	if(m != (1 << 20))
+	{
+		throw /error/New(TEST_NUMBER,"While loops failed!");
+	}
+}

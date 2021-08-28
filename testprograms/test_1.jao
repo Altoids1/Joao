@@ -1,7 +1,0 @@
-/main()
-{
-	Value x = 2;
-	Value y = 2;
-
-	return x * y;
-}

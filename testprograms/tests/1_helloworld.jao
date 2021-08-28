@@ -1,0 +1,34 @@
+/main()
+{
+	Number TEST_NUMBER = 1;
+	String x = "Hello";
+	Number y = 5;
+	
+	##Test addition
+	if(y + 4 != 9)
+	{
+		throw /error/New(TEST_NUMBER, "Addition failed!");
+	}
+	##Concentation
+	if(x .. " world!" != "Hello world!")
+	{
+		throw /error/New(TEST_NUMBER, "Concatenation failed!");
+	}
+	
+	##Logic
+	if(true && false)
+	{
+		throw /error/New(TEST_NUMBER, "Logic failed!");
+	}
+	if(!(false ~~ true))
+	{
+		throw /error/New(TEST_NUMBER, "Logical NXOR failed!");
+	}
+	Object z = /table/New();
+	if(7 && z && "Hello")
+	{
+		throw /error/New(TEST_NUMBER, "Boolean coercion failed!");
+	}
+
+	print("Test #" .. TEST_NUMBER .. " passed");
+}
