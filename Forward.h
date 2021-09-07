@@ -36,11 +36,6 @@
 #define MAX_RECURSION 64 // The maximum depth of recursion of Joao functions.
 #endif
 
-//Config flags
-//The Interpreter has a functioning error handling system, including an ability to exit with an error code, so no #define for you.
-#define EXIT_ON_PARSETIME // Uncomment if you want all parsetimes to cause João to exit(1).
-//The scanner always has to crash, it can't do anything otherwise, so no #define for you.
-
 //Version flags
 #define VERSION_MAJOR 1 // For when we break || add || fix something
 #define VERSION_MINOR 2 // For when we add || fix something

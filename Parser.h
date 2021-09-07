@@ -637,12 +637,14 @@ public: // Parser doesn't have much of an API but it does have something
 		else
 			std::cout << "ERROR_ERROR: No Token pointer provided to ParserError()!\n";
 
-#ifdef EXIT_ON_PARSETIME
 		if (!is_interactive)
+#ifdef JOAO_SAFE
+			throw error::parser(what);
+#else
 			exit(1);
+#endif
 		else
 			t_program.is_malformed = true;
-#endif
 	}
 	Program parse();
 	

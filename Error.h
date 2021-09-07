@@ -7,6 +7,39 @@ This includes, out-of-memory issues, safeguards against malicious code, or an in
 */
 namespace error
 {
+	// Abstract class that all errors that are (probably!) not something malicious done by the user.
+	class fatal : public std::runtime_error
+	{
+	protected:
+		using _Mybase = std::runtime_error;
+
+		explicit fatal(const std::string& _Message) : _Mybase(_Message.c_str()) {}
+
+		explicit fatal(const char* _Message) : _Mybase(_Message) {}
+	};
+
+	// variety of error used for failing to scan a file.
+	class scanner : public fatal
+	{ 
+	public:
+		using _Mybase = fatal;
+
+		explicit scanner(const std::string& _Message) : _Mybase(_Message.c_str()) {}
+
+		explicit scanner(const char* _Message) : _Mybase(_Message) {}
+	};
+
+	// variety of error used for failing to parse a scanned file correctly.
+	class parser : public fatal
+	{ 
+	public:
+		using _Mybase = fatal;
+
+		explicit parser(const std::string& _Message) : _Mybase(_Message.c_str()) {}
+
+		explicit parser(const char* _Message) : _Mybase(_Message) {}
+	};
+
 	/* MALICIOUS ERRORS */
 	// Abstract class that all errors that are (probably!) the result of something bad the user did.
 	class malicious : public std::runtime_error

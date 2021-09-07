@@ -4,6 +4,7 @@
 
 #include "SharedEnums.h"
 #include "Directory.h"
+#include "Error.h"
 
 #define NAME_CONST_METHODS(the_thing) virtual cEnum class_enum() const override { return cEnum :: the_thing; } \
 						  virtual std::string class_name() const override { return #the_thing; }
@@ -538,7 +539,11 @@ class Scanner
 
 		std::cout << msg << std::endl << string::replace_all(line,'\t',' ') << std::endl << squiggly << std::endl;
 		if (!is_interactive)
+#ifdef JOAO_SAFE
+			throw error::scanner(msg);
+#else
 			exit(1);
+#endif
 		else
 			is_malformed = true;
 	}
