@@ -29,6 +29,13 @@
 
 #endif
 
+//#define JOAO_SAFE // Uncomment if you want Joao to be extremely suspicious of its code. Disables OS-interfacing libraries and enables throttling.
+#ifdef JOAO_SAFE
+#define MAX_STATEMENTS 10000 // The maximum number of statements that will be executed in JOAO_SAFE mode.
+#define MAX_VARIABLES 1024 // How many variables Joao is allowed to use, as a hard limit. Includes indices.
+#define MAX_RECURSION 64 // The maximum depth of recursion of Joao functions.
+#endif
+
 //Config flags
 //The Interpreter has a functioning error handling system, including an ability to exit with an error code, so no #define for you.
 #define EXIT_ON_PARSETIME // Uncomment if you want all parsetimes to cause João to exit(1).

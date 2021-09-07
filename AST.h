@@ -5,6 +5,7 @@
 
 #include "Forward.h"
 #include "SharedEnums.h"
+#include "Error.h"
 
 class Value { // A general pseudo-typeless Value used to store data within the programming language.
 public:
@@ -146,8 +147,20 @@ public:
 // Expressions are ASTNodes that make sense to be done on their lonesome as a statement w/o other context.
 class Expression : public ASTNode
 {
-
-	virtual bool is_expression() override  { return true; }
+	static int expr_count;
+protected:
+#ifdef JOAO_SAFE
+	void increment()
+	{
+		++expr_count;
+		if (expr_count > MAX_STATEMENTS)
+		{
+			throw error::maximum_expr(std::string("Program reached the limit of ") + std::to_string(MAX_STATEMENTS) + std::string("expressions!"));
+		}
+	}
+#endif
+public:
+	virtual bool is_expression() override { return true; }
 };
 
 class Identifier : public ASTNode

@@ -171,6 +171,7 @@
     <ClInclude Include="Args.h" />
     <ClInclude Include="AST.h" />
     <ClInclude Include="Directory.h" />
+    <ClInclude Include="Error.h" />
     <ClInclude Include="Forward.h" />
     <ClInclude Include="Interpreter.h" />
     <ClInclude Include="Object.h" />

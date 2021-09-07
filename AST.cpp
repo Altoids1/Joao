@@ -10,6 +10,9 @@
 
 
 Value Value::dev_null = Value();
+#ifdef JOAO_SAFE
+int Expression::expr_count = 0;
+#endif
 
 std::string Value::to_string()
 {
@@ -113,6 +116,9 @@ Value& Identifier::handle(Interpreter& interp)
 
 Value AssignmentStatement::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	Value rhs_val = rhs->resolve(interp);
 
 	Value& lhs_val = id->handle(interp);
@@ -132,6 +138,9 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 Value LocalAssignmentStatement::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	Value rhs_val = rhs->resolve(interp);
 	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 
@@ -157,6 +166,9 @@ Value LocalAssignmentStatement::const_resolve(Parser& parser, bool loudfail)
 
 Value UnaryExpression::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	Value rhs = t_rhs->resolve(interp);
 	Value::vType rtype = rhs.t_vType;
 
@@ -221,6 +233,9 @@ std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser&
 
 Value BinaryExpression::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	//The Chef's ingredients: t_op, t_lhs, t_rhs
 	Value lhs = t_lhs->resolve(interp);
 	Value rhs = t_rhs->resolve(interp); //TODO: This fails the principle of short-circuiting but we'll be fine for now
@@ -593,6 +608,9 @@ Value Function::resolve(Interpreter & interp)
 
 Value CallExpression::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	Value func = func_expr->handle(interp);
 	if (func.t_vType != Value::vType::Function)
 	{
@@ -711,7 +729,9 @@ Value Block::iterate_statements(Interpreter& interp)
 
 Value IfBlock::resolve(Interpreter& interp)
 {
-
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	if (condition && !condition->resolve(interp)) // If our condition exists (so we're not an Else) and fails
 	{
 		if (Elseif) // If we have an Elseif to point to
@@ -731,6 +751,9 @@ Value IfBlock::resolve(Interpreter& interp)
 
 Value ForBlock::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	Expression::increment();
+#endif
 	interp.push_block("for"); // Has to happen here since initializer takes place in the for-loops var stack
 	if (initializer)
 		initializer->resolve(interp);
@@ -756,6 +779,9 @@ Value ForBlock::resolve(Interpreter& interp)
 
 Value WhileBlock::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	interp.push_block("while");
 	if(!condition) // if condition not defined
 		interp.RuntimeError(this, "Missing condition in WhileBlock!");
@@ -782,6 +808,9 @@ Value WhileBlock::resolve(Interpreter& interp)
 
 Value BreakStatement::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	interp.BREAK_COUNTER = breaknum;
 	return Value();
 }
@@ -976,6 +1005,9 @@ Value& IndexAccess::handle(Interpreter& interp)
 
 Value TryBlock::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	interp.push_block("try");
 	Value ret = iterate_statements(interp);
 	interp.pop_block();
@@ -998,6 +1030,9 @@ Value TryBlock::resolve(Interpreter& interp)
 
 Value ThrowStatement::resolve(Interpreter& interp)
 {
+#ifdef JOAO_SAFE
+	increment();
+#endif
 	if (!err_node)
 	{
 		interp.RuntimeError(this, ErrorCode::Unknown, "Exception thrown!");

@@ -26,6 +26,9 @@ public:
 
 	int BREAK_COUNTER = 0; // An integer flag used to break (perhaps several levels) out of one or several blocks (which are not Function blocks)
 	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.
+#ifdef JOAO_SAFE
+	int value_init_count = 0;
+#endif
 
 	Interpreter();
 	Interpreter(Program&,bool);
@@ -83,6 +86,12 @@ public:
 	//Pushes a new blockstack and objstack layer
 	void push_stack(std::string name = "", Object* obj = nullptr)
 	{
+#ifdef JOAO_SAFE
+		if (blockscope.size() > MAX_RECURSION)
+		{
+			throw error::maximum_recursion(std::string("Program reached the limit of ") + std::to_string(MAX_RECURSION) + std::string("recursive calls!"));
+		}
+#endif
 		blockscope.push(new Scope<Value>(name));
 		objectscope.push(obj);
 	}

@@ -20,8 +20,8 @@ template <typename _Ty>
 class Scope {
 	/*
 	This class can serve two functionalities, whose implementations are merged into one powerful class.
-	1. This can be used by the Parser to keep track of the Object or Function tree system, to be later collapsed into Program::definedFunctions and Program::definedObjTypes, if it wants
-	2. This can be used by the Interpreter to keep track of scoped variables (so, Values), allowing for their access and dismissal as it enters and exits various Scopes.
+	1. This can be (but isn't) used by the Parser to keep track of the Object or Function tree system, to be later collapsed into Program::definedFunctions and Program::definedObjTypes, if it wants
+	2. This can be (and is) used by the Interpreter to keep track of scoped variables (so, Values), allowing for their access and dismissal as it enters and exits various Scopes.
 	*/
 
 	std::forward_list<Scopelet<_Ty>*> stack;

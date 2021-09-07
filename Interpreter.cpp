@@ -88,8 +88,14 @@ void Interpreter::UncaughtRuntime(const Value& err)
 
 void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
 {
+#ifdef JOAO_SAFE
+	++value_init_count;
+	if (value_init_count > MAX_VARIABLES)
+	{
+		throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
+	}
+#endif
 	Scope<Value>* varscope = blockscope.top();
-	//std::cout << "Setting variable " + varname + " to value " + std::to_string(val.t_value.as_int) + "\n";
 	varscope->set(varname, val);
 }
 
