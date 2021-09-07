@@ -10,6 +10,9 @@ class Parser
 	Program t_program;
 	std::vector<Token*> tokens;
 	const bool is_interactive;
+
+	//Used to store extraneous, native types
+	std::unordered_map<std::string, ObjectType*> uncooked_types;
 	
 	/*
 	Here's how this is gonna work:
@@ -613,7 +616,7 @@ ACCESS_END:
 protected:
 	//Does the nitty-gritty of filling out the function and objecttype tables.
 	void generate_object_tree(std::vector<ClassDefinition*>&);
-public:
+public: // Parser doesn't have much of an API but it does have something
 	Parser(Scanner&t)
 		:is_interactive(t.is_interactive)
 		,tokens(t.tokens)
@@ -642,4 +645,7 @@ public:
 #endif
 	}
 	Program parse();
+	
+	//Allows outside programs to include extra "native" types.
+	void IncludeAlienType(ObjectType* ot);
 };

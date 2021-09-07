@@ -139,7 +139,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	//Step 0. Define any weird native classes that might exist (so the user may overload them with novel behavior)
 
 	//Step 1. Get a list of all classes that exist in some way
-	std::unordered_map<std::string, ObjectType*> list_of_types = t_program.construct_natives();
+	uncooked_types.merge(t_program.construct_natives()); //Aghast! C++17 be required to run this line!
 	std::unordered_map<std::string, bool> list_of_funcs; // Not as used here, mostly for the ParserError
 
 	for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
@@ -147,7 +147,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 		ClassDefinition* cdptr = *it;
 		std::string cdstr = cdptr->direct;
 
-		if (list_of_types.count(cdstr))
+		if (uncooked_types.count(cdstr))
 		{
 			ParserError(nullptr, "Duplicate class definition detected!"); // FIXME: Allow for this (with perhaps suppressable warnings regardless)
 			continue;
@@ -155,7 +155,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 		ObjectType* objtype = new ObjectType(cdstr, cdptr->resolve_properties(*this));
 
-		list_of_types[cdstr] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
+		uncooked_types[cdstr] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
 	}
 	for (auto it = t_program.definedMethods.begin(); it != t_program.definedMethods.end(); ++it) // Ask all the functions
 	{
@@ -174,21 +174,21 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 		std::string dir_f = Directory::DotDot(function_fullname);
 		
-		if (!list_of_types.count(dir_f)) // If our type doesn't exist
+		if (!uncooked_types.count(dir_f)) // If our type doesn't exist
 		{
 			ObjectType* objtype = new ObjectType(dir_f);
 			objtype->set_typemethod(*this, function_shortname, fptr);
-			list_of_types[dir_f] = objtype; // Make it so!
+			uncooked_types[dir_f] = objtype; // Make it so!
 		}
 		else
 		{
-			list_of_types[dir_f]->set_typemethod(*this, function_shortname, fptr);
+			uncooked_types[dir_f]->set_typemethod(*this, function_shortname, fptr);
 		}
 
 	}
 
 	ObjectTree joao; //Wow, it's the real Jo�o Gaming!
-	for (auto it = list_of_types.begin(); it != list_of_types.end(); ++it)
+	for (auto it = uncooked_types.begin(); it != uncooked_types.end(); ++it)
 	{
 		joao.append(it->second);
 	}
@@ -199,8 +199,8 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	joao.dump();
 	std::cout << "----\n";
 #endif
-
-	t_program.definedObjTypes = list_of_types;
+	
+	t_program.definedObjTypes = uncooked_types; // They're cooked *at this point*, I will note
 	
 
 	return;
@@ -1057,4 +1057,9 @@ READ_CLASSDEF_RETURN_ASTS:
 	std::cout << "Exiting Classdef with header pointed at " << std::to_string(tokenheader) << ".\n";
 #endif
 	return ASTs;
+}
+
+void Parser::IncludeAlienType(ObjectType* ot)
+{
+	uncooked_types[ot->get_name()] = ot;
 }
