@@ -149,7 +149,9 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 	construct_math_library();
 	construct_string_library();
 	cooked_classes["/table"] = construct_table_library();
+#ifndef JOAO_SAFE
 	cooked_classes["/file"] = construct_file_library();
+#endif
 	cooked_classes["/error"] = construct_error_library();
 
 	return cooked_classes;
