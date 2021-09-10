@@ -617,11 +617,11 @@ class Scanner
 	int readString(int);
 	int readNumber(int);
 	int readPairSymbol(int);
-	int readEqSymbol(int, std::ifstream&);
-	int readSymbol(int,std::ifstream&);
+	int readEqSymbol(int, std::istream&);
+	int readSymbol(int,std::istream&);
 	int readWord(int);
-	int readComment(int,std::ifstream&);
-	int readSlash(int,std::ifstream&);
+	int readComment(int,std::istream&);
+	int readSlash(int,std::istream&);
 	
 	//Checks if the portion of the string starting at $start and ending at $end is all whitespace.
 	//DOES NOT CHECK IF the index args are valid for the string given.
@@ -711,8 +711,8 @@ public:
 		fist.open(filename, static_cast<std::ios_base::openmode>(static_cast<int>(drapes))); //VS2019 doesn't make me do this static-casting nonsense but g++ does. :weary:
 	}
 
-	//Reads in an ifstream line-by-line as an ASCII text file which is supposed to contain João code.
-	void scan(std::ifstream&);
+	//Reads in an istream (most likely an ifstream) line-by-line as an ASCII text file which is supposed to contain João code.
+	void scan(std::istream&);
 
 	//These functions mostly exist to get convenient access to sub-Scanners invoked by the 'include' keyword and its functionality
 	std::vector<Token*> get_tokens() const { return tokens; }

@@ -133,7 +133,7 @@ for instance, being able to warn about swapping <= to become =< instead, an inva
 
 Still generates a SymbolToken, just is a bit nicer about it.
 */
-int Scanner::readEqSymbol(int it, std::ifstream& ifst)
+int Scanner::readEqSymbol(int it, std::istream& ifst)
 {
 	char first = line[it];
 	const bool can_be_two = static_cast<size_t>(it + 1) < line.length();
@@ -180,7 +180,7 @@ int Scanner::readEqSymbol(int it, std::ifstream& ifst)
 	}
 }
 
-int Scanner::readSymbol(int it, std::ifstream& ifst)
+int Scanner::readSymbol(int it, std::istream& ifst)
 {
 	char first = line[it];
 	char second = '\0';
@@ -321,7 +321,7 @@ int Scanner::readWord(int it)
 }
 
 //it here points to the 3rd character of comment, including the hashes. If it's '#' then it's a longcomment (or an attempt at one)
-int Scanner::readComment(int it,std::ifstream& ifst)
+int Scanner::readComment(int it,std::istream& ifst)
 {
 
 	if(it > line.length() || line[it] != '#') // If this is a linecomment
@@ -355,7 +355,7 @@ int Scanner::readComment(int it,std::ifstream& ifst)
 
 
 //Reads in a '/' character and disambiguates it between meaning a DirectoryToken, ConstructionToken, or a SymbolToken.
-int Scanner::readSlash(int it, std::ifstream& ifst)
+int Scanner::readSlash(int it, std::istream& ifst)
 {
 /*
 Situations that prove that this is an operator: (easier)
@@ -456,7 +456,7 @@ READSLASH_FINISH:
 	return it;
 }
 
-void Scanner::scan(std::ifstream& ifst)
+void Scanner::scan(std::istream& ifst)
 {
 	do
 	{
