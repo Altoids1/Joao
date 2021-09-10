@@ -1,5 +1,6 @@
 #pragma once
 
+#ifndef JOAO_NO_INCLUDE_STD
 //Core Libraries
 #include <iostream>
 #include <fstream>
@@ -10,8 +11,10 @@
 #include <list>
 #include <stack>
 
+
 #ifdef __GNUG__
 	#include <cmath>
+#endif
 #endif
 
 #ifdef DEBUG
