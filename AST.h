@@ -426,6 +426,7 @@ public:
 
 		return str;
 	}
+	static Value BinaryOperation(Value&, Value&, bOps, Interpreter&);
 };
 
 class ReturnStatement : public Expression {

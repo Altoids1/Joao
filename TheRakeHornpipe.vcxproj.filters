@@ -63,6 +63,9 @@
     <ClCompile Include="nativefuncs\error.cpp">
       <Filter>Source Files\nativeLibrary</Filter>
     </ClCompile>
+    <ClCompile Include="BinaryOperations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AST.h">

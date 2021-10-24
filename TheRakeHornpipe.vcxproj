@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="Args.cpp" />
     <ClCompile Include="AST.cpp" />
+    <ClCompile Include="BinaryOperations.cpp" />
     <ClCompile Include="Directory.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="main.cpp" />
