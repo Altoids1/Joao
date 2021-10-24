@@ -85,7 +85,7 @@ void Interpreter::UncaughtRuntime(const Value& err)
 	std::cout << *(err.t_value.as_object_ptr->get_property(*this, "what").t_value.as_string_ptr);
 #ifdef JOAO_SAFE
 	throw err;
-#elif
+#else
 	exit(err.t_value.as_object_ptr->get_property(*this, "code").t_value.as_int);
 #endif
 }
