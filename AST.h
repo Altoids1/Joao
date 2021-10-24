@@ -413,9 +413,18 @@ public:
 			sop = "Concatenate";
 			break;
 		//
+		case(bOps::ShiftLeft):
+			sop = "ShiftLeft";
+			break;
+		//
 		case(bOps::Equals):
 			sop = "Equals";
 			break;
+		case(bOps::NotEquals):
+			sop = "NotEquals";
+			break;
+		//
+
 		default:
 			sop = "????";
 		}
@@ -683,9 +692,18 @@ public:
 	virtual std::string dump(int indent)
 	{
 		std::string ind = std::string(indent, ' ');
-		std::string str = ind + "IfBlock\n";
+		std::string str = ind;
+		
 
-		str += ind + "?Cond:\n" + condition->dump(indent + 2);
+		if (condition)
+		{
+			str += "IfBlock\n";
+			str += ind + "?Cond:\n" + condition->dump(indent + 2);
+		}
+		else
+		{
+			str += "ElseBlock\n";
+		}
 
 		for (size_t i = 0; i < statements.size(); ++i)
 		{

@@ -31,14 +31,15 @@
 	
 ##While loops
 	Number m = 1;
-	while(n < 0)
+	Number o = 20;
+	while(o > 0)
 	{
 		m *= 2;
-		n -= 1;
+		o -= 1;
 	}
 	if(m != (1 << 20))
 	{
-		throw /error/New(TEST_NUMBER,"While loops failed: " .. m);
+		throw /error/New(TEST_NUMBER,"While loops failed: " .. m .. "\t" .. o);
 	}
 	
 	print("Test #" .. TEST_NUMBER .. " passed");
