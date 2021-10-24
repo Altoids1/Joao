@@ -38,6 +38,8 @@
 	}
 	if(m != (1 << 20))
 	{
-		throw /error/New(TEST_NUMBER,"While loops failed!");
+		throw /error/New(TEST_NUMBER,"While loops failed: " .. m);
 	}
+	
+	print("Test #" .. TEST_NUMBER .. " passed");
 }

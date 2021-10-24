@@ -86,7 +86,11 @@ void Interpreter::UncaughtRuntime(const Value& err)
 #ifdef JOAO_SAFE
 	throw err;
 #else
-	exit(err.t_value.as_object_ptr->get_property(*this, "code").t_value.as_int);
+	int code = err.t_value.as_object_ptr->get_property(*this, "code").t_value.as_int;
+	if (code)
+		exit(code);
+	else
+		exit(-(1 << 16));
 #endif
 }
 
