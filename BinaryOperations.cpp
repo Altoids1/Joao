@@ -619,6 +619,7 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 		std::string newstr = *(lhs.t_value.as_string_ptr) + *(rhs.t_value.as_string_ptr);
 		return Value(newstr);
 	}
+	//
 	case(BIN_ENUMS(bOps::Equals, Value::vType::String, Value::vType::String)):
 	{
 		return Value(*(lhs.t_value.as_string_ptr) == *(rhs.t_value.as_string_ptr));
@@ -643,31 +644,84 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	{
 		return Value(*(lhs.t_value.as_string_ptr) < *(rhs.t_value.as_string_ptr));
 	}
+	//
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::String, Value::vType::String)):
+	case(BIN_ENUMS(bOps::LogicalOr,  Value::vType::String, Value::vType::String)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::String, Value::vType::String)):
+		return Value(false);
 	//STRING & DOUBLE
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Double)):
 	{
 		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_double);
 		return Value(newstr);
 	}
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::String, Value::vType::Double)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::String, Value::vType::Double)):
+		return Value(rhs.t_value.as_double != static_cast<double>(0));
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::String, Value::vType::Double)):
+		return Value(rhs.t_value.as_double == static_cast<double>(0));
 	//DOUBLE & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::String)):
 	{
 		std::string newstr = std::to_string(lhs.t_value.as_double) + *(rhs.t_value.as_string_ptr);
 		return Value(newstr);
 	}
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Double, Value::vType::String)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Double, Value::vType::String)):
+		return Value(lhs.t_value.as_double != static_cast<double>(0));
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Double, Value::vType::String)):
+		return Value(lhs.t_value.as_double == static_cast<double>(0));
 	//STRING & INT
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Integer)):
 	{
 		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_int);
 		return Value(newstr);
 	}
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::String, Value::vType::Integer)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::String, Value::vType::Integer)):
+		return Value(rhs.t_value.as_int != 0);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::String, Value::vType::Integer)):
+		return Value(rhs.t_value.as_int == 0);
 	//INT & STRING
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::String)):
 	{
 		std::string newstr = std::to_string(lhs.t_value.as_int) + *(rhs.t_value.as_string_ptr);
 		return Value(newstr);
 	}
-	
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Integer, Value::vType::String)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Integer, Value::vType::String)):
+		return Value(lhs.t_value.as_int != 0);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Integer, Value::vType::String)):
+		return Value(lhs.t_value.as_int == 0);
+	//STRING & BOOL
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::String, Value::vType::Bool)):
+	{
+		std::string newstr = *(lhs.t_value.as_string_ptr) + std::to_string(rhs.t_value.as_bool);
+		return Value(newstr);
+	}
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::String, Value::vType::Bool)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::String, Value::vType::Bool)):
+		return Value(rhs.t_value.as_bool);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::String, Value::vType::Bool)):
+		return Value(!rhs.t_value.as_bool);
+	//BOOL & STRING
+	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Bool, Value::vType::String)):
+	{
+		std::string newstr = std::to_string(lhs.t_value.as_bool) + *(rhs.t_value.as_string_ptr);
+		return Value(newstr);
+	}
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Bool, Value::vType::String)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::String)):
+		return Value(lhs.t_value.as_bool);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::String)):
+		return Value(!lhs.t_value.as_bool);
 
 	default:
 		interp.RuntimeError(nullptr, ErrorCode::FailedOperation, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
