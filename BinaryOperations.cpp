@@ -793,7 +793,34 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::String, Value::vType::Null)):
 		return Value(true);
 
+	/*
+	----------------------------------------------------------------------------
+	OVERLOADABLE OPERATORS
+	----------------------------------------------------------------------------
+	*/
+	//OBJECT & OBJECT
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Object, Value::vType::Object)):
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Object, Value::vType::Object)):
+		return Value(true);
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Object, Value::vType::Object)):
+		return Value(false);
 	default:
+		switch (t_op) // Behold, a shitty kludge to handle rawdog-casting Objects to boolean true in logical expressions
+		{
+		case(BinaryExpression::bOps::LogicalAnd):
+		case(BinaryExpression::bOps::LogicalOr):
+		case(BinaryExpression::bOps::LogicalXor):
+			if (lhs.t_vType == Value::vType::Object)
+			{
+				return Value(true && rhs);
+			}
+			else if (rhs.t_vType == Value::vType::Object)
+			{
+				return Value(lhs && true);
+			}
+		default:
+			//Aww, poopie!
+		}
 		interp.RuntimeError(nullptr, ErrorCode::FailedOperation, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
 		return Value();
 	}
