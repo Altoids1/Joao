@@ -819,9 +819,9 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 				return Value(lhs && true);
 			}
 		default:
-			//Aww, poopie!
+			interp.RuntimeError(nullptr, ErrorCode::FailedOperation, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
+			return Value();
 		}
-		interp.RuntimeError(nullptr, ErrorCode::FailedOperation, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
-		return Value();
+		
 	}
 }
