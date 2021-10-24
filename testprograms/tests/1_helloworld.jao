@@ -9,7 +9,7 @@
 	{
 		throw /error/New(TEST_NUMBER, "Addition failed!");
 	}
-	##Concentation
+	##Concatenation
 	if(x .. " world!" != "Hello world!")
 	{
 		throw /error/New(TEST_NUMBER, "Concatenation failed!");
