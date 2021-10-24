@@ -25,13 +25,16 @@ default: joao
 
 # To create the executable file count we need the object files
 joao:  Args.o AST.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Table.o
-	$(CC) $(CFLAGS) -o joao Args.o AST.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o
+	$(CC) $(CFLAGS) -o joao Args.o AST.o BinaryOperations.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o
 
 Args.o: Args.h Scanner.h Parser.h Interpreter.h
 	$(CC) $(CFLAGS) -c Args.cpp
 
 AST.o: AST.cpp Forward.h AST.h Object.h Interpreter.h Parser.h Table.h
 	$(CC) $(CFLAGS) -c AST.cpp
+
+BinaryOperations.o: BinaryOperations.cpp Forward.h AST.h Object.h Interpreter.h Parser.h Table.h
+	$(CC) $(CFLAGS) -c BinaryOperations.cpp
 
 Directory.o: Directory.cpp Forward.h Directory.h
 	$(CC) $(CFLAGS) -c Directory.cpp
