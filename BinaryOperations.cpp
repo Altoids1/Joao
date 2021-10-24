@@ -723,6 +723,76 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::String)):
 		return Value(!lhs.t_value.as_bool);
 
+
+	//NULL & NULL
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Null, Value::vType::Null)):
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Null, Value::vType::Null)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Null, Value::vType::Null)):
+		return Value(false);
+	
+
+	//NULL & DOUBLE
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Null, Value::vType::Double)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Null, Value::vType::Double)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Null, Value::vType::Double)):
+		return Value(rhs.t_value.as_double != static_cast<double>(0));
+
+
+	//DOUBLE & NULL
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Double, Value::vType::Null)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Double, Value::vType::Null)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Double, Value::vType::Null)):
+		return Value(lhs.t_value.as_double != static_cast<double>(0));
+
+
+	//NULL & INT
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Null, Value::vType::Integer)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Null, Value::vType::Integer)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Null, Value::vType::Integer)):
+		return Value(rhs.t_value.as_int != 0);
+
+
+	//INT & NULL
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Integer, Value::vType::Null)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Integer, Value::vType::Null)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Integer, Value::vType::Null)):
+		return Value(lhs.t_value.as_int != 0);
+
+
+	//NULL & BOOL
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Null, Value::vType::Bool)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Null, Value::vType::Bool)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Null, Value::vType::Bool)):
+		return Value(rhs.t_value.as_bool);
+
+
+	//BOOL & NULL
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Null)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Bool, Value::vType::Null)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Bool, Value::vType::Null)):
+		return Value(lhs.t_value.as_bool);
+
+
+	//NULL & STRING
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Null, Value::vType::String)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::Null, Value::vType::String)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::Null, Value::vType::String)):
+		return Value(true);
+
+	//STRING & NULL
+	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::String, Value::vType::Null)):
+		return Value(false);
+	case(BIN_ENUMS(bOps::LogicalOr, Value::vType::String, Value::vType::Null)):
+	case(BIN_ENUMS(bOps::LogicalXor, Value::vType::String, Value::vType::Null)):
+		return Value(true);
+
 	default:
 		interp.RuntimeError(nullptr, ErrorCode::FailedOperation, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
 		return Value();
