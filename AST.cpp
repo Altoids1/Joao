@@ -199,9 +199,14 @@ Value UnaryExpression::resolve(Interpreter& interp)
 		return Value(~rhs.t_value.as_int);
 	case(UN_ENUMS(uOps::BitwiseNot, Value::vType::Double)): // Does, indeed, flip the bits of the double
 	{
-		uint64_t fauxint = ~*(reinterpret_cast<uint64_t*>(&rhs.t_value.as_double));
-		double newdouble = *(reinterpret_cast<double*>(&fauxint));
-		return Value(newdouble);
+		double beta = rhs.t_value.as_double;
+		unsigned char* charlie = reinterpret_cast<unsigned char*>(&beta);
+		unsigned char delta[sizeof(double)];
+		for(int i = 0; i < sizeof(double);++i)
+		{
+			delta[i] = ~charlie[i];
+		}
+		return Value(beta);
 	}
 	//LENGTH
 	case(UN_ENUMS(uOps::Length, Value::vType::String)):
