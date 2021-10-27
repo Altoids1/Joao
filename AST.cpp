@@ -191,6 +191,9 @@ Value UnaryExpression::resolve(Interpreter& interp)
 		return Value(!rhs.t_value.as_int);
 	case(UN_ENUMS(uOps::Not, Value::vType::Double)):
 		return Value(!rhs.t_value.as_double);
+	case(UN_ENUMS(uOps::Not, Value::vType::String)):
+	case(UN_ENUMS(uOps::Not, Value::vType::Object)):
+		return Value(false);
 	//BITWISENOT
 	case(UN_ENUMS(uOps::BitwiseNot, Value::vType::Integer)):
 		return Value(~rhs.t_value.as_int);
@@ -207,6 +210,7 @@ Value UnaryExpression::resolve(Interpreter& interp)
 		if (rhs.t_value.as_object_ptr->is_table())
 			return Value(static_cast<Table*>(rhs.t_value.as_object_ptr)->length());
 	//Rolls over into the default error case on length failure
+	[[fallthrough]];
 	default:
 		interp.RuntimeError(this, ErrorCode::FailedOperation, "Failed to do an Unary operation! (" + rhs.to_string() + ")\nType: (" + rhs.typestring() + ")");
 		return Value();
