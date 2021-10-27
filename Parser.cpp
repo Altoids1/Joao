@@ -810,10 +810,17 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				{
 				case(Token::cEnum::NumberToken):
 				{
-					NumberToken* nt = static_cast<NumberToken*>(t);
-					if(nt->is_double)
-						ParserError(t, "Unexpected double literal after Break keyword; 'break' may only take expressionless integer literals as input!");
-					brk = nt->num.as_int;
+					NumberToken* nt = static_cast<NumberToken*>(t2);
+					if (nt->is_double)
+					{
+						if(nt->num.as_double != int64_t(nt->num.as_double))
+							ParserError(t, "Unexpected double-type literal after Break keyword; 'break' may only take expressionless integer literals as input!");
+						brk = nt->num.as_double;
+					}
+					else
+					{
+						brk = nt->num.as_int;
+					}
 
 					if (brk < 1) // No "break 0;" please, thanks
 					{
