@@ -41,7 +41,7 @@
 
 //Version flags
 #define VERSION_MAJOR 1 // For when we break || add || fix something
-#define VERSION_MINOR 2 // For when we add || fix something
+#define VERSION_MINOR 3 // For when we add || fix something
 #define VERSION_PATCH 0 // For when we fix something
 constexpr char VERSION_STRING[]{ VERSION_MAJOR + '0' , '.' , VERSION_MINOR + '0' , '.' , VERSION_PATCH + '0' , '\0'};
 
