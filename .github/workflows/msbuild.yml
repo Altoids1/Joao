@@ -38,3 +38,5 @@ jobs:
         ./x64/Release/Joao.exe ./testprograms/tests/2_blocks.jao
         ./x64/Release/Joao.exe ./testprograms/tests/3_functions.jao
         ./x64/Release/Joao.exe ./testprograms/tests/4_objects.jao
+        ./x64/Release/Joao.exe ./testprograms/tests/5_strings.jao
+        ./x64/Release/Joao.exe ./testprograms/tests/6_parser.jao

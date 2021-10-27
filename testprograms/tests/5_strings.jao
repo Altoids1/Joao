@@ -1,0 +1,44 @@
+/foo(x)
+{
+	return x .. " and omega";
+}
+
+/main()
+{
+	Number TEST_NUMBER = 5;
+
+	##Concatenation
+	String cool = "cool";
+	if(cool .. " and good" != "cool and good")
+	{
+		throw /error/New(TEST_NUMBER,"Concatenation failed!");
+	}
+	
+	##Comparison
+	if("A" > "B")
+	{
+		throw /error/New(TEST_NUMBER,"String comparison failed!");
+	}
+	
+	##Logic
+	if(!"apple")
+	{
+		throw /error/New(TEST_NUMBER,"String logic failed!");
+	}
+	
+	##Cloning
+	String cooler = cool;
+	if(cooler != "cool")
+	{
+		throw /error/New(TEST_NUMBER,"String cloning failed!");
+	}
+
+	##Passing strings
+	String alpha = "alpha";
+	if(foo(alpha) != "alpha and omega")
+	{
+		throw /error/New(TEST_NUMBER,"Passing strings as parameters failed!");
+	}
+	
+	print("Test #" .. TEST_NUMBER .. " passed");
+}

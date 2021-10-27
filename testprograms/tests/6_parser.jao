@@ -1,0 +1,13 @@
+##Goal here is to throw off the parser
+/main()
+{
+	Number TEST_NUMBER = 6;
+	Number paren = ((((((((((((((7))))))))))))));
+	
+	for(Value x=0;x<10;x+=(1)){break 1;}
+	
+###
+	Long comment!
+### ##Line comment!
+	print("Test #" .. TEST_NUMBER .. " passed");
+}
