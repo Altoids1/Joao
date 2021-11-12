@@ -167,6 +167,7 @@
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Scanner.cpp" />
     <ClCompile Include="Table.cpp" />
+    <ClCompile Include="Value.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Args.h" />
@@ -184,6 +185,7 @@
     <ClInclude Include="Scope.h" />
     <ClInclude Include="SharedEnums.h" />
     <ClInclude Include="Table.h" />
+    <ClInclude Include="Value.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Joao.rc" />

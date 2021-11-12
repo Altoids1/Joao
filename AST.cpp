@@ -9,52 +9,10 @@
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
 
-Value Value::dev_null = Value();
 #ifdef JOAO_SAFE
 int Expression::expr_count = 0;
 #endif
 
-std::string Value::to_string()
-{
-	switch (t_vType)
-	{
-	case(vType::Null):
-		return "NULL";
-	case(vType::Bool):
-		return std::to_string(t_value.as_bool);
-	case(vType::Integer):
-		return std::to_string(t_value.as_int);
-	case(vType::Double):
-		return std::to_string(t_value.as_double);
-	case(vType::String):
-		return *(t_value.as_string_ptr);
-	case(vType::Object):
-		return t_value.as_object_ptr->dump();
-	default:
-		return "???";
-	}
-}
-
-std::string Value::typestring()
-{
-	switch (t_vType)
-	{
-	case(vType::Null):
-		return "NULL";
-	case(vType::Bool):
-		return "Boolean";
-	case(vType::Integer):
-		return "Integer";
-	case(vType::Double):
-		return "Double";
-	case(vType::String):
-		return "String";
-	case(vType::Object):
-		return "Object";
-	default:
-		return "UNKNOWN!!";
-	}
-}
 
 Value ASTNode::resolve(Interpreter& interp)
 {

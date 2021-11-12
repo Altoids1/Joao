@@ -16,7 +16,7 @@ ObjectType* Program::construct_table_library()
 			t->t_array.push_back(args[i]);
 		}
 
-		return Value(obj); // If anything.
+		return Value(true); // If anything.
 	}));
 	table->set_typemethod_raw("implode",new NativeMethod("implode",[](std::vector<Value> args, Object* obj){
 		Table* t = static_cast<Table*>(obj);
