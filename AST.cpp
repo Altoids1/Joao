@@ -62,7 +62,7 @@ Value& Identifier::handle(Interpreter& interp)
 	Function* funky = interp.get_func(t_name,this,false);
 	if (funky)
 	{
-		return *(new Value(funky)); // memory leak woo
+		return funky->to_value();
 	}
 	else
 	{
@@ -447,7 +447,9 @@ Value ForBlock::resolve(Interpreter& interp)
 		initializer->resolve(interp);
 	while (condition && condition->resolve(interp))
 	{
+		interp.push_block("for2"); // The "secondary layer" of the for-loop's block, which is actually reset each iteration
 		Value blockret = iterate_statements(interp);
+		interp.pop_block();
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
@@ -543,7 +545,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 			return Value::dev_null;
 		}
 		meth->set_obj(fr.t_value.as_object_ptr);
-		return *(new Value(meth));
+		return meth->to_value();
 	}
 
 	// This is something confusing, then

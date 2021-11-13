@@ -132,6 +132,7 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 	//Then try globalscope
 	if (globalscope.table.count(varname))
 	{
+		delete globalscope.table[varname];
 		Value* vuh = new Value(val);
 		globalscope.table[varname] = vuh;
 		return;
@@ -286,7 +287,7 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 	Function* fnuh = objt->has_typemethod(*this, str, getter);
 	if (fnuh)
 	{
-		return *(new Value(fnuh));
+		return fnuh->to_value();
 	}
 
 	RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to get property of Parent objectscope!");

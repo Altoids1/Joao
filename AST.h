@@ -421,14 +421,17 @@ protected:
 	//std::vector<Expression> args;
 	std::string t_name; // My name
 	Object* obj = nullptr; // I don't know.
+	Value my_value; // A value reference which represents me. of type Function; necessary for somethings sometimes
 
 	Function()
+		:my_value(Value(this))
 	{
 
 	}
 public:
 	
-	std::string get_name() { return t_name; }
+	Value& to_value() { return my_value; }
+	std::string get_name() const { return t_name; }
 	Object* get_obj() const { return obj; }
 	void set_obj(Object* o) { obj = o; };
 	Function(std::string name, Expression* expr)
