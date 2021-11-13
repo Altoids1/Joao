@@ -352,7 +352,8 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	case(Token::cEnum::StringToken): // LiteralString
 	{
 		StringToken st = *static_cast<StringToken*>(t);
-		lvalue = new Literal(Value(st.word));
+		Value val = Value(st.word);
+		lvalue = new Literal(val);
 		tokenheader = here + 1;
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readlvalue setting tokenheader to " << std::to_string(tokenheader) << std::endl;

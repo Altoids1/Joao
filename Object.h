@@ -24,9 +24,6 @@ public:
 	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
 	Function* get_method(Interpreter&, std::string);
 
-	//Attempts to queue this object for garbage collection. TODO: Make garbage collection for objects exist.
-	void qdel();
-
 	Object(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh, Metatable* m = nullptr)
 		:base_properties(puh)
 		,base_funcs(fuh)

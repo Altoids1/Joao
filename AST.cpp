@@ -9,52 +9,10 @@
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
 
 
-Value Value::dev_null = Value();
 #ifdef JOAO_SAFE
 int Expression::expr_count = 0;
 #endif
 
-std::string Value::to_string()
-{
-	switch (t_vType)
-	{
-	case(vType::Null):
-		return "NULL";
-	case(vType::Bool):
-		return std::to_string(t_value.as_bool);
-	case(vType::Integer):
-		return std::to_string(t_value.as_int);
-	case(vType::Double):
-		return std::to_string(t_value.as_double);
-	case(vType::String):
-		return *(t_value.as_string_ptr);
-	case(vType::Object):
-		return t_value.as_object_ptr->dump();
-	default:
-		return "???";
-	}
-}
-
-std::string Value::typestring()
-{
-	switch (t_vType)
-	{
-	case(vType::Null):
-		return "NULL";
-	case(vType::Bool):
-		return "Boolean";
-	case(vType::Integer):
-		return "Integer";
-	case(vType::Double):
-		return "Double";
-	case(vType::String):
-		return "String";
-	case(vType::Object):
-		return "Object";
-	default:
-		return "UNKNOWN!!";
-	}
-}
 
 Value ASTNode::resolve(Interpreter& interp)
 {
@@ -104,7 +62,7 @@ Value& Identifier::handle(Interpreter& interp)
 	Function* funky = interp.get_func(t_name,this,false);
 	if (funky)
 	{
-		return *(new Value(funky)); // memory leak woo
+		return funky->to_value();
 	}
 	else
 	{
@@ -489,7 +447,9 @@ Value ForBlock::resolve(Interpreter& interp)
 		initializer->resolve(interp);
 	while (condition && condition->resolve(interp))
 	{
+		interp.push_block("for2"); // The "secondary layer" of the for-loop's block, which is actually reset each iteration
 		Value blockret = iterate_statements(interp);
+		interp.pop_block();
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
@@ -518,7 +478,9 @@ Value WhileBlock::resolve(Interpreter& interp)
 
 	while (condition->resolve(interp))
 	{
+		interp.push_block("while2");
 		Value blockret = iterate_statements(interp);
+		interp.pop_block();
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1;
@@ -585,7 +547,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 			return Value::dev_null;
 		}
 		meth->set_obj(fr.t_value.as_object_ptr);
-		return *(new Value(meth));
+		return meth->to_value();
 	}
 
 	// This is something confusing, then
