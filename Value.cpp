@@ -103,6 +103,8 @@ std::string Value::to_string() const
 		return *(t_value.as_string_ptr);
 	case(vType::Object):
 		return t_value.as_object_ptr->dump();
+	case(vType::Function):
+		return "Function (" + t_value.as_function_ptr->get_name() +")";
 	default:
 		return "???";
 	}
@@ -124,6 +126,8 @@ std::string Value::typestring()
 		return "String";
 	case(vType::Object):
 		return "Object";
+	case(vType::Function):
+		return "Function";
 	default:
 		return "UNKNOWN!!";
 	}
