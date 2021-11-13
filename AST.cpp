@@ -478,7 +478,9 @@ Value WhileBlock::resolve(Interpreter& interp)
 
 	while (condition->resolve(interp))
 	{
+		interp.push_block("while2");
 		Value blockret = iterate_statements(interp);
+		interp.pop_block();
 		if (interp.BREAK_COUNTER)
 		{
 			interp.BREAK_COUNTER -= 1;
