@@ -33,7 +33,7 @@ void Value::deref_as_obj()
 	{
 		cached_ptrs.erase(t_value.as_object_ptr);
 #ifdef LOUD_GC
-		std::cout << "Deleting " << to_string();
+		std::cout << "Deleting " << to_string() << std::endl;
 #endif
 		delete t_value.as_object_ptr;
 	}
@@ -158,10 +158,10 @@ Value& Value::operator=(const Value& rhs)
 	case(vType::String):
 		t_value.as_string_ptr = rhs.t_value.as_string_ptr;
 		cached_ptrs[rhs.t_value.as_string_ptr]++;
-		t_value.as_object_ptr = rhs.t_value.as_object_ptr;
 		break;
 	case(vType::Object):
 		cached_ptrs[rhs.t_value.as_object_ptr]++;
+		t_value.as_object_ptr = rhs.t_value.as_object_ptr;
 		break;
 	case(vType::Bool):
 		t_value.as_bool = rhs.t_value.as_bool;

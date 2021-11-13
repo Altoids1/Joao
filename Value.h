@@ -108,7 +108,7 @@ class Value : public UnmanagedValue { // A general pseudo-typeless Value used to
 			cached_ptrs.erase(t_value.as_string_ptr);
 			str_to_ptr.erase(*t_value.as_string_ptr);
 #ifdef LOUD_GC
-			std::cout << "Deleting " << (*t_value.as_string_ptr);
+			std::cout << "Deleting " << (*t_value.as_string_ptr) << std::endl;
 #endif
 			delete t_value.as_string_ptr;
 		}

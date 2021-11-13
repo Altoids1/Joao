@@ -30,11 +30,17 @@ ObjectType* Program::construct_error_library()
 		{
 		default:
 		case(2):
+#ifdef _DEBUG
+			if (args[1].t_vType != Value::vType::String)
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+#endif
 			obj->set_property_raw("what", args[1]);
+			[[fallthrough]];
 		case(1):
 			if (args[0].t_vType != Value::vType::Integer && args[0].t_vType != Value::vType::Double)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			obj->set_property_raw("code", args[0]);
+			[[fallthrough]];
 		case(0):
 			break;
 		}

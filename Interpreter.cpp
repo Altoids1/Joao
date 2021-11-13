@@ -69,7 +69,6 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 
 void Interpreter::RuntimeError(ASTNode* node, ErrorCode err,const std::string& what)
 {
-
 	error = Value(prog->definedObjTypes["/error"]->makeObject(*this, {Value(static_cast<int>(err)),Value(what) }));
 	//assert(error.t_value.as_object_ptr->get_property_raw("what").t_vType == Value::vType::String);
 	return;
