@@ -24,8 +24,8 @@ CFLAGS = -g -std=c++17 -O3 -s $(WARNINGS)
 default: joao
 
 # To create the executable file count we need the object files
-joao:  Args.o AST.o BinaryOperations.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Table.o
-	$(CC) $(CFLAGS) -o joao Args.o AST.o BinaryOperations.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o
+joao:  Args.o AST.o BinaryOperations.o Directory.o Interpreter.o main.o math.o string.o tablelib.o Object.o Parser.o Program.o Scanner.o Table.o Value.o
+	$(CC) $(CFLAGS) -o joao Args.o AST.o BinaryOperations.o Directory.o Interpreter.o main.o Object.o Parser.o Program.o Scanner.o Table.o Value.o
 
 Args.o: Args.h Scanner.h Parser.h Interpreter.h
 	$(CC) $(CFLAGS) -c Args.cpp
@@ -71,6 +71,9 @@ Scanner.o:  Scanner.cpp Scanner.h
 	
 Table.o: Table.cpp Table.h Interpreter.h
 	$(CC) $(CFLAGS) -c Table.cpp
+
+Value.o: Value.cpp Value.h
+	$(CC) $(CFLAGS) -c Value.cpp
 
 # To start over from scratch, type 'make clean'.  This
 # removes the executable file, as well as old .o object
