@@ -39,7 +39,7 @@ I hope you like it.
 /apple
 {
 	Value stinky = false;
-	Value color = "red";
+	String color = "red";
 }
 
 /apple/rotten
@@ -50,6 +50,6 @@ I hope you like it.
 
 /apple/get_color()
 {
-	return this.color;
+	return ./color;
 }
 ```
