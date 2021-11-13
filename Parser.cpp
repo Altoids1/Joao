@@ -949,6 +949,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
 			}
 			ParserError(t, "Unexpected PairSymbol while traversing block!");
+			break;
 		}
 		
 		
@@ -967,7 +968,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 			int found_aop = find_aOp(where + 1, yonder - 1);
 
 			if(found_aop) // varstat
-				ASTs.push_back(readAssignmentStatement(where, there));
+				ASTs.push_back(readAssignmentStatement(where, yonder));
 			else // functioncall
 			{
 				ASTNode* luh = readlvalue(where, yonder - 1);

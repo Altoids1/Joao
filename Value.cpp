@@ -48,7 +48,6 @@ Value::Value(const Value& v)
 	case(vType::Object):
 		t_value.as_object_ptr = v.t_value.as_object_ptr; // The order of these two lines matters!
 		cached_ptrs[t_value.as_object_ptr]++;
-		
 		break;
 	case(vType::String):
 		t_value.as_string_ptr = v.t_value.as_string_ptr;
@@ -135,7 +134,7 @@ Value& Value::operator=(const Value& rhs)
 	if (this == &rhs)
 		return *this;
 
-	if (t_vType == t_vType && rhs.t_value.as_object_ptr == t_value.as_object_ptr)
+	if (t_vType == rhs.t_vType && t_value.as_object_ptr == rhs.t_value.as_object_ptr)
 		return *this;
 
 	//Logic to drop the ref to a string or object already held by lhs

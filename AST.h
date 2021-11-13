@@ -435,15 +435,18 @@ public:
 	Object* get_obj() const { return obj; }
 	void set_obj(Object* o) { obj = o; };
 	Function(std::string name, Expression* expr)
+		:my_value(Value(this))
 	{
 		statements = std::vector<Expression*>{ expr };
 	}
 	Function(std::string name, std::vector<Expression*> exprs) // argument-less-ness
+		:my_value(Value(this))
 	{
 		t_name = name;
 		statements = exprs;
 	}
 	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string>& sargs, int linenum = 0)
+		:my_value(Value(this))
 	{
 		t_name = name;
 		statements = exprs;
@@ -489,6 +492,7 @@ class NativeFunction final : public Function
 	// Value lambda() {};
 public:
 	NativeFunction(std::string n)
+		:Function()
 	{
 		t_name = n;
 		lambda = [](std::vector<Value> args)
@@ -497,6 +501,7 @@ public:
 		};
 	}
 	NativeFunction(std::string n, Value(*luh)(std::vector<Value>), int linenum = 0)
+		:Function()
 	{
 		t_name = n;
 		lambda = luh;
@@ -522,6 +527,7 @@ class NativeMethod final : public Function
 public:
 	bool is_static = false; // True if it actually doesn't need an object to act on
 	NativeMethod(std::string n)
+		:Function()
 	{
 		t_name = n;
 		lambda = [](std::vector<Value> args,Object*)
@@ -530,6 +536,7 @@ public:
 		};
 	}
 	NativeMethod(std::string n, Value(*luh)(std::vector<Value>,Object*), int linenum = 0)
+		:Function()
 	{
 		t_name = n;
 		lambda = luh;
