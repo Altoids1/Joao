@@ -24,6 +24,9 @@ public:
 	//Stores the current, most recent runtime error.
 	Value error = Value();
 
+	//Something used to handle rvalues in expressions. TODO: Should be blanked sometimes.
+	Value tempvalue = Value();
+
 	int BREAK_COUNTER = 0; // An integer flag used to break (perhaps several levels) out of one or several blocks (which are not Function blocks)
 	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.
 #ifdef JOAO_SAFE

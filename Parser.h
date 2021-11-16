@@ -275,6 +275,58 @@ class Parser
 		return BinaryExpression::bOps::NoOp;
 	}
 
+	//Attempts to find a func access. All instances of it are optional; so just quietly returns its var_access arg upon failure.
+	//Here-there-update; here is the token directly following var_access
+	//func_access ::= (property | element)['(' explist ')'][func_access]
+	void readFuncAccess(ASTNode*& var_access, int here, int there)
+	{
+		if (there < here)
+			return;
+		int where = here;
+		for (; where <= there; ++where) // This is all here to handle repetitive Member and Index accesses.
+		//TODO: Make this for-loop a discrete function since it's called elsewhere as well
+		{
+			Token* propeller = tokens[where]; // PROPerty or ELLERment. I guess. Shut up.
+
+			switch (propeller->class_enum())
+			{
+			case(Token::cEnum::MemberToken):
+			{
+				++where;
+				//return new MemberAccess(scoped_access, readVarAccess(tokenheader, there)); // Doing just this would end up being right-associative, which for our purposes would be annoying to deal with interpreter-side.
+				//So we're going to do something else.
+				if (tokens[where]->class_enum() != Token::cEnum::WordToken)
+				{
+					ParserError(tokens[where], "Unexpected Token when reading MemberAccess!");
+				}
+				var_access = new MemberAccess(var_access, new Identifier(static_cast<WordToken*>(tokens[where])->word));
+				continue;
+			}
+			case(Token::cEnum::PairSymbolToken):
+			{
+				PairSymbolToken pst = *static_cast<PairSymbolToken*>(propeller);
+				if (pst.t_pOp == PairSymbolToken::pairOp::Bracket)
+				{
+					int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Bracket, where + 1);
+					var_access = new IndexAccess(var_access, readExp(where + 1, yonder - 1));
+					where = yonder;
+					continue;
+
+				}
+				//If it's a parenthesis then we're probably about to do a function call but, that's none of *our* business in readVarAccess() so just return
+				--where; // Make sure that hypothetical paren handler can actually see the paren
+				goto FACCESS_END;
+			}
+			default: // I dunno what this is, just return what you have and hope the higher stacks know what it is
+				--where;
+				goto FACCESS_END;
+			}
+		}
+	FACCESS_END:
+		tokenheader = where + 1;
+		return;
+	}
+
 	// VAR_ACCESS ::=
 	// scoped_access | var_access property | var_access element
 	// scoped_access ::= './' Name | {'../'}'../' Name | '/' Name | Name

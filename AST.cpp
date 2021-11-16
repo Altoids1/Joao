@@ -324,6 +324,13 @@ Value CallExpression::resolve(Interpreter& interp)
 	return fptr->resolve(interp);
 }
 
+//HOPEFULLY! this is an rvalue-kinda situation we have on our hands here
+Value& CallExpression::handle(Interpreter& interp)
+{
+	interp.tempvalue = resolve(interp);
+	return interp.tempvalue;
+}
+
 Value NativeFunction::resolve(Interpreter& interp)
 {
 	Value result = lambda(t_args);

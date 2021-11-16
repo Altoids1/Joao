@@ -371,20 +371,24 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			break;
 		}
 		//Now check to see if this is actually a function call
+		//If this fails it's okay; just means that it's a regular var_access, I think
 		Token* nexttoken = tokens[tokenheader];
 		if (nexttoken->class_enum() == Token::cEnum::PairSymbolToken)
 		{
 			PairSymbolToken* pst = static_cast<PairSymbolToken*>(nexttoken);
-			if (pst->is_start && pst->t_pOp == PairSymbolToken::pairOp::Paren)
+			if (pst->is_start && pst->t_pOp == PairSymbolToken::pairOp::Paren) // I guess it is!
+			//functioncall ::= var_access '(' explist ')' [func_access] 
 			{
 				int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
 				if (close != tokenheader + 1)
 					lvalue = new CallExpression(lvalue, readArgs(tokenheader + 1, close - 1), tokens[here]->line);
 				else
 					lvalue = new CallExpression(lvalue, {},tokens[here]->line);
-
-				tokenheader = close + 1;
+				//Now check for any func_access
+				//(updates tokenheader for us :))
+				readFuncAccess(lvalue, close + 1, there);
 				break;
+
 			}
 		}
 
@@ -970,7 +974,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 			if(found_aop) // varstat
 				ASTs.push_back(readAssignmentStatement(where, yonder));
 			else // functioncall
-			{
+			{ // defers to readlvalue(), since it contains the functioncall constructor within it
 				ASTNode* luh = readlvalue(where, yonder - 1);
 				if (luh->is_expression())
 					ASTs.push_back(static_cast<Expression*>(luh));

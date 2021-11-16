@@ -396,6 +396,7 @@ public:
 	}
 
 	virtual Value resolve(Interpreter&) override;
+	virtual Value& handle(Interpreter&) override;
 	virtual const std::string class_name() const override { return "CallExpression"; }
 	virtual std::string dump(int indent) override {
 		std::string ind = std::string(indent, ' ');
