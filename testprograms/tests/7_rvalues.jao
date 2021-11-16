@@ -1,0 +1,16 @@
+/make_table()
+{
+	Object t = /table/New();
+	t[0] = /table/New();
+	t[0][0] = "Cool!"; 
+	return t;
+}
+
+/main()
+{
+	Number TEST_NUMBER = 7;
+	if(make_table()[0][0] == "Cool!")
+	{
+		print("Test #" .. TEST_NUMBER .. " passed!");
+	}
+}
