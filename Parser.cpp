@@ -379,13 +379,18 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			if (pst->is_start && pst->t_pOp == PairSymbolToken::pairOp::Paren) // I guess it is!
 			//functioncall ::= var_access '(' explist ')' [func_access] 
 			{
-				int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
+				int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader+1);
 				if (close != tokenheader + 1)
 					lvalue = new CallExpression(lvalue, readArgs(tokenheader + 1, close - 1), tokens[here]->line);
 				else
 					lvalue = new CallExpression(lvalue, {},tokens[here]->line);
 				//Now check for any func_access
 				//(updates tokenheader for us :))
+				if (close + 1 >= there)
+				{
+					tokenheader = close + 1;
+					break;
+				}
 				readFuncAccess(lvalue, close + 1, there);
 				break;
 
@@ -414,7 +419,12 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 		else
 			lvalue = new Construction(ct.dir, {}, tokens[here]->line);
 
-		tokenheader = close + 1;
+		if (close + 1 >= there)
+		{
+			tokenheader = close + 1;
+			break;
+		}
+		readFuncAccess(lvalue, close + 1, there);
 		break;
 	}
 	case(Token::cEnum::PairSymbolToken): // tableconstructor | '(' exp ')'

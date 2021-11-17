@@ -280,8 +280,6 @@ class Parser
 	//func_access ::= (property | element)['(' explist ')'][func_access]
 	void readFuncAccess(ASTNode*& var_access, int here, int there)
 	{
-		if (there < here)
-			return;
 		int where = here;
 		for (; where <= there; ++where) // This is all here to handle repetitive Member and Index accesses.
 		//TODO: Make this for-loop a discrete function since it's called elsewhere as well
