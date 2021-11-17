@@ -39,6 +39,7 @@
 #define MAX_STATEMENTS 10000 // The maximum number of statements that will be executed in JOAO_SAFE mode.
 #define MAX_VARIABLES 1024 // How many variables Joao is allowed to use, as a hard limit. Includes indices.
 #define MAX_RECURSION 64 // The maximum depth of recursion of Joao functions.
+#define MAX_REPLACEMENTS_ALLOWED 256 // The maximum number of replacements that /replace() can carry out.
 #endif
 
 //Version flags

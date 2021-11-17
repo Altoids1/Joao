@@ -21,6 +21,41 @@ void Program::construct_string_library()
 		return Value(cpp_result);
 	}));
 
+	NATIVE_FUNC("replace")
+	{
+		if (args.size() < 3)
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
+		Value hay = args[0];
+		Value needle = args[1];
+		Value better_hay = args[2];
+		if (hay.t_vType != Value::vType::String || needle.t_vType != Value::vType::String || better_hay.t_vType != Value::vType::String)
+			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+
+		const std::string& hay_str = *hay.t_value.as_string_ptr;
+		const std::string& needle_str = *needle.t_value.as_string_ptr;
+		const std::string& better_hay_str = *better_hay.t_value.as_string_ptr;
+		const int needle_len = needle_str.size();
+		if (hay_str.find(needle_str) == std::string::npos)
+			return hay;
+		std::string newstr = hay_str;
+		size_t position = 0;
+#ifdef JOAO_SAFE
+		for(int i = 0; i < MAX_REPLACEMENTS_ALLOWED; ++i) // It just returning the partially-replaced string is... fine, I guess.
+#else
+		while (true)
+#endif
+		{
+			auto pos = newstr.find(needle_str, position);
+			if (pos == std::string::npos)
+				break;
+			newstr.replace(pos, needle_len, better_hay_str);
+			position = pos + better_hay_str.size(); // If size is one, then look at the pos+1 position next, I guess!
+			if (position >= newstr.size())
+				break;
+		}
+		return Value(newstr);
+	}));
+
 	NATIVE_FUNC("rep")
 	{
 		if (args.size() < 2)
