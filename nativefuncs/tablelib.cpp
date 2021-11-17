@@ -95,6 +95,13 @@ ObjectType* Program::construct_table_library()
 		return Value(t->t_array[rand() % t->t_array.size()]);
 	}));
 
+	definedFunctions["pick"] = new NativeFunction("pick", [](std::vector<Value> args)
+		{
+			if (!args.size())
+				return Value();
+			return Value(args[rand() % args.size()]);
+		});
+
 	table->set_typemethod_raw("remove",new NativeMethod("remove",[](std::vector<Value> args, Object* obj){
 		if(args.size() < 1)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
