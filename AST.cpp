@@ -159,10 +159,9 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	{
 		double beta = rhs.t_value.as_double;
 		unsigned char* charlie = reinterpret_cast<unsigned char*>(&beta);
-		unsigned char delta[sizeof(double)];
 		for(int i = 0; i < sizeof(double);++i)
 		{
-			delta[i] = ~charlie[i];
+			charlie[i] = ~charlie[i];
 		}
 		return Value(beta);
 	}
