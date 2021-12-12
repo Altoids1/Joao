@@ -135,6 +135,9 @@ std::string Value::typestring()
 
 Value& Value::operator=(const Value& rhs)
 {
+	if (this == &Value::dev_null)
+		return *this;
+
 	if (this == &rhs)
 		return *this;
 
