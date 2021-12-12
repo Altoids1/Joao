@@ -56,36 +56,6 @@ ObjectType* Program::construct_table_library()
 		return Value(result);
 	}));
 
-
-	table->set_typemethod_raw("insert",new NativeMethod("insert",[](std::vector<Value> args, Object* obj){
-		if(args.size() < 2)
-			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
-		if(args[0].t_vType != Value::vType::Integer)
-			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-		
-		size_t index = args[0].t_value.as_int;
-
-		//This tries to mimic some of the behavior of at_set() w/o explicitly calling it
-		//FIXME: This should really all use the same function tbh
-
-		Table* t = static_cast<Table*>(obj);
-
-		if(index > t->t_array.size())
-		{
-			t->t_array.resize(index,Value());
-			t->t_array.push_back(args[1]);
-		}
-		else if(index ==  t->t_array.size())
-		{
-			t->t_array.push_back(args[1]);
-		}
-		else
-		{
-			t->t_array.insert(t->t_array.begin() + index,args[1]);
-		}
-		return Value();
-	}));
-
 	table->set_typemethod_raw("pick", new NativeMethod("pick", [](std::vector<Value> args, Object* obj) {
 		Table* t = static_cast<Table*>(obj);
 

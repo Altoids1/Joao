@@ -21,6 +21,7 @@ class Table final : public Object
 {
 public:
 	std::vector<Value> t_array;
+	std::unordered_map<size_t, Value> t_hash;
 	Table(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
 		:Object(objty,puh,fuh,nullptr)
 	{
@@ -35,12 +36,7 @@ public:
 
 	//Sets the value pointed to by index to the value referenced by the second.
 	void at_set(Interpreter&, Value, Value&);
-
-	//Handle a resize of the array such that it can now store new_index.
-	void resize(Value::JoaoInt new_index)
-	{
-		t_array.resize(static_cast<size_t>(new_index) + 1, Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
-	}
+	bool at_set_raw(Value, Value&);
 
 	size_t length() { return t_array.size(); }
 	bool virtual is_table() override { return true; }
