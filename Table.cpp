@@ -47,7 +47,7 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 		{
 			return t_hash.at(hash);
 		}
-		return Value::dev_null;
+		return talloc(index, Value());
 	}
 	case(Value::vType::Integer):
 		array_index = index.t_value.as_int;
@@ -66,30 +66,56 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 		{
 			return t_hash.at(hash);
 		}
-		return Value::dev_null;
+		return talloc(index, Value());
 	}
 
 	return t_array.at(array_index);
 }
 
+bool Table::at_set_raw(Value index, Value& newval)
+{
+	switch (index.t_vType)
+	{
+	default:
+		return true;
+	case(Value::vType::String):
+	case(Value::vType::Integer):
+	case(Value::vType::Double):
+		talloc(index, newval);
+		return false;
+	}
+}
+
 void Table::at_set(Interpreter& interp, Value index, Value& newval)
 {
-	Value::JoaoInt array_index;
-
 	switch (index.t_vType)
 	{
 	default:
 		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Bad type used to index into Table!");
 		return;
-	case(Value::vType::String): 
+	case(Value::vType::String):
+	case(Value::vType::Integer):
+	case(Value::vType::Double):
+		talloc(index, newval);
+		return;
+	}
+}
+
+Value& Table::talloc(Value index, const Value& newval)
+{
+	Value::JoaoInt array_index;
+
+	switch (index.t_vType)
+	{
+	case(Value::vType::String):
 	{
 		// Unfortunately we can't just use our properties since, since these elements are removable,
 		// this would allow Objects which inherit from /table to rescind their properties and go AWOL from the OOP structure,
 		// which, while pleasantly chaotic, would be a horrible paradigm to allow, and honestly would probably end up being kinda buggy.
-		
+
 		size_t hash_index = std::hash<std::string>()(*index.t_value.as_string_ptr);
 		t_hash[hash_index] = newval;
-		return;
+		return t_hash.at(hash_index);
 	}
 	case(Value::vType::Integer):
 		array_index = index.t_value.as_int;
@@ -103,29 +129,27 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 	{
 		size_t hash_index = std::hash<Value::JoaoInt>()(index.t_value.as_int);
 		t_hash[hash_index] = newval;
-		return;
+		return t_hash.at(hash_index);
 	}
 
 	//Would this fit in the next sequential spot?
 	if (array_index == static_cast<Value::JoaoInt>(t_array.size()))
 	{ // Perfect! A pleasant and surprisingly common case.
 		t_array.push_back(newval);
-		return;
+		return t_array.at(array_index);
 	}
 
 	//Is this index already in the array to begin with?
 	if (array_index < static_cast<Value::JoaoInt>(t_array.size()))
 	{
-		t_array.at(array_index) = newval;
-		return;
+		return t_array.at(array_index) = newval;
 	}
 
 	//..Is this index already in the HASHTABLE to begin with?
 	size_t hash_index = std::hash<Value::JoaoInt>()(array_index);
 	if (t_hash.count(hash_index))
 	{
-		t_hash.at(hash_index) = newval;
-		return;
+		return t_hash.at(hash_index) = newval;
 	}
 
 	//If we won't cause a rehash by adding this new element to the hashtable...
@@ -133,7 +157,7 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 	{
 		// Just stick it in there, then, tbh
 		t_hash[hash_index] = newval;
-		return;
+		return t_hash.at(hash_index);
 	}
 
 	//If we *would*, do a check to make sure that we can't just move some stuff over
@@ -151,8 +175,10 @@ void Table::at_set(Interpreter& interp, Value index, Value& newval)
 		t_array.push_back(std::move(t_hash.at(hash)));
 		t_hash.erase(hash);
 	}
+	t_array.push_back(newval);
+	return t_array.at(array_index);
 
 JUST_HASH_IT:
 	t_hash[hash_index] = newval;
-	return;
+	return t_hash.at(hash_index);
 }

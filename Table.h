@@ -19,6 +19,10 @@ This concept in general is a mixture of general OOP and Lua's concept of having 
 */
 class Table final : public Object
 {
+	//The worker function for at_ref, at_set, and at_set_raw.
+	//Allocates space within the table for the key-value pair corresponding to the 1st and 2nd args, respectively.
+	//Returns a reference to the place it allocated. Must succeed.
+	Value& talloc(Value, const Value&);
 public:
 	std::vector<Value> t_array;
 	std::unordered_map<size_t, Value> t_hash;
