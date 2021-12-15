@@ -24,6 +24,9 @@ class Table final : public Object
 	//Returns a reference to the place it allocated. Must succeed.
 	Value& talloc(Value, const Value&);
 public:
+	//Deallocates the index provided, if it exists somewhere.
+	void tfree(const Value&);
+
 	std::vector<Value> t_array;
 	std::unordered_map<size_t, Value> t_hash;
 	Table(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)

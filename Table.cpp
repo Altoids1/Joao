@@ -69,7 +69,7 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 		return talloc(index, Value());
 	}
 
-	return t_array.at(array_index);
+	return t_array.at(array_index); // Friendly reminder that std::vector::at() does bounds-checking, while std::vector::operator[] does not.
 }
 
 bool Table::at_set_raw(Value index, Value& newval)
@@ -181,4 +181,70 @@ Value& Table::talloc(Value index, const Value& newval)
 JUST_HASH_IT:
 	t_hash[hash_index] = newval;
 	return t_hash.at(hash_index);
+}
+
+void Table::tfree(const Value& index)
+{
+	//NOTE: This function should *always* follow the pattern of data access that talloc() does, since it needs to reverse-engineer what it did from the index.
+	Value::JoaoInt array_index;
+
+	switch (index.t_vType)
+	{
+	case(Value::vType::String):
+	{
+		// Unfortunately we can't just use our properties since, since these elements are removable,
+		// this would allow Objects which inherit from /table to rescind their properties and go AWOL from the OOP structure,
+		// which, while pleasantly chaotic, would be a horrible paradigm to allow, and honestly would probably end up being kinda buggy.
+
+		size_t hash_index = std::hash<std::string>()(*index.t_value.as_string_ptr);
+		t_hash.erase(hash_index);
+		return;
+	}
+	case(Value::vType::Integer):
+		array_index = index.t_value.as_int;
+		break;
+	case(Value::vType::Double): // It looks like you were trying to index by doubles. Did you mean to use Integers?
+		array_index = math::round({ index }).t_value.as_int;
+		break;
+	}
+
+	if (array_index < 0)
+	{
+		size_t hash_index = std::hash<Value::JoaoInt>()(index.t_value.as_int);
+		t_hash.erase(hash_index);
+		return;
+	}
+
+	//Is this index already in the array to begin with?
+
+	const Value::JoaoInt arrsize = static_cast<Value::JoaoInt>(t_array.size());
+	if (array_index < arrsize)
+	{
+
+		if (array_index + 1 == arrsize)
+		{
+			t_array.pop_back();
+			return;
+		}
+		//Oh, christ.
+		
+		//So right now, tfree() is only called by /table/remove()
+		//So we can avoid having to do some hashtable weirdness in this case,
+		//and just do an "oops it just erases it and shifts the elements afterwards! lol" for now
+		t_array.erase(t_array.begin()+array_index); // This is kind of a FIXME? Maybe? I guess?
+	}
+
+	//..Is this index already in the HASHTABLE to begin with?
+	size_t hash_index = std::hash<Value::JoaoInt>()(array_index);
+	if (t_hash.count(hash_index))
+	{
+		t_hash.erase(hash_index);
+		return;
+	}
+
+	//This index didn't exist. Weird.
+#ifdef _DEBUG
+	std::cout << "DEBUG: Attempted to tfree() an index that didn't exist!\n";
+#endif
+	return;
 }
