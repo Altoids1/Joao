@@ -19,8 +19,16 @@ This concept in general is a mixture of general OOP and Lua's concept of having 
 */
 class Table final : public Object
 {
+	//The worker function for at_ref, at_set, and at_set_raw.
+	//Allocates space within the table for the key-value pair corresponding to the 1st and 2nd args, respectively.
+	//Returns a reference to the place it allocated. Must succeed.
+	Value& talloc(Value, const Value&);
 public:
+	//Deallocates the index provided, if it exists somewhere.
+	void tfree(const Value&);
+
 	std::vector<Value> t_array;
+	std::unordered_map<size_t, Value> t_hash;
 	Table(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
 		:Object(objty,puh,fuh,nullptr)
 	{
@@ -35,12 +43,7 @@ public:
 
 	//Sets the value pointed to by index to the value referenced by the second.
 	void at_set(Interpreter&, Value, Value&);
-
-	//Handle a resize of the array such that it can now store new_index.
-	void resize(Value::JoaoInt new_index)
-	{
-		t_array.resize(static_cast<size_t>(new_index) + 1, Value()); // FIXME: this is fucking crazy and needs to be changed so as to better support sparsely-populated arrays
-	}
+	bool at_set_raw(Value, Value&);
 
 	size_t length() { return t_array.size(); }
 	bool virtual is_table() override { return true; }
