@@ -59,6 +59,13 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 		{
 			return t_hash.at(hash);
 		}
+#ifdef JOAO_SAFE
+		++interp.value_init_count;
+		if (interp.value_init_count > MAX_VARIABLES)
+		{
+			throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
+		}
+#endif
 		return talloc(index, Value());
 	}
 	case(Value::vType::Integer):
@@ -78,6 +85,13 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 		{
 			return t_hash.at(hash);
 		}
+#ifdef JOAO_SAFE
+		++interp.value_init_count;
+		if (interp.value_init_count > MAX_VARIABLES)
+		{
+			throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
+		}
+#endif
 		return talloc(index, Value());
 	}
 
