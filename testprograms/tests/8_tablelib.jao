@@ -1,0 +1,32 @@
+/main()
+{
+	Number TEST_NUMBER = 8;
+	
+	Object t = /table/New();
+	
+	t.insert(0,"bet");
+	t.insert(0,"Alpha");
+	if(t[0] .. t[1] != "Alphabet")
+	{
+		throw /error/New(TEST_NUMBER,"/table.insert failed!");
+	}
+	Object t2 = t;
+	if(t2[0] != t[0])
+	{
+		throw /error/New(TEST_NUMBER,"Table copy-by-reference failed!");
+	}
+	t[3] = " to learn";
+	t[2] = " is easy";
+	if(t[0] .. t[1] .. t[2] .. t[3] != "Alphabet is easy to learn")
+	{
+		throw /error/New(TEST_NUMBER,"Non sequitur index assignment failed!");
+	}
+	t.remove(2); ## Especially tests removing an element along the array/hash border
+	if(t[0] .. t[1] .. t[2] != "Alphabet to learn")
+	{
+		print(t[0] .. t[1] .. t[2],"!=","Alphabet to learn");
+		throw /error/New(TEST_NUMBER,"/table.remove failed!");
+	}
+	
+	print("Test #" .. TEST_NUMBER .. " passed");
+}
