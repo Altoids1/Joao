@@ -1,6 +1,7 @@
 #include "Table.h"
 #include "Interpreter.h"
 
+//Should be identical to at_ref except that it returns Value() instead of doing a talloc() call.
 Value Table::at(Interpreter& interp, Value index)
 {
 	Value::JoaoInt array_index;
@@ -11,7 +12,14 @@ Value Table::at(Interpreter& interp, Value index)
 		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Bad type used to index into Table!");
 		return Value();
 	case(Value::vType::String): // Just use our properties, innit?
-		return *(has_property(interp, *index.t_value.as_string_ptr));
+	{
+		size_t hash = std::hash<std::string>()(*index.t_value.as_string_ptr);
+		if (t_hash.count(hash))
+		{
+			return t_hash.at(hash);
+		}
+		return Value();
+	}
 	case(Value::vType::Integer):
 		array_index = index.t_value.as_int;
 		break;
@@ -24,11 +32,15 @@ Value Table::at(Interpreter& interp, Value index)
 
 	if (array_index < 0 || array_index >= static_cast<Value::JoaoInt>(t_array.size()))
 	{
-		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Index was out-of-bounds of array!");
+		size_t hash = std::hash<Value::JoaoInt>()(index.t_value.as_int);
+		if (t_hash.count(hash))
+		{
+			return t_hash.at(hash);
+		}
 		return Value();
 	}
 
-	return t_array.at(array_index);
+	return t_array.at(array_index); // Friendly reminder that std::vector::at() does bounds-checking, while std::vector::operator[] does not.
 }
 
 Value& Table::at_ref(Interpreter& interp, Value index)
@@ -220,18 +232,33 @@ void Table::tfree(const Value& index)
 	const Value::JoaoInt arrsize = static_cast<Value::JoaoInt>(t_array.size());
 	if (array_index < arrsize)
 	{
-
-		if (array_index + 1 == arrsize)
-		{
-			t_array.pop_back();
-			return;
-		}
 		//Oh, christ.
 		
 		//So right now, tfree() is only called by /table/remove()
 		//So we can avoid having to do some hashtable weirdness in this case,
 		//and just do an "oops it just erases it and shifts the elements afterwards! lol" for now
+
+		//Before we do this, imagine that there's an index [9] present in the hashtable, and the array only goes from [0] to [8].
+		//Inserting naïvely in that case would clobber the 9th element, which is a bad.
+		//talloc() tries to prevent this, but it's still possible, so lets do some checks first.
+
+		//FIXME: This nonsense shouldn't really be in tfree(); it'd be better as something that insert() and remove() have sovereignly,
+		//so this function can be used more generically for freeing table data.
+		while (t_hash.count(std::hash<Value::JoaoInt>()(t_array.size()))) // If this is the case
+		{ // take that element and actually put it on the fucking array, I guess
+			size_t hash_index = std::hash<Value::JoaoInt>()(t_array.size());
+			t_array.push_back(std::move(t_hash.at(hash_index)));
+			t_hash.erase(hash_index);
+		}
+		/*
+		if (array_index + 1 == arrsize)
+		{
+			t_array.pop_back();
+			return;
+		}
+		*/
 		t_array.erase(t_array.begin()+array_index); // This is kind of a FIXME? Maybe? I guess?
+		return;
 	}
 
 	//..Is this index already in the HASHTABLE to begin with?

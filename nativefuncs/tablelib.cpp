@@ -72,7 +72,7 @@ ObjectType* Program::construct_table_library()
 			return Value(args[rand() % args.size()]);
 		});
 
-	table->set_typemethod_raw("insert", new NativeMethod("remove", [](std::vector<Value> args, Object* obj) {
+	table->set_typemethod_raw("insert", new NativeMethod("insert", [](std::vector<Value> args, Object* obj) {
 		if (args.size() < 2)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& vindex = args[0];
