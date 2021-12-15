@@ -53,3 +53,15 @@ I hope you like it.
 	return ./color;
 }
 ```
+
+## Building
+
+João is built using Meson. It is very easy to build:
+
+```
+$ meson builddir
+$ cd builddir
+$ meson compile
+```
+
+You may also run `meson test` to run tests!
