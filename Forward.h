@@ -22,7 +22,7 @@
 #define _DEBUG
 #endif
 
-#ifdef _DEBUG
+#ifdef _DEBUG // This is the preferred debug flag macro for this project.
 
 //Debug flags
 #define LOUD_SCANNER // Uncomment if you want Scanner to be verbose about what it is doing.
@@ -43,8 +43,8 @@
 #endif
 
 //Version flags
-#define VERSION_MAJOR 1 // For when we break || add || fix something
-#define VERSION_MINOR 3 // For when we add || fix something
+#define VERSION_MAJOR 2 // For when we break || add || fix something
+#define VERSION_MINOR 0 // For when we add || fix something
 #define VERSION_PATCH 0 // For when we fix something
 constexpr char VERSION_STRING[]{ VERSION_MAJOR + '0' , '.' , VERSION_MINOR + '0' , '.' , VERSION_PATCH + '0' , '\0'};
 
