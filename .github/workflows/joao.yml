@@ -1,0 +1,33 @@
+name: Joao Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build (${{ matrix.os[1] }})
+    runs-on: ${{ matrix.os[0] }}
+    strategy:
+      matrix:
+        os: [[windows-latest, windows, joao.exe], [ubuntu-latest, linux, joao]]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install Meson + Ninja
+      run: pip install meson ninja
+    - name: Setup Meson
+      run: meson setup builddir/ --buildtype release
+    - name: Compile
+      run: meson compile -C builddir/ -v
+    - name: Run Tests
+      run: meson test -C builddir/ -v
+    - name: Upload Build Result
+      uses: actions/upload-artifact@v2
+      with:
+        name: joao-${{ matrix.os[1] }}
+        path: builddir/${{ matrix.os[2] }}

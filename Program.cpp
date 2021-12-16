@@ -1,14 +1,6 @@
 #include "Program.h"
 #include "Object.h"
 
-#ifdef __GNUG__
-	#include "./nativefuncs/math.cpp"
-	#include "./nativefuncs/string.cpp"
-	#include "./nativefuncs/tablelib.cpp"
-	#include "./nativefuncs/file.cpp"
-	#include "./nativefuncs/error.cpp"
-#endif
-
 std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 {
 	globals.table["__VERSION"] = new Value(std::string(VERSION_STRING));

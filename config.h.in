@@ -1,0 +1,8 @@
+#include <string>
+
+#define VERSION_MAJOR @major@
+#define VERSION_MINOR @minor@
+#define VERSION_PATCH @patch@
+
+
+const std::string VERSION_STRING = "@version@";

@@ -11,6 +11,7 @@
 #include <forward_list>
 #include <list>
 #include <stack>
+#include "config.h"
 
 
 #ifdef __GNUG__
@@ -41,12 +42,6 @@
 #define MAX_RECURSION 64 // The maximum depth of recursion of Joao functions.
 #define MAX_REPLACEMENTS_ALLOWED 256 // The maximum number of replacements that /replace() can carry out.
 #endif
-
-//Version flags
-#define VERSION_MAJOR 2 // For when we break || add || fix something
-#define VERSION_MINOR 0 // For when we add || fix something
-#define VERSION_PATCH 0 // For when we fix something
-constexpr char VERSION_STRING[]{ VERSION_MAJOR + '0' , '.' , VERSION_MINOR + '0' , '.' , VERSION_PATCH + '0' , '\0'};
 
 //Forwarded Objects
 class Object;

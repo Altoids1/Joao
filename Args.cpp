@@ -4,7 +4,7 @@
 #include "Parser.h"
 #include "Interpreter.h"
 
-#ifdef __linux__ && __GNUG__
+#ifdef __GNUG__
 #include <strings.h>
 #define _strcmpi strcasecmp
 #endif
