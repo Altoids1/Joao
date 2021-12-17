@@ -22,7 +22,7 @@ public:
 	void set_property_raw(std::string, Value);
 
 	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
-	Function* get_method(Interpreter&, std::string);
+	Function* has_method(Interpreter&, std::string);
 
 	Object(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh, Metatable* m = nullptr)
 		:base_properties(puh)

@@ -87,7 +87,7 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 }
 
 //If it fails, it simply returns a nullptr w/o throwing a Runtime. Part of scope resolution of function calls.
-Function* Object::get_method(Interpreter& interp, std::string name)
+Function* Object::has_method(Interpreter& interp, std::string name)
 {
 	if (base_funcs->count(name))
 	{

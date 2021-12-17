@@ -526,7 +526,10 @@ Value MemberAccess::resolve(Interpreter& interp)
 	{
 		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
 		if (v) return *v;
-		return Value(fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str()));
+		Function* f = fr.t_value.as_object_ptr->has_method(interp, static_cast<Identifier*>(back)->get_str());
+		if (f) return Value(f);
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "MemberAccess failed because member does not exist!");
+		return Value();
 	}
 
 	// This is something confusing, then
@@ -546,7 +549,7 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	{
 		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
 		if (v) return *v;
-		Function* meth = fr.t_value.as_object_ptr->get_method(interp, static_cast<Identifier*>(back)->get_str());
+		Function* meth = fr.t_value.as_object_ptr->has_method(interp, static_cast<Identifier*>(back)->get_str());
 		if (!meth)
 		{
 			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "MemberAccess failed because member does not exist!");

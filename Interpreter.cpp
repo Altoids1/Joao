@@ -176,7 +176,7 @@ Function* Interpreter::get_func(std::string funkname, ASTNode *caller, bool loud
 	Object* obj = objectscope.top();
 	if (obj)
 	{
-		Function* method = obj->get_method(*this, funkname);
+		Function* method = obj->has_method(*this, funkname);
 		if (method)
 			return method;
 	}
