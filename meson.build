@@ -10,7 +10,8 @@ src = [
 	'BinaryOperations.cpp',
 	'Directory.cpp',
 	'Interpreter.cpp',
-	'main.cpp',
+	#'main.cpp',
+    'telecomms_main'
 	'Object.cpp',
 	'Parser.cpp',
 	'Program.cpp',

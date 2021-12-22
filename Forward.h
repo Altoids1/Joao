@@ -11,6 +11,7 @@
 #include <forward_list>
 #include <list>
 #include <stack>
+#include <sstream>  
 #include "config.h"
 
 
@@ -35,13 +36,15 @@
 
 #endif
 
-//#define JOAO_SAFE // Uncomment if you want Joao to be extremely suspicious of its code. Disables OS-interfacing libraries and enables throttling.
+#define JOAO_SAFE // Uncomment if you want Joao to be extremely suspicious of its code. Disables OS-interfacing libraries and enables throttling.
 #ifdef JOAO_SAFE
 #define MAX_STATEMENTS 10000 // The maximum number of statements that will be executed in JOAO_SAFE mode.
 #define MAX_VARIABLES 1024 // How many variables Joao is allowed to use, as a hard limit. Includes indices.
 #define MAX_RECURSION 64 // The maximum depth of recursion of Joao functions.
 #define MAX_REPLACEMENTS_ALLOWED 256 // The maximum number of replacements that /replace() can carry out.
 #endif
+
+#define TELECOMMS // Uncomment to make this strange variant of Joao somewhat behave like normal Joao
 
 //Forwarded Objects
 class Object;

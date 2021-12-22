@@ -9,6 +9,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 	globals.table["__VERSION_PATCH"] = new Value(VERSION_PATCH);
 
 	//TEXT MANIPULATION
+#ifndef TELECOMMS
 	definedFunctions["print"] = new NativeFunction("print", [](std::vector<Value> args) // Lua-style print() function
 	{
 		if (args.size())
@@ -41,6 +42,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 			return Value();
 		return Value(imp);
 	});
+#endif
 	definedFunctions["tostring"] = new NativeFunction("tostring", [](std::vector<Value> args)
 	{
 		return Value(args[0].to_string());
