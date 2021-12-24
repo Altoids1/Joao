@@ -28,10 +28,8 @@ ObjectType* Program::construct_file_library()
 
 		if (argnum > 1)
 		{
-			Value second = args[1];
-			if(second.t_vType != Value::vType::Bool)
-				return Value(Value::vType::Null, static_cast<int>(ErrorCode::BadArgType));
-			blank_it = second.t_value.as_bool;
+			const Value& second = args[1];
+			blank_it = static_cast<bool>(second);
 		}
 
 		Metatable* mt = obj->get_metatable();
