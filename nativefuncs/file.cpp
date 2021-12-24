@@ -47,12 +47,23 @@ ObjectType* Program::construct_file_library()
 		
 
 		our_file = new std::fstream();
-
-		if(blank_it)
-			our_file->open(filename, std::fstream::in | std::fstream::out | std::fstream::trunc);
-		else
-			our_file->open(filename, std::fstream::in | std::fstream::out);
-
+		try
+		{
+			if(blank_it)
+				our_file->open(filename, std::fstream::in | std::fstream::out | std::fstream::trunc);
+			else
+				our_file->open(filename, std::fstream::in | std::fstream::out);
+			
+			if(!our_file->good())
+			{
+				our_file->close();
+				throw;
+			}
+		}
+		catch(...)
+		{
+			return Value(Value::vType::Null, static_cast<int>(ErrorCode::BadCall));
+		}
 		mt->set_private(static_cast<size_t>(PrivIndex::FSTREAM), our_file);
 		return Value(our_file->good());
 	}));
@@ -94,7 +105,7 @@ ObjectType* Program::construct_file_library()
 			(*our_file) << args[i].to_string();
 		}
 
-		return Value(true);
+		return Value(our_file->good());
 	}));
 	__mt->append_method("close", new NativeMethod("close", [](std::vector<Value> args, Object* obj)
 	{
