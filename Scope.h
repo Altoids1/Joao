@@ -10,7 +10,7 @@ struct Scopelet
 	{
 
 	}
-	Scopelet(std::string name)
+	Scopelet(const std::string& name)
 	{
 		scopename = name;
 	}
@@ -38,7 +38,7 @@ public:
 		sc->table = {};
 	}
 
-	Scope(std::string sc)
+	Scope(const std::string& sc)
 	{
 		Scopelet<_Ty>* base = new Scopelet<_Ty>(sc);
 		top_scope = base;
@@ -49,12 +49,12 @@ public:
 		return stack.front()->scopename;
 	}
 
-	_Ty* get(std::string name)
+	_Ty* get(const std::string& name)
 	{
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 		for (auto it = stack.begin(); it != stack.end(); ++it)
 		{
-			Scopelet<_Ty> sc = **it;
+			Scopelet<_Ty>& sc = **it;
 			//std::cout << "Looking at scope " << sc.scopename << "...\n";
 
 			if (sc.table.count(name))
@@ -63,14 +63,14 @@ public:
 		return nullptr; // Give up.
 	}
 
-	_Ty* get_front(std::string name)
+	_Ty* get_front(const std::string& name)
 	{
 		if (stack.front()->table.count(name))
 			return stack.front()->table.at(name);
 		return nullptr;
 	}
 
-	_Ty* get_back(std::string name)
+	_Ty* get_back(const std::string& name)
 	{
 		if (top_scope->table.count(name))
 			return top_scope->table.at(name);
@@ -83,14 +83,14 @@ public:
 		return top_scope->scopename;
 	}
 
-	void set(std::string name, _Ty& t)
+	void set(const std::string& name, _Ty& t)
 	{
 		_Ty* tuh = new _Ty(t);
 
 		(stack.front()->table[name]) = tuh;
 	}
 
-	bool Override(std::string name, _Ty& t)
+	bool Override(const std::string& name, _Ty& t)
 	{
 		for (auto it = stack.begin(); it != stack.end(); ++it)
 		{
@@ -109,7 +109,7 @@ public:
 		return false;
 	}
 
-	void push(std::string name = "") // Add a new stack layer
+	void push(const std::string& name = "") // Add a new stack layer
 	{
 		//std::cout << "Creating new scope layer called " << name << "...\n";
 		Scopelet<_Ty>* newsc = new Scopelet<_Ty>(name);
