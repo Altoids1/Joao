@@ -4,6 +4,8 @@
 #include "Parser.h"
 #include "Interpreter.h"
 
+#include <sstream>
+
 #ifdef __GNUG__
 #include <strings.h>
 #define _strcmpi strcasecmp
@@ -63,15 +65,15 @@ void Args::print_help()
 
 //Tries to run the given chunk of strings as if they were all statements in the /main(){} of a program with nothing else in it.
 //Returns true if successful and false if an error occurred.
-bool Args::run_code_block(std::vector<std::string*>& statements)
+bool Args::run_code_block(std::vector<std::string>& statements)
 {
 	std::stringstream dummy;
 
 	dummy << "/main(){\n";
 
-	for (std::string* s : statements)
+	for (const std::string& s : statements)
 	{
-		dummy_file << *(s) << std::endl;
+		dummy << s << std::endl;
 	}
 
 	dummy << "return 0;\n}\n";
@@ -97,7 +99,7 @@ bool Args::run_code_block(std::vector<std::string*>& statements)
 
 void Args::interactive_mode()
 {
-	std::vector<std::string*> statements;
+	std::vector<std::string> statements;
 
 	while (true)
 	{
@@ -112,7 +114,7 @@ void Args::interactive_mode()
 		if (input == "quit()")
 			return;
 
-		statements.push_back(new std::string(input));
+		statements.push_back(std::string(input));
 		if (!run_code_block(statements))
 		{
 			statements.pop_back();
