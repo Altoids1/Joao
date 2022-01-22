@@ -133,15 +133,4 @@ public:
 
 		stack.pop_front();
 	}
-
-	/*
-	So this function is kinda interesting.
-	The default structure of this thing is to be used as a sort of "linked list" that does these (expensive!) recursive calls to find things.
-	This function allows the conversion of the linked list into one big, fat hashtable that stores everything in strings that have a directory structure,
-	with the names of each directory being the Scope::scopename things of each Scope.
-	*/
-	std::unordered_map<std::string, _Ty*>* squish()
-	{
-
-	}
 };
