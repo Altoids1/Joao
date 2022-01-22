@@ -65,21 +65,19 @@ void Args::print_help()
 //Returns true if successful and false if an error occurred.
 bool Args::run_code_block(std::vector<std::string*>& statements)
 {
-	const char* file_name = "__joao_interactive";
+	std::stringstream dummy;
 
-	std::fstream dummy_file = std::fstream(file_name, std::fstream::in | std::fstream::out | std::fstream::trunc);
-
-	dummy_file << "/main(){\n";
+	dummy << "/main(){\n";
 
 	for (std::string* s : statements)
 	{
 		dummy_file << *(s) << std::endl;
 	}
 
-	dummy_file << "return 0;\n}\n";
+	dummy << "return 0;\n}\n";
 
 	Scanner scn(true);
-	scn.scan(dummy_file, file_name);
+	scn.scan(dummy);
 
 	if (scn.is_malformed)
 		return false;
@@ -94,8 +92,6 @@ bool Args::run_code_block(std::vector<std::string*>& statements)
 	Value jargs = interp.makeBaseTable();
 	interp.execute(prog, jargs);
 
-	dummy_file.close();
-	std::remove(file_name);
 	return !(interp.error);
 }
 
