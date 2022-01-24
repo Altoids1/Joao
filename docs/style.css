@@ -1,0 +1,107 @@
+html
+{
+    background-color: #333;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    background-color: #fff5f5;
+    
+    line-height: 1.25;
+    margin: 16px auto;
+    padding: 32px;
+    border: solid #ccc 1px;
+    border-radius: 20px;
+    max-width: 70em;
+    width: 90%;
+}
+
+header
+{
+    font-size: 32px;
+    white-space: nowrap;
+    color: rgb(143,17,29);
+}
+
+a
+{
+    text-decoration: none;
+    color: #03a;
+}
+
+a:visited
+{
+    color: #03a;
+}
+
+nav 
+{
+    padding: 0px;
+    text-align: left;
+    font-size: 24px;
+}
+
+article
+{
+    text-align: justify;
+}
+
+h1
+{
+    font-size: 48px;
+    line-height: 1;
+    margin-block-start: 0.5em;
+    margin-block-end: 0.25em;
+}
+h1 a
+{
+    color: #000;
+}
+h2 a
+{
+    color: #000;
+}
+a:target
+{
+    background-color: #eee5e5;
+    text-decoration: underline;
+}
+
+h3
+{
+    margin-block-end: 8px;
+}
+
+pre.joaocode
+{
+    background-color: #3b3b3b;
+    color: #d6d6d6;
+    border-radius: 5px;
+    padding:5px;
+    line-height: 1;
+}
+
+th
+{
+    border-bottom: 1px solid black;
+}
+
+td
+{
+    padding: 2px;
+}
+
+footer
+{
+    clear: both;
+    text-align: center;
+}
+
+.index
+{
+    width: 100%;
+}
+table.index td
+{
+    vertical-align: top;
+}

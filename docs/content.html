@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Joao Documentation</title>
+		<link rel="stylesheet" href="style.css">
+		
+	</head>
+	
+	<body>
+		
+		<header>
+			<img src="https://user-images.githubusercontent.com/29939414/114955666-c9ffe700-9e22-11eb-95fd-649fd2ef250b.png">
+			Documentation for João v2.0.0
+		</header>
+		<hr/>
+		<nav>
+			<a href='index.html'>Index</a>
+		</nav>
+		<hr/>
+		<article>
+			<h1>1 - <a name='1'>Introduction</a></h1>
+			<p><b>João</b> is a programming language. You can use it to tell your computer to do stuff.</p>
+			<p>
+				There is a lot of software on the internet can declare that, but João has a few gimmicks: It is lightweight and made to be easy to learn.
+				It uses a novel <em>directory-oriented</em> manner of articulating object-orientation that's tolerable to experts
+				and palatable to new programmers who are tired of the concept being obfuscated by the syntax and mechanics OOP often has in other languages.
+			</p>
+			<p>
+				Initially developed to suit my personal taste in programming languages, I have come to realize that other people may have some interest in learning it themselves,
+				so I have written for you, kind reader, this documentation. If you are new to programming, I strongly recommend reading everything mostly in order
+				and taking some time to play with new concepts before trying to learn new ones. An associated guide, more suited for first-time programmers, will be published at a
+				later time.
+			</p>
+			<p>
+				There <em>are</em> bugs in this language; it is not complete and it never will be. Please report any bug or undesirable behaviour on the
+				associated <a href='https://github.com/Altoids1/Joao/issues'>Github repository</a> of this project, especially if it clashes with the information presented in this documentation.
+			</p>
+
+			<h2>1.1 - <a name='1.1'>Installation & Use</a></h2>
+			<p>
+				The current singular official software that can run João programs is an interpreter located on Github. Its source code may be viewed there,
+				and it may be <a href='https://github.com/Altoids1/Joao/releases'>downloaded there as well.</a> The official releases ship out with a 64-bit pre-compiled binary for Windows and a Linux binary created on a Linux Mint system.
+				João may be capable of compiling on other systems, but those are the only ones officially supported, and resolving my build system is an exercise passive-aggressively left to the reader.
+			</p>
+			<p>
+				Using the binary is simple, but may be confusing to those new to command-line-only software. To use, create a text file containing your script,
+				such as a simple hello world program:
+				<pre class='joaocode'>
+/main()
+{
+	print("Hello, world!");
+}</pre>	
+			</p>
+			<p>
+				Then, open the command line and call the executable with the location of the file as an operand:
+				<pre>
+C:\joao_folder>Joao.exe your_file.txt</pre>
+				João will then attempt to run the program, hopefully printing a friendly "Hello, world!" into the command line before exiting.
+			</p>
+
+
+			<h1>2 - <a name='2'>The Language</a></h1>
+			<p>
+				Several concepts are necessary to understand in order to operate any programming language, including this one.
+				 Here they are, starting with elements likely familiar to anyone that has used a good calculator, and working upwards in complexity and downwards in usefulness.
+			</p>
+			<h2>2.1 - <a name='2.1'>Variables and Types</a></h2>
+			<p>
+				Computers need to remember things. As with most languages, this is resolved by the use of <strong>Variables.</strong>
+			</p>
+			<p>
+				In João, variables are things that store Values. A <strong>Value</strong> is the dynamic type in João which is capable of storing data of a particular <strong>Type.</strong>
+				There are several types in João:
+			</p>
+			<ul>
+				<li><strong>Null</strong>, a type (and value) which indicates a lack of data.
+					If you declare a variable but do not set it to anything, or try to access something that doesn't exist,
+					the value you will receive is null and its type will be Null.</li>
+				<li><strong>Boolean</strong>, which stores a singular bit of data, with two possible values: true and false.</li>
+				<li><strong>Double</strong>, which stores a number in a sort of scientific notation internally. This type is used to store very large numbers and fractions.</li>
+				<li><strong>Integer</strong>, which store some whole number.
+					It can be positive or negative or zero, but it can be no bigger than 2,147,483,647 and no smaller than -2,147,483,648.
+					Attempting to exceed these limits will result in integer overflow or underflow, "wrapping the number around" to keep within this range.</li>
+				<li><strong>String</strong>, which stores text. Strings are created by encasing the text in quotes, "like this".</li>
+				<li><strong>Object</strong>, which is for storing anything else. It stores a value that has a “type” created by you (or a library of João)
+					with certain special functionality. This includes things like tables, which are used to store groups of data, and files,
+					which are handles to an actual file on the computer. </li>
+			</ul>
+			<h3>2.1.1 - Strings</h3>
+			<p>
+				Strings have the usual meaning: a sequence of characters, like the word “apple.”
+				Each character is any eight-bit number, and so strings may contain characters with any numeric value, but are typically assumed to contain ASCII text.
+			</p>
+			<p>
+				Escape Sequences allow a string to contain special characters.
+				For instance, if you wanted to actually have a " character within a string, it would need to be escaped so that it isn't perceived as being the end of the string.
+				Strings in João can contain the following C-like escape sequences:
+				<table>
+					<thead>
+						<tr>
+							<th>Escape Character</th>
+							<th>Meaning</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>\n</td><td>Newline</td></tr>
+						<tr><td>\t</td><td>Tab character</td></tr>
+						<tr><td>\\</td><td>The backslash character itself</td></tr>
+						<tr><td>\"</td><td>Double quote</td></tr>
+						<tr><td>\'</td><td>Single quote</td></tr>
+					</tbody>
+				</table>
+			</p>
+			<p>
+				Strings and numbers are different things. A comparison like 10 == “10” is always false,
+				because 10 is an integer and “10” is a string. When in doubt, typecast it out for clarity and confidence.
+			</p>
+			<h3>2.1.2 - Objects</h3>
+			<p>
+				Objects are the bread and butter of João.
+				They use the directory system to organize groups of code and variables which can be used together to form some greater, more complex thing.
+			</p>
+			<p>
+				Since their concept is a bit abstract, lets start with a concrete example.
+				Lets say you want to make a video game, and ergo might want something that can store the state of a particular player.
+				You may want to, on a player-by-player basis, store things like their health and position on the map.
+				Here's an object-oriented way of storing such data:
+				<pre class='joaocode'>
+/player
+{
+	Number health = 100; ## The player's health, out of 100 points
+
+	Number x = 0; ## The x-coordinate of this player
+	Number y = 0; ## y-coordinate
+	Number z = 0; ## z-coordinate
+}
+
+/main()
+{
+	Object my_player = /player/New();
+	print("My player has " .. my_player.health .. " HP!"); ## Prints 'My player has 100 HP'!
+}</pre>
+			</p>
+			<p>
+				There's several steps in the creation of an object:
+				<ol>
+					<li>
+						The object must have a class that is defined in a class definition,
+						a braced block containing the class' name and a list of its properties:
+						variables that belong to any object created from that class.
+					</li>
+					<li>
+						Once the class is defined, an object of that class can be created anywhere by doing class_name/New(),
+						with class_name being whatever the directory name of the class is. New() is a function inherent to all classes,
+						which creates an Object with that class as its class.
+					</li>
+				</ol>
+			</p>
+			<p>
+				Further, classes can "inherit" from other classes via the directory tree, like so:
+				<pre class='joaocode'>
+/player
+{
+	Number health = 100;
+
+	Number x = 0;
+	Number y = 0;
+	Number z = 0;
+}
+
+/player/red
+{
+	String team = "Red";
+}
+
+/player/blue
+{
+	String team = "Blue";
+}
+
+/main()
+{
+	Object redmann = /player/red/New();
+	Object blumann = /player/blue/New();
+	
+	print(blumann.team .. " team hates " .. redmann.team .. " team!"); ## Prints 'Blue team hates Red team!'
+}</pre>
+			</p>
+			<p>
+				Unlike some other languages, the classes (and functions) of João can be declared in any particular order, regardless of how the inheritence resolves itself.
+			</p>
+
+			<h2>2.2 - <a name='2.2'>Arithmetic and other Operations</a></h2>
+			<p>
+			João can be used to carry out typical math operations. The syntax for such mimics what one may see on a fancier calculator,
+			phrases like 1 + 5 for addition or 2 * 3.5 for multiplication. Exponentiation is expressed using the caret symbol, as in 2 ^ 10.
+			</p>
+			
+			<p>Assignment is also an operation, and one necessary in order to store data in a variable. It is typically written in the form x = value,
+			where x is the name of the variable and value is the value.
+			</p>
+
+			<p>
+			Operations that go beyond typical mathematics also exist. For instance, there is an operator for concatenating two strings together:
+			<pre class='joaocode'>
+/main()
+{
+	print("Pineapple " .. "pen"); ## Prints 'Pineapple pen'. Note the explicitly-stated space character.
+}</pre>
+			When the concatenation operator is used with things that are not strings, those things are coerced into being strings; 10 .. 1 becomes the String "101".
+			</p>
+
+			<p>
+				Sometimes, you may want to manipulate the bits of an Integer or Double manually; flipping them on and off like a set of switches.
+				The typical bitwise operations are all implemented and available for this purpose.
+				<strong>Using bitwise on doubles works,</strong> but the results may be slightly machine-dependent.
+			</p>
+
+			<p>
+				There are also operators for determining that a system of truths are correct, like asserting that a variable is less than seven,
+				or that two statements of fact are true at the same time. They behave as you'd expect:
+				<pre class='joaocode'>
+/main()
+{
+	Value x = 5;
+	print(x < 7 && 2 >= 1); ## Prints 'true', since both x is less than seven and 2 is greater than or equal to one.
+}</pre>
+			</p>
+
+			<p>
+				The order of operations behaves somewhat as you'd expect, while being somewhat expanded to accommodate the expanded set of operations.
+				When multiple operations are used in the same expression, they are carried out in the following order, top to bottom:
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Operators</th>
+							<th>Associativity</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>Grouping & Function Calls</td><td>()</td><td>None, left</td></tr>
+						<tr><td>Exponentiation</td><td>^</td><td>Right</td></tr>
+						<tr><td>Unary Operators</td><td>- ! ~ #</td><td>Right</td></tr>
+						<tr><td>Multiplication & Division</td><td>* / // %</td><td>Left</td></tr>
+						<tr><td>Addition & Subtraction</td><td>+ -</td><td>Left</td></tr>
+						<tr><td>Concatenation</td><td>..</td><td>Left</td></tr>
+						<tr><td>Bitwise Operators</td><td>& ~ | >> <<</td><td>Left</td></tr>
+						<tr><td>Comparison Operators</td><td>< <= > >= !=</td><td>Left</td></tr>
+						<tr><td>Logical Operators</td><td>&& || ~~</td><td>Left</td></tr>
+						<tr><td>Assignment Operators</td><td>= += -= *= /= %=</td><td>None</td></tr>
+					</tbody>
+				</table>
+				Assignment is treated uniquely in João. Only one assignment may occur in a given statement and, unlike other operations, it cannot occur as any expression.
+				The phrase (1 + (x = 2)) is not valid João, but x = 2 + 1; as a statement is valid.
+			</p>
+
+			<h2>2.3 - <a name='2.3'>Iteration and Flow Control</a></h2>
+			<p>
+				Most programs need to be able to execute certain code only if a particular condition is met,
+				i.e. a video game character should only be able to shoot their gun when they are not dead or out of ammo.
+				This behaviour is implemented through the if, elseif, and else keywords.
+			</p>
+			<pre class='joaocode'>
+/gun
+{
+	Number ammo = 6;
+}
+/player
+{
+	Number health = 100;
+	Object gun = /gun/New();
+}
+/main()
+{
+	Object gamer = /player/New();
+	if(gamer.health <= 0)
+	{
+		print("You are dead! You can't shoot!");
+	}
+	elseif(gamer.gun.ammo == 0)
+	{
+		print("*click*");
+	}
+	else
+	{
+		print("The gamer fires their gun!!");
+	}
+}</pre>
+	<p>
+		There are also keywords for handling doing a repetitive process many times, avoiding having to write the same lines of code perhaps one million times.
+		Such behaviour is achieved through the for and while keywords.
+	</p>
+	<p>
+		The only for-loop in João is the explicit, C-like variety. It has three statements that describe its behaviour: an initializer,
+		a condition to test against (making the program exit the loop if the condition resolves to false), and an increment line to run at the end of every loop around.
+		Its syntax looks as follows:
+		<pre class='joaocode'>
+/main()
+{
+	for(Number i = 0; i < 100; i += 1)
+	{
+		if(i % 2 == 0) ## If i is even
+		{
+			print(i); ## Print i. Prints all of the even numbers less than 100.
+		}
+	}
+}
+</pre>
+	</p>
+	<p>
+		While-loops have the same behaviour as C while loops.
+	</p>
+			<h2>2.4 - <a name='2.4'>Tables</a></h2>
+			<p>
+				The table class implements associative arrays.
+				An associative array is an array that can be indexed not only with integers, but also with strings.
+				Moreover, unlike the properties of objects, tables have no fixed size; you can add as many elements as you want to a table dynamically.
+				Tables are the main ad-hoc data structuring mechanism in João, and a powerful one, sidestepping the rigidity of the typical class system.
+				We can use tables to represent ordinary arrays, databases, and even other tables, in a simple, uniform, and efficient way.
+			</p>
+			<p>
+				You can construct tables simply through a typical /New() call. As well, you can use brackets to index into it, to set values and acquire them later:
+			</p>
+			<pre class='joaocode'>
+/main()
+{
+	Object tbl = /table/New();
+	tbl[0] = "apple"; ## Tables are zero-indexed in João.
+	print("I love " .. tbl[0] .. "s!"); ## Prints 'I love apples!'
+	print("There are " .. #tbl .. " elements in tbl!"); ## Prints 'There are 1 elements in tbl!'
+}
+			</pre>
+			<p>
+				Like all objects, when a program has no references to a table left,
+				João memory management deletes the table and frees the memory it was using for other purposes.
+			</p>
+			<p>
+				Beyond this functionality, the /table class has several methods, and there are several global functions which take tables as arguments, as described in <a href='content.html#3.2'>#3.2.</a>
+			</p>
+
+			<h2>2.5 - <a name='2.5'>Exception Handling</a></h2>
+			<p>
+			It is very possible for a João program you write to come to an error condition, either as a result of imperfectly-written code on your part,
+			or a failure of the computer the program is running on.
+			</p>
+			<p>
+				When this happens, João emits an Object of type /error, which is stored internally and transmitted up the stack until it is either caught in a try-catch block,
+				or ascends beyond /main and causes the João executable itself to error out.
+			</p>
+			<p>
+				This /error Object holds two properties: /error.code, which stores an Integer that describes the category of error that has taken place, and /error.what,
+				which is a human-readable String which attempts to explain the error. 
+			</p>
+			<p>
+				Error objects can also be constructed and thrown by the user, via the throw keyword:
+				<pre class='joaocode'>
+/main()
+{
+	Object err = /error/New(420,"Illegal substance detected!");
+	throw err; ## Presumably prints the above error into stdout/stderr and quits the program.
+}</pre>
+			</p>
+			<p>
+				Sometimes it is not necessary for João to crash when an error takes place. In such a case, the programmer may use a try-catch block to "catch" the error
+				as its propagating from any code executed within (or as a result of the code within) the try block:
+				<pre class='joaocode'>
+/main()
+{
+	try
+	{
+		x = 5; ## Uh-oh! x has yet to be initialized anywhere!
+	}
+	catch(err)
+	{
+		print("Caught this error:",err.what);
+	}
+	print("I can resume without a problem! :-)");
+}</pre>
+			</p>
+			<p>
+				The user, as with any other native class, can provide derived classes of /error to add additional functionality if necessary.
+				Regardless, throw will only accept its input if it argument is an Object whose class derives from or is /error.
+			</p>
+			<h1>3 - <a name='3'>The Standard Library</a></h1>
+			<p>Several native functions come already in the scope of any João program, to allow for the use of common mathematical functions, I/O with the computer,
+				 and other functionality.</p>
+			<p>These functions are usually preferrable to any implementation made directly in João, as their body is typically written in compiled C++, making them faster,
+				 and are allowed access to things otherwise inaccessible by the João user.</p>
+			<h2>3.1 - The Standard Standard Library</h2>
+			
+			<h3>/print(...)</h3>
+			Receives any number of arguments and prints their values to stdout, converting each argument to a string following the same rules of tostring.
+			The values are tab-separated in the input, and every call to print() ends its output with a newline character.
+
+			<h3>/input([len])</h3>
+			Receives character input from stdin, up to a limit of len characters if len is provided.
+			Result is always of String type, unless no input is provided, in which case null is returned.
+
+			<h3>/tostring(val)</h3>
+			Receives a value of any type and coerces it into a human-readable string. Any type in João can be coerced into being a string through this method, without error.
+
+			<h3>/tointeger(val)</h3>
+			Attempts to convert the value given into an integer. Throws an /error if the conversion is not sensibly possible or unimplemented.
+
+			<h3>/typeof(val)</h3>
+			Returns a string denoting the type of the given value, always and without error.
+
+			<h3>/isnull(val)</h3>
+			Returns a Boolean denoting whether the given value is null or not.
+
+			<h3>/classof(val)</h3>
+			If val is an Object, returns a string denoting the directory tree that describes that Object's class.
+
+			<h3>/pick(...)</h3>
+			Randomly chooses one of its arguments through an internal call to rand() and returns it.
+	
+			<h2>3.2 - <a name='3.2'>The Table Library</a></h2>
+
+			<h3>/istable(val)</h3>
+			Returns a Boolean denoting whether the given value is an Object whose class inherits from (or is) /table.
+			
+			<h3>/table/New([...])</h3>
+			Constructs a new /table Object, with the (optional) arguments being the initial elements of that table.
+
+			<h3>/table/implode([sep = ", ",start = 0, stop])</h3>
+				In the default case, returns a String which is the concatenation of all the array elements of the table, separated by commas and spaces.
+				Passing a sep argument determines the separator used. Passing a start and stop determines what portion of the table to implode.
+			
+			<h3>/table/pick()</h3>
+				Randomly picks an element, through an internal call to rand(), and returns that element.
+
+			<h3>/table/insert(index,value)</h3>
+				Inserts the value given at the index given into the table. If the index is numeric, integer indices above that value are incremented to avoid overlap.
+			
+			<h3>/table/remove(index)</h3>
+				Removes the element at the index given, if it exists.
+
+			<h2>3.3 - <a name='3.3'>The File Library</a></h2>
+
+			The /file type is used to read from and write to files on disk. It is not available in Safe Mode.
+
+			<h3>/file/open(filename)</h3>
+				Opens a handle to a file under the given filename, creating the file if it doesn't yet exist.
+				If the /file Object already points to another file, /file/close() is internally called and the Object quietly points to this new file instead.
+			<h3>/file/lines()</h3>
+				Returns a table with its array part filled with the lines of this file. Returns null if this /file Object has no file open.
+			<h3>/file/write(val)</h3>
+				Writes the value given, after coercing it into a String, into the file. Returns a Boolean denoting if the file is still "good" and devoid of errors,
+				 a value of true indicating no error.
+			<h3>/file/close()</h3>
+				Closes the file of this /file Object, if it is open. Guarantees all written data will be flushed onto disk.
+	
+	</article>
+	<hr/>
+	<footer>Copyright (C) 2021-2022 Altoids0 (mom-puter@hotmail.com)</footer>
+	</body>
+	<script src='joaocode_formatter.js'></script>
+</html>
