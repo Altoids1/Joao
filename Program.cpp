@@ -92,6 +92,12 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		case(Value::vType::String):
 			str =  "String";
 			break;
+		case(Value::vType::Null):
+			str = "Null";
+			break;
+		case(Value::vType::Function):
+			str = "Function";
+			break;
 		default:
 			str =  "Unknown"; // This is very strange, if it were to happen.
 			break;
