@@ -887,9 +887,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 					ParserError(_catch, "Unexpected token when 'catch' block was expected!");
 				}
 				++tokenheader;
-				std::cout << "I got here!\n";
 				consume_paren(true); // (
-				std::cout << "I got there!\n";
 				std::string err_name = readName(tokenheader);
 				consume_paren(false); // )
 				std::vector<Expression*> catch_block = readBlock(BlockType::Catch, tokenheader, there);
