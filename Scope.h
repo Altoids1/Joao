@@ -5,15 +5,6 @@ template <typename _Tysc>
 struct Scopelet
 {
 	std::unordered_map < std::string, _Tysc*> table;
-	std::string scopename;
-	Scopelet()
-	{
-
-	}
-	Scopelet(const std::string& name)
-	{
-		scopename = name;
-	}
 };
 
 template <typename _Ty>
@@ -27,6 +18,7 @@ class Scope {
 	std::forward_list<Scopelet<_Ty>*> stack;
 
 	Scopelet<_Ty>* top_scope = nullptr; //The backmost scoplet of the stack.
+	std::string top_scope_name; // Usually the name of the function which owns this scope.
 
 public:
 	static void blank_table(Scopelet<_Ty>* sc)
@@ -35,18 +27,14 @@ public:
 		{
 			delete it->second; // Hopefully this works, heh.
 		}
-		sc->table = {};
+		sc->table.clear();
 	}
 
 	Scope(const std::string& sc)
+		:top_scope_name(sc)
+		,top_scope(new Scopelet<_Ty>())
 	{
-		Scopelet<_Ty>* base = new Scopelet<_Ty>(sc);
-		top_scope = base;
-		stack.push_front(base);
-	}
-	std::string get_name()
-	{
-		return stack.front()->scopename;
+		stack.push_front(top_scope);
 	}
 
 	_Ty* get(const std::string& name)
@@ -78,9 +66,9 @@ public:
 		return nullptr;
 	}
 	
-	std::string get_back_name()
+	const std::string& get_back_name() const
 	{
-		return top_scope->scopename;
+		return top_scope_name;
 	}
 
 	void set(const std::string& name, _Ty& t)
@@ -112,8 +100,7 @@ public:
 	void push(const std::string& name = "") // Add a new stack layer
 	{
 		//std::cout << "Creating new scope layer called " << name << "...\n";
-		Scopelet<_Ty>* newsc = new Scopelet<_Ty>(name);
-		stack.push_front(newsc);
+		stack.push_front(new Scopelet<_Ty>());
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 	}
 

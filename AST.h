@@ -73,7 +73,7 @@ public:
 	{
 		//std::cout << "I've been created with name " + s + "!\n";
 	}
-	std::string get_str()
+	const std::string& get_str() const
 	{
 		return t_name;
 	}
