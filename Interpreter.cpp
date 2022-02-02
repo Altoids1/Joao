@@ -142,7 +142,7 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 	RuntimeError(setter, "Unable to override value of variable named " + varname + "!");
 }
 
-Value& Interpreter::get_var(std::string varname, ASTNode *getter)
+Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
 {
 	//First try blockscope
 	Scope<Value>* varscope = blockscope.top();
@@ -170,7 +170,7 @@ Value& Interpreter::get_var(std::string varname, ASTNode *getter)
 	return Value::dev_null;
 }
 
-Function* Interpreter::get_func(std::string funkname, ASTNode *caller, bool loud)
+Function* Interpreter::get_func(const std::string& funkname, ASTNode *caller, bool loud)
 {
 	//Try to find an objectscope function with this name
 	Object* obj = objectscope.top();
