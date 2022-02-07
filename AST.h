@@ -971,3 +971,34 @@ public:
 		return ind + "Throw\n" + err_node->dump(indent + 1);
 	}
 };
+
+
+/*
+This is an optimization feature which makes successive uses of concat non-associative.
+Honestly I *could* create equivalent ASTNodes for other operations,
+but it's most useful with concat to prevent redundant internal malloc() calls for arbitrarily-sized strings.
+*/
+class MassConcatenation : public Expression
+{
+	std::vector<ASTNode*> operands; // AFAIK the vector can't store them itself since they're derived types of unknown size; would get "demoted" implicitly
+	const size_t estimated_evaluated_size; // A guess at how big the resulting string will be after concatenation. Used to minimize mallocs.
+public:
+	MassConcatenation(const std::vector<ASTNode*>& ops)
+		:operands(ops)
+		,estimated_evaluated_size(operands.size() * 16) //FIXME: This is such a ballpark, out-of-my-ass estimate. Be better about predicting result size.
+	{
+
+	}
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "MassConcatenation"; }
+	virtual std::string dump(int indent)
+	{
+		const std::string ind = std::string(indent, ' ');
+		std::string ret = ind + class_name() + "\n";
+		for (ASTNode* nodeptr : operands)
+		{
+			ret += nodeptr->dump(indent + 1);
+		}
+		return ret;
+	}
+};

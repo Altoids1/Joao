@@ -174,6 +174,25 @@ public:
 		}
 		t_vType = vType::String;
 	}
+	//A special-snowflake optimization where somebody else has already allocated this string onto the heap
+	//(and so it doesn't need to be copied onto the heap from the stack or where-ever the fuck)
+	//DO NOT GIVE THIS CONSTRUCTOR POINTERS TO MEMORY ON THE STACK. THIS CLASS WILL ATTEMPT TO DELETE THEM LATER.
+	Value(std::string* const sptr)
+	{
+		if (cached_ptrs.count(sptr) == 0) // Novel string, it seems!
+		{
+			t_value.as_string_ptr = sptr;
+			cached_ptrs[sptr] = 1u;
+			str_to_ptr[*sptr] = sptr; //FIXME: This is still a string copy. Can we make it better?
+		}
+		else
+		{
+			t_value.as_string_ptr = sptr;
+			cached_ptrs[sptr]++;
+		}
+		t_vType = vType::String;
+	}
+
 	Value(Object* o);
 	
 	//Jesus fucking christ I wish the copy-move-reference tricohotomy made any fucking sense in C++
