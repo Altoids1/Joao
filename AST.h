@@ -39,6 +39,7 @@ public:
 	{
 		//std::cout << "Constructing literal...\n";
 	}
+	const Value& value() const { return heldval; }
 
 	virtual Value resolve(Interpreter&) override;
 	virtual Value const_resolve(Parser&, bool) override;
@@ -982,10 +983,31 @@ class MassConcatenation : public Expression
 {
 	std::vector<ASTNode*> operands; // AFAIK the vector can't store them itself since they're derived types of unknown size; would get "demoted" implicitly
 	const size_t estimated_evaluated_size; // A guess at how big the resulting string will be after concatenation. Used to minimize mallocs.
+	size_t calculate_estimated_size()
+	{
+		size_t i = 0;
+		for (ASTNode* node : operands)
+		{
+			if (node->class_name() == "Literal")
+			{
+				Literal* litnode = static_cast<Literal*>(node);
+				i += litnode->value().to_string().size();
+				continue;
+			}
+			i += 16; //FIXME: This is such a ballpark, out-of-my-ass estimate. Be better about predicting result size.
+		}
+#if defined(LOUD_AST) && !defined(JOAO_SAFE)
+		if (i == 0)
+		{
+			std::cout << "WARNING: MassConcatenation determined estimated size to be zero!\n";
+		}
+#endif
+		return i;
+	}
 public:
 	MassConcatenation(const std::vector<ASTNode*>& ops)
 		:operands(ops)
-		,estimated_evaluated_size(operands.size() * 16) //FIXME: This is such a ballpark, out-of-my-ass estimate. Be better about predicting result size.
+		,estimated_evaluated_size(calculate_estimated_size())
 	{
 
 	}
