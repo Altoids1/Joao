@@ -22,7 +22,7 @@
 #ifdef DEBUG
 #define _DEBUG
 #endif
-
+#define _DEBUG
 #ifdef _DEBUG // This is the preferred debug flag macro for this project.
 
 //Debug flags

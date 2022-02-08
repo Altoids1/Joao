@@ -14,7 +14,7 @@ class ASTNode // ASTNodes are abstract symbols which together form a "flow chart
 public:
 	int my_line = 0; // Hypothetically, the line that this ASTNode happens on. This is remembered for the sake of improving runtime legibility.
 
-	virtual const std::string class_name() const { return "ASTNode"; }
+	virtual const std::string class_name() const { return "ASTNode"; } // FIXME: Make better use of typeid() calls instead of this shit
 
 	// Collapses this symbol into a real dang thing or process that the interpreter can do.
 	virtual Value resolve(Interpreter&); 

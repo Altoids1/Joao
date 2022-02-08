@@ -229,7 +229,7 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 
 	for (unsigned int i = 0; i < depth; ++i)
 	{
-		std::string dir = Directory::DotDot(dir);
+		dir = Directory::DotDot(dir);
 	}
 	if (dir == "/")
 	{

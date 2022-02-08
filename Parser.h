@@ -366,7 +366,7 @@ class Parser
 			int depth = 1;
 			for(int where = here +1; where <= there; ++where)
 			{
-				Token* tuk = tokens[here]; // KARH EN TUK
+				Token* tuk = tokens[where]; // KARH EN TUK
 
 				if (tuk->class_enum() == Token::cEnum::GrandparentToken)
 				{
