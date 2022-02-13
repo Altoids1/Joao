@@ -1,6 +1,7 @@
 #include "../Program.h"
 #include "../Object.h"
 #include "../Table.h"
+#include "../AST.hpp"
 
 //#define NATIVE_FUNC_TABLE(name) static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
 

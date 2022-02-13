@@ -1,6 +1,7 @@
 #include "../Program.h"
 #include "../Object.h"
 #include "../Table.h"
+#include "../AST.hpp"
 
 ObjectType* Program::construct_table_library()
 {

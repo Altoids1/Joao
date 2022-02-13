@@ -1,5 +1,6 @@
 #include "Program.h"
 #include "Object.h"
+#include "AST.hpp"
 
 std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 {

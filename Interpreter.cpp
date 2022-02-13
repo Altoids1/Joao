@@ -15,7 +15,6 @@ Interpreter::Interpreter(Program& p, bool interact = false)
 	:is_interactive(interact)
 {
 	prog = &p;
-	p.set_interp(*this);
 	globalscope = p.globals;
 }
 

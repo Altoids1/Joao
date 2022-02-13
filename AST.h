@@ -484,29 +484,22 @@ public:
 	}
 };
 
-class NativeFunction final : public Function
+template <typename Lambda>
+class NativeFunction : public Function
 {
+protected:
 	/*
 	So this kinda overrides a lot of the typical behavior of a function, instead deferring it into some kickass lambda stored within.
 	*/
-	Value(*lambda)(std::vector<Value>) = nullptr;
+	Lambda lambda;
 	// Value lambda() {};
 public:
-	NativeFunction(std::string n)
+	NativeFunction(std::string n, Lambda lamb)
 		:Function()
+		,lambda(lamb)
 	{
+		my_line = 0; // These functions aren't really supposed to BE anywhere in the code per se so..
 		t_name = n;
-		lambda = [](std::vector<Value> args)
-		{
-			return Value();
-		};
-	}
-	NativeFunction(std::string n, Value(*luh)(std::vector<Value>), int linenum = 0)
-		:Function()
-	{
-		t_name = n;
-		lambda = luh;
-		my_line = linenum;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -518,30 +511,18 @@ public:
 };
 
 //Similar to a NativeFunction except it requires a handle to an object its acting within.
+template <typename Lambda>
 class NativeMethod final : public Function
 {
-	/*
-	So this kinda overrides a lot of the typical behavior of a function, instead deferring it into some kickass lambda stored within.
-	*/
-	Value(*lambda)(std::vector<Value>,Object*) = nullptr;
-	// Value lambda() {};
+	Lambda lambda;
 public:
 	bool is_static = false; // True if it actually doesn't need an object to act on
-	NativeMethod(std::string n)
+	NativeMethod(std::string n, Lambda lamb)
 		:Function()
+		,lambda(lamb)
 	{
+		my_line = 0;
 		t_name = n;
-		lambda = [](std::vector<Value> args,Object*)
-		{
-			return Value();
-		};
-	}
-	NativeMethod(std::string n, Value(*luh)(std::vector<Value>,Object*), int linenum = 0)
-		:Function()
-	{
-		t_name = n;
-		lambda = luh;
-		my_line = linenum;
 	}
 
 	virtual Value resolve(Interpreter&) override;

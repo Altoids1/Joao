@@ -1,4 +1,5 @@
 #include "../Program.h"
+#include "../AST.hpp"
 
 #define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
 
@@ -115,6 +116,7 @@ void Program::construct_string_library()
 
 		return Value(str.substr(start.t_value.as_int,stop.t_value.as_int - start.t_value.as_int + 1));
 	}));
+
 }
 
 

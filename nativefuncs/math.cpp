@@ -1,4 +1,5 @@
 #include "../Program.h"
+#include "../AST.hpp"
 
 #include <limits>
 

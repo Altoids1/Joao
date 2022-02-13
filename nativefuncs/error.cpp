@@ -1,5 +1,6 @@
 #include "../Program.h"
 #include "../Object.h"
+#include "../AST.hpp"
 
 ObjectType* Program::construct_error_library()
 {
