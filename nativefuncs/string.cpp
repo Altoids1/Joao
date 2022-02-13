@@ -119,6 +119,50 @@ void Program::construct_string_library()
 		return Value(str.substr(start.t_value.as_int,stop.t_value.as_int - start.t_value.as_int + 1));
 	}));
 
+	NATIVE_FUNC("explode")
+	{
+		char sep = ' ';
+		std::string* str_ptr;
+		switch (args.size())
+		{
+		default:
+		case(2):
+			if(args[1].t_vType != Value::vType::String || args[1].t_value.as_string_ptr->empty())
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+			sep = args[1].t_value.as_string_ptr->at(0); // FIXME: Learn to support non-character separators.
+			[[fallthrough]];
+		case(1):
+			if (args[0].t_vType != Value::vType::String)
+				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+			str_ptr = args[0].t_value.as_string_ptr;
+			break;
+		case(0):
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
+		}
+
+		const std::string& ref_str = *str_ptr;
+		if (ref_str.empty()) return Value(interp.makeObject("/table", {}, nullptr));
+		std::vector<Value> new_arr;
+		size_t pos = 0;
+		size_t end = ref_str.size();
+#ifdef JOAO_SAFE
+		for (int i = 0; i < MAX_REPLACEMENTS_ALLOWED; ++i) // It just returning the partially-replaced string is... fine, I guess.
+#else
+		while (pos < end)
+#endif
+		{
+			size_t new_pos = ref_str.find(sep, pos);
+			if (new_pos == std::string::npos)
+			{
+				new_arr.push_back(Value(ref_str.substr(pos,std::string::npos)));
+				break;
+			}
+			new_arr.push_back(Value(ref_str.substr(pos, new_pos-pos)));
+			pos = new_pos + 1; // Move to the next character
+		}
+
+		return Value(interp.makeObject("/table",new_arr,nullptr));
+	}));
 }
 
 
