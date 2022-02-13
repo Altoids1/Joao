@@ -43,7 +43,7 @@ public:
 
 	//Sets the value pointed to by index to the value referenced by the second.
 	void at_set(Interpreter&, Value, Value&);
-	bool at_set_raw(Value, Value&);
+	bool at_set_raw(Value, const Value&);
 
 	size_t length() { return t_array.size(); }
 	bool virtual is_table() override { return true; }

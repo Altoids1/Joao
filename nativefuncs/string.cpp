@@ -1,7 +1,7 @@
 #include "../Program.h"
 #include "../AST.hpp"
 
-#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](const std::vector<Value>& args)
 
 void Program::construct_string_library()
 {
@@ -10,8 +10,8 @@ void Program::construct_string_library()
 		if(args.size() < 2)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 
-		Value hay = args[0];
-		Value needle = args[1];
+		const Value& hay = args[0];
+		const Value& needle = args[1];
 		if(hay.t_vType != Value::vType::String || needle.t_vType != Value::vType::String)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		
@@ -26,9 +26,9 @@ void Program::construct_string_library()
 	{
 		if (args.size() < 3)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
-		Value hay = args[0];
-		Value needle = args[1];
-		Value better_hay = args[2];
+		const Value& hay = args[0];
+		const Value& needle = args[1];
+		const Value& better_hay = args[2];
 		if (hay.t_vType != Value::vType::String || needle.t_vType != Value::vType::String || better_hay.t_vType != Value::vType::String)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
@@ -62,8 +62,8 @@ void Program::construct_string_library()
 		if (args.size() < 2)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 
-		Value repetition_legitimizes = args[0];
-		Value repnum = args[1];
+		const Value& repetition_legitimizes = args[0];
+		const Value& repnum = args[1];
 
 		if (repetition_legitimizes.t_vType != Value::vType::String || repnum.t_vType != Value::vType::Integer)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
@@ -84,7 +84,7 @@ void Program::construct_string_library()
 		if (args.size() < 1)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 
-		Value record = args[0];
+		const Value& record = args[0];
 
 		if (record.t_vType != Value::vType::String)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
@@ -105,9 +105,9 @@ void Program::construct_string_library()
 		if (args.size() < 3)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 
-		Value hay = args[0];
-		Value start = args[1];
-		Value stop = args[2];
+		const Value& hay = args[0];
+		const Value& start = args[1];
+		const Value& stop = args[2];
 
 		if (hay.t_vType != Value::vType::String || start.t_vType != Value::vType::Integer || stop.t_vType != Value::vType::Integer)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));

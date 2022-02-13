@@ -98,7 +98,7 @@ Value& Table::at_ref(Interpreter& interp, Value index)
 	return t_array.at(array_index); // Friendly reminder that std::vector::at() does bounds-checking, while std::vector::operator[] does not.
 }
 
-bool Table::at_set_raw(Value index, Value& newval)
+bool Table::at_set_raw(Value index, const Value& newval)
 {
 	switch (index.t_vType)
 	{

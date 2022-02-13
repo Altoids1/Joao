@@ -8,7 +8,7 @@ ObjectType* Program::construct_table_library()
 	ObjectType* table = new ObjectType("/table");
 	table->is_table_type = true;
 	
-	table->set_typemethod_raw("#constructor",new NativeMethod("#constructor",[](std::vector<Value> args, Object* obj){
+	table->set_typemethod_raw("#constructor",new NativeMethod("#constructor",[](const std::vector<Value>& args, Object* obj){
 		
 		Table* t = static_cast<Table*>(obj);
 
@@ -19,7 +19,7 @@ ObjectType* Program::construct_table_library()
 
 		return Value(true); // If anything.
 	}));
-	table->set_typemethod_raw("implode",new NativeMethod("implode",[](std::vector<Value> args, Object* obj){
+	table->set_typemethod_raw("implode",new NativeMethod("implode",[](const std::vector<Value>& args, Object* obj){
 		Table* t = static_cast<Table*>(obj);
 
 		std::string sep = ", ";
@@ -57,7 +57,7 @@ ObjectType* Program::construct_table_library()
 		return Value(result);
 	}));
 
-	table->set_typemethod_raw("pick", new NativeMethod("pick", [](std::vector<Value> args, Object* obj) {
+	table->set_typemethod_raw("pick", new NativeMethod("pick", [](const std::vector<Value>& args, Object* obj) {
 		Table* t = static_cast<Table*>(obj);
 
 		if (!t->t_array.size())
@@ -66,14 +66,14 @@ ObjectType* Program::construct_table_library()
 		return Value(t->t_array[rand() % t->t_array.size()]);
 	}));
 
-	definedFunctions["pick"] = new NativeFunction("pick", [](std::vector<Value> args)
+	definedFunctions["pick"] = new NativeFunction("pick", [](const std::vector<Value>& args)
 		{
 			if (!args.size())
 				return Value();
 			return Value(args[rand() % args.size()]);
 		});
 
-	table->set_typemethod_raw("insert", new NativeMethod("insert", [](std::vector<Value> args, Object* obj) {
+	table->set_typemethod_raw("insert", new NativeMethod("insert", [](const std::vector<Value>& args, Object* obj) {
 		if (args.size() < 2)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& vindex = args[0];
@@ -122,7 +122,7 @@ ObjectType* Program::construct_table_library()
 		}
 	}));
 
-	table->set_typemethod_raw("remove",new NativeMethod("remove",[](std::vector<Value> args, Object* obj){
+	table->set_typemethod_raw("remove",new NativeMethod("remove",[](const std::vector<Value>& args, Object* obj){
 		if(args.size() < 1)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& vindex = args[0];

@@ -6,12 +6,12 @@
 #define MATH_E 2.71828182845904523536
 #define PI 3.14159265358979323846
 
-#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](const std::vector<Value>& args)
 
 #define MAXMIN_ENUM(type,thebool) (static_cast<uint16_t>(type) | (static_cast<uint16_t>(thebool) << 8))
 
 
-Value math::round(std::vector<Value> args)
+Value math::round(const std::vector<Value>& args)
 {
 	if(args.empty())
 		return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
@@ -47,7 +47,7 @@ void Program::construct_math_library()
 	//GLOBAL FUNCTIONS
 	NATIVE_FUNC("abs")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -62,7 +62,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("acos")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -77,7 +77,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("asin")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -92,7 +92,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("atan")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -107,7 +107,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("ceil")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -123,7 +123,7 @@ void Program::construct_math_library()
 
 	NATIVE_FUNC("cos")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -138,7 +138,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("deg")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -153,7 +153,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("exp")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 
 		//Literal eugh = Literal(Value(MATH_E));
 		//Literal argh = Literal(arg);
@@ -172,7 +172,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("floor")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -211,7 +211,7 @@ void Program::construct_math_library()
 		
 		for (size_t i = 1; i < args.size(); ++i)
 		{
-			Value v = args[i];
+			const Value& v = args[i];
 			switch (MAXMIN_ENUM(v.t_vType,is_double))
 			{
 			case(MAXMIN_ENUM(Value::vType::Double, true)):
@@ -276,7 +276,7 @@ void Program::construct_math_library()
 
 		for (size_t i = 1; i < args.size(); ++i)
 		{
-			Value v = args[i];
+			const Value& v = args[i];
 			switch (MAXMIN_ENUM(v.t_vType,is_double))
 			{
 			case(MAXMIN_ENUM(Value::vType::Double, true)):
@@ -317,7 +317,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("rad")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -404,7 +404,7 @@ void Program::construct_math_library()
 
 	NATIVE_FUNC("sin")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -419,7 +419,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("sqrt")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -434,7 +434,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("tan")
 	{
-		Value arg = args[0];
+		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
 		case(Value::vType::Double):
@@ -449,8 +449,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("ult")
 	{
-		Value lhs = args[0];
-		Value rhs = args[1];
+		const Value& lhs = args[0];
+		const Value& rhs = args[1];
 
 		if(lhs.t_vType != Value::vType::Integer || rhs.t_vType != Value::vType::Integer)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));

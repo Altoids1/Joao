@@ -25,7 +25,7 @@ ObjectType* Program::construct_error_library()
 	}
 	*/
 
-	error->set_typemethod_raw("#constructor", new NativeMethod("#constructor", [](std::vector<Value> args, Object* obj) {
+	error->set_typemethod_raw("#constructor", new NativeMethod("#constructor", [](const std::vector<Value>& args, Object* obj) {
 
 		switch (args.size())
 		{
@@ -48,7 +48,7 @@ ObjectType* Program::construct_error_library()
 
 		return Value(); // If anything.
 	}));
-	error->set_typemethod_raw("#tostring", new NativeMethod("#tostring", [](std::vector<Value> args, Object* obj) {
+	error->set_typemethod_raw("#tostring", new NativeMethod("#tostring", [](const std::vector<Value>& args, Object* obj) {
 		return obj->get_property_raw("what");
 	}));
 
