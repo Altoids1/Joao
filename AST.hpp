@@ -10,7 +10,7 @@ TODO: Make this file go away somehow.
 template <typename Lambda>
 Value NativeFunction<Lambda>::resolve(Interpreter& interp)
 {
-	Value result = lambda(t_args);
+	Value result = lambda(interp, t_args);
 	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
 	{
 		switch (result.t_value.as_int)

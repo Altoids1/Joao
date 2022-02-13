@@ -2,6 +2,7 @@
 #include "../Object.h"
 #include "../Table.h"
 #include "../AST.hpp"
+#include "../Interpreter.h"
 
 ObjectType* Program::construct_table_library()
 {
@@ -34,11 +35,13 @@ ObjectType* Program::construct_table_library()
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			stop = args[2].t_value.as_int;
 			//Falls over into the other arguments
+			[[fallthrough]];
 		case(2):
 			if(args[1].t_vType != Value::vType::Integer)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			start = args[1].t_value.as_int;
 			//Falls over into the other arguments
+			[[fallthrough]];
 		case(1):
 			sep = args[0].to_string();
 		case(0):
@@ -66,7 +69,7 @@ ObjectType* Program::construct_table_library()
 		return Value(t->t_array[rand() % t->t_array.size()]);
 	}));
 
-	definedFunctions["pick"] = new NativeFunction("pick", [](const std::vector<Value>& args)
+	definedFunctions["pick"] = new NativeFunction("pick", [](Interpreter& interp, const std::vector<Value>& args)
 		{
 			if (!args.size())
 				return Value();

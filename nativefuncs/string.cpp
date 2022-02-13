@@ -1,7 +1,9 @@
 #include "../Program.h"
 #include "../AST.hpp"
+#include "../Object.h"
+#include "../Interpreter.h"
 
-#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](const std::vector<Value>& args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
 
 void Program::construct_string_library()
 {
