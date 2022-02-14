@@ -5,6 +5,7 @@
 
 #define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
 
+
 void Program::construct_string_library()
 {
 	NATIVE_FUNC("find") //TODO: Implement a Regex type with a basic regex engine. Someday. Maybe.
