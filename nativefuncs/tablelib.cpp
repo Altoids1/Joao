@@ -4,23 +4,38 @@
 #include "../AST.hpp"
 #include "../Interpreter.h"
 
+
+#if defined(__GNUC__) && __GNUC__ <= 8
+//This macro exists, in part, to get around a bug in GCC 8.1,
+//that caused it to be unable to do type deduction of lambda expressions for template-class constructors.
+//That whole jumble of words is just too jumbly for it to understand, despite it definitely being compliant with C++17 spec.
+//Why do I not just move to a different compiler?
+//Because Github Actions has 8.1 as their default C++ compiler on their Windows build with no plans to increment at all.
+//Despite it being years stale. Kill me.
+#define NATIVEMETHOD(objtype,func,lambda) { auto l = lambda; objtype->set_typemethod_raw(func, new NativeMethod(func,l));}
+#else
+//The version of this define for the good boys and girls who actually fucking comply with standard
+#define NATIVEMETHOD(objtype,func,lambda) objtype->set_typemethod_raw(func, new NativeMethod(func,lambda));
+#endif
+
 ObjectType* Program::construct_table_library()
 {
+	
 	ObjectType* table = new ObjectType("/table");
 	table->is_table_type = true;
 	
-	table->set_typemethod_raw("#constructor",new NativeMethod("#constructor",[](const std::vector<Value>& args, Object* obj){
-		
+	NATIVEMETHOD(table, "#constructor", [](const std::vector<Value>& args, Object* obj) {
+
 		Table* t = static_cast<Table*>(obj);
 
-		for(size_t i = 0; i < args.size(); ++i)
+		for (size_t i = 0; i < args.size(); ++i)
 		{
 			t->t_array.push_back(args[i]);
 		}
 
 		return Value(true); // If anything.
-	}));
-	table->set_typemethod_raw("implode",new NativeMethod("implode",[](const std::vector<Value>& args, Object* obj){
+		});
+	NATIVEMETHOD(table,"implode",[](const std::vector<Value>& args, Object* obj){
 		Table* t = static_cast<Table*>(obj);
 
 		std::string sep = ", ";
@@ -58,16 +73,16 @@ ObjectType* Program::construct_table_library()
 			result += sep + t->t_array[start].to_string();
 		}
 		return Value(result);
-	}));
+	});
 
-	table->set_typemethod_raw("pick", new NativeMethod("pick", [](const std::vector<Value>& args, Object* obj) {
+	NATIVEMETHOD(table,"pick", [](const std::vector<Value>& args, Object* obj) {
 		Table* t = static_cast<Table*>(obj);
 
 		if (!t->t_array.size())
 			return Value();
 
 		return Value(t->t_array[rand() % t->t_array.size()]);
-	}));
+	});
 
 	definedFunctions["pick"] = new NativeFunction("pick", [](Interpreter& interp, const std::vector<Value>& args)
 		{
@@ -76,7 +91,7 @@ ObjectType* Program::construct_table_library()
 			return Value(args[rand() % args.size()]);
 		});
 
-	table->set_typemethod_raw("insert", new NativeMethod("insert", [](const std::vector<Value>& args, Object* obj) {
+	NATIVEMETHOD(table,"insert", [](const std::vector<Value>& args, Object* obj) {
 		if (args.size() < 2)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& vindex = args[0];
@@ -123,9 +138,9 @@ ObjectType* Program::construct_table_library()
 			}
 			return Value();
 		}
-	}));
+	});
 
-	table->set_typemethod_raw("remove",new NativeMethod("remove",[](const std::vector<Value>& args, Object* obj){
+	NATIVEMETHOD(table,"remove",[](const std::vector<Value>& args, Object* obj){
 		if(args.size() < 1)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& vindex = args[0];
@@ -139,7 +154,7 @@ ObjectType* Program::construct_table_library()
 			static_cast<Table*>(obj)->tfree(vindex);
 			return Value();
 		}
-	}));
+	});
 
 	return table;
 }
