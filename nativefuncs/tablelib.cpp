@@ -5,18 +5,7 @@
 #include "../Interpreter.h"
 
 
-#if defined(__GNUC__) && __GNUC__ <= 8
-//This macro exists, in part, to get around a bug in GCC 8.1,
-//that caused it to be unable to do type deduction of lambda expressions for template-class constructors.
-//That whole jumble of words is just too jumbly for it to understand, despite it definitely being compliant with C++17 spec.
-//Why do I not just move to a different compiler?
-//Because Github Actions has 8.1 as their default C++ compiler on their Windows build with no plans to increment at all.
-//Despite it being years stale. Kill me.
-#define NATIVEMETHOD(objtype,func,lambda) { auto l = lambda; objtype->set_typemethod_raw(func, new NativeMethod<decltype(l)>(func,l));}
-#else
-//The version of this define for the good boys and girls who actually fucking comply with standard
-#define NATIVEMETHOD(objtype,func,lambda) objtype->set_typemethod_raw(func, new NativeMethod(func,lambda));
-#endif
+
 
 ObjectType* Program::construct_table_library()
 {
