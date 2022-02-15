@@ -18,12 +18,7 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
-      if: matrix.os[0] == 'windows-latest'
-    - name: Test that we have access to cl.exe from here
-      run: cl
-      if: matrix.os[0] == 'windows-latest'
+    - uses: ilammy/msvc-dev-cmd@v1.10
     - name: Install Meson + Ninja
       run: pip install meson ninja
     - name: Setup Meson
