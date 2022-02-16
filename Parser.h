@@ -293,9 +293,9 @@ class Parser
 				++where;
 				//return new MemberAccess(scoped_access, readVarAccess(tokenheader, there)); // Doing just this would end up being right-associative, which for our purposes would be annoying to deal with interpreter-side.
 				//So we're going to do something else.
-				if (tokens[where]->class_enum() != Token::cEnum::WordToken)
+				if (propeller->class_enum() != Token::cEnum::WordToken)
 				{
-					ParserError(tokens[where], "Unexpected Token when reading MemberAccess!");
+					ParserError(propeller, "Unexpected Token when reading MemberAccess!");
 				}
 				var_access = new MemberAccess(var_access, new Identifier(static_cast<WordToken*>(tokens[where])->word));
 				continue;
@@ -312,16 +312,20 @@ class Parser
 
 				}
 				//If it's a parenthesis then we're probably about to do a function call but, that's none of *our* business in readVarAccess() so just return
-				--where; // Make sure that hypothetical paren handler can actually see the paren
-				goto FACCESS_END;
+				tokenheader = where;
+				return;
 			}
 			default: // I dunno what this is, just return what you have and hope the higher stacks know what it is
-				--where;
-				goto FACCESS_END;
+				tokenheader = where;
+				return;
 			}
 		}
-	FACCESS_END:
-		tokenheader = where + 1;
+		//A fluke of having the init statement be above-scope of the for-loop like this is that
+		//it actually increment once *past* what the condition is.
+		//like if the condition were "where < 5" then it'd be 5 here.
+		//So setting the tokenheader to where is valid here; that is genuinely the next token past what we parsed
+		//since we *ought* to be in the case that we genuinely consumed all the tokens from here to there.
+		tokenheader = where;
 		return;
 	}
 
