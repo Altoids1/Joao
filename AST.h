@@ -650,6 +650,40 @@ public:
 	}
 };
 
+class ForEachBlock final : public Block
+{
+	std::string key_name;
+	std::string value_name;
+	ASTNode* table_node;
+public:
+	ForEachBlock(const std::string& k , const std::string& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
+		:key_name(k),
+		value_name(v),
+		table_node(tn)
+	{
+		my_line = linenum;
+		statements = st;
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "ForEachBlock"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "ForEachBlock\n";
+
+		str += ind + "=Pair: " + key_name + "," + value_name + "\n";
+		str += ind + "<in:\n" + table_node->dump(indent + 2);
+
+		for (size_t i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
+
+		return str;
+	}
+};
+
 class WhileBlock final : public Block
 {
 	ASTNode* condition = nullptr;

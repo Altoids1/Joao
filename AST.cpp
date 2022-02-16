@@ -439,6 +439,93 @@ Value ForBlock::resolve(Interpreter& interp)
 	return Value();
 }
 
+Value ForEachBlock::resolve(Interpreter& interp)
+{
+#ifdef JOAO_SAFE
+	Expression::increment();
+#endif
+	Value tblval = table_node->resolve(interp);
+	if (tblval.t_vType != Value::vType::Object || !tblval.t_value.as_object_ptr->is_table())
+	{
+		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "for-each iterator must be an Object which inherits from /table!");
+		return Value();
+	}
+
+	Table* tbl = static_cast<Table*>(tblval.t_value.as_object_ptr);
+	/*
+	Iterates over the elements of the /table given.
+	It first attempts to go in numerical order along the keys, starting at 0 and going up until the associated numerical key cannot be found.
+	At that point, it iterates over all remaining keys in an unspecified order until all elements have been iterated over.
+	*/
+	interp.push_block();
+	interp.init_var(key_name, Value(), this);
+	interp.init_var(value_name, Value(), this);
+	//Normal array keys
+	size_t array_it = 0;
+	for (; tbl->length(); array_it++)
+	{
+		interp.override_var(key_name, Value(array_it), this);
+		interp.override_var(value_name,tbl->t_array.at(array_it) , this); // FIXME: Maybe it'd be better if this used a Value& instead of copying it? :thinking:
+		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
+			return blockret;
+		}
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
+			return blockret;
+		}
+	}
+	//Silly keys, still attempting to go incrementally
+	for (array_it += 1;; array_it++)
+	{
+		Value v = tbl->at(interp, Value(array_it));
+		if (v.t_vType == Value::vType::Null)
+			break;
+		interp.override_var(key_name, Value(array_it), this);
+		interp.override_var(value_name, v, this);
+		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
+			return blockret;
+		}
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
+			return blockret;
+		}
+	}
+	//Normal hash keys
+	for (auto it = tbl->t_hash.begin(); it != tbl->t_hash.end(); ++it) // Doesn't fucking work yet since table doesn't actually remember the damned keys >:(
+	{
+		const Value& key = it->first;
+		if (key.t_vType == Value::vType::Integer && key.t_value.as_int < array_it) // Skipping over "silly keys" that we've already iterated over
+			continue;
+
+		interp.override_var(key_name, key, this);
+		interp.override_var(value_name, it->second, this);
+		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
+			return blockret;
+		}
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
+			return blockret;
+		}
+	}
+	interp.pop_block();
+	return Value();
+}
+
 Value WhileBlock::resolve(Interpreter& interp)
 {
 #ifdef JOAO_SAFE

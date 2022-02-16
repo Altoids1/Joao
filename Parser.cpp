@@ -712,7 +712,43 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				consume_paren(true); // (
 				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
 
-				size_t semicolon = find_first_semicolon(tokenheader, yonder-1);
+				size_t semicolon = find_first_semicolon(tokenheader, yonder-1); // Using "find" instead of "get" here,
+				//since we not sure whether this is a generic for-loop or a for-each.
+
+				if (!semicolon) // Can't be a generic for-loop, then. Attempt to read foreach
+				{
+					WordToken* keytoken, *valtoken; // This syntax is so borked
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //keytoken
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
+					}
+					keytoken = static_cast<WordToken*>(tokens[tokenheader]);
+					++tokenheader;
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::CommaToken) // The comma
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when Comma expected while reading for-each!");
+					}
+					++tokenheader;
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //valtoken
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
+					}
+					valtoken = static_cast<WordToken*>(tokens[tokenheader]);
+					++tokenheader;
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::KeywordToken
+						|| static_cast<KeywordToken*>(tokens[tokenheader])->t_key != KeywordToken::Key::In) //"in" keyword
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when 'in' keyword expected while reading for-each!");
+					}
+					++tokenheader;
+					ASTNode* table_node = readExp(tokenheader, yonder - 1);
+					consume_paren(false);
+
+					ASTs.push_back(new ForEachBlock(keytoken->word, valtoken->word, table_node, readBlock(BlockType::For, tokenheader, there)));
+					where = tokenheader - 1; // decrement to counteract imminent increment
+					continue;
+				}
+
 				ASTNode* init;
 				if (find_aOp(tokenheader, static_cast<int>(semicolon)))
 				{
@@ -727,7 +763,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				}
 
 				where = static_cast<int>(semicolon + 1);
-				semicolon = find_first_semicolon(where, yonder-1);
+				semicolon = get_first_semicolon(where, yonder-1);
 				ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in Jo�o so putting one in a conditional is silly
 				where = static_cast<int>(semicolon + 1);
 				ASTNode* inc;
@@ -939,7 +975,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				}
 				else // #2
 				{
-					int yonder = find_first_semicolon(where + 1, there);
+					int yonder = get_first_semicolon(where + 1, there);
 					ASTs.push_back(new ThrowStatement(readExp(where, yonder-1)));
 					consume_semicolon();
 					where = tokenheader - 1;
@@ -976,7 +1012,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		//If the Grammar serves me right, this is either a varstat or a functioncall.
 		//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
 		{
-			int yonder = static_cast<int>(find_first_semicolon(where+1, there));
+			int yonder = static_cast<int>(get_first_semicolon(where+1, there));
 			int found_aop = find_aOp(where + 1, yonder - 1);
 
 			if(found_aop) // varstat
