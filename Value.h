@@ -15,7 +15,7 @@ public:
 		Function // Functions as first-class values isn't 100% in yet and there's a lot of degenerate circumstances with this type.
 	}t_vType{ vType::Null };
 
-	union {
+	union DATA{
 		bool as_bool;
 		JoaoInt as_int;
 		double as_double;
@@ -29,6 +29,14 @@ public:
 	{
 		t_value.as_int = 0;
 	}
+protected:
+	UnmanagedValue(vType ty, DATA datum)
+		:t_vType(ty)
+		,t_value(datum)
+	{
+
+	}
+public:
 	UnmanagedValue(int64_t i)
 	{
 		t_value.as_int = static_cast<JoaoInt>(i);
@@ -181,7 +189,12 @@ public:
 	Value(const Value&);
 
 	//and this is the Move-constructor.
-	//Value(const Value&&);
+	Value(Value&& src) noexcept
+		:UnmanagedValue(src.t_vType, src.t_value)
+	{
+		src.t_vType = Value::vType::Null;
+		src.t_value.as_int = 0; // FIXME: this'll be unnecessary once NativeFunction's weird error codes are removed. :)
+	}
 	
 	//And this is the assignment operator?? Kill me.
 	Value& operator=(const Value&);
