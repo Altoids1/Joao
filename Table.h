@@ -28,14 +28,14 @@ public:
 	void tfree(const Value&);
 
 	std::vector<Value> t_array;
-	std::unordered_map<size_t, Value> t_hash;
+	std::unordered_map<Value, Value> t_hash;
 	Table(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
 		:Object(objty,puh,fuh,nullptr)
 	{
 
 	}
 
-	//Returns the value stored at this index, or NULL and a runtime if it cannot be found.
+	//Returns the value stored at this index, or NULL if it cannot be found.
 	Value at(Interpreter&, Value);
 	
 	//Gets a handle to the value pointed to by this index. Quietly creates a reference to a null Value if it cannot be found.

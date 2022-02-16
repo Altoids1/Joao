@@ -122,6 +122,8 @@ class Value : public UnmanagedValue { // A general pseudo-typeless Value used to
 		}
 	}
 	void deref_as_obj();
+
+	
 public:
 	static Value dev_null;
 	//Constructors where Value behaves sensibly
@@ -198,10 +200,31 @@ public:
 	
 	//And this is the assignment operator?? Kill me.
 	Value& operator=(const Value&);
+	bool operator==(const Value&) const; // For the love of god DO NOT CALL THIS
 
 	//I am become death, the destroyer of malloc()
 	~Value();
-public:
+
 	std::string to_string() const;
 	std::string typestring();
+};
+
+
+template <>
+struct std::hash<Value>
+{
+	size_t operator()(const Value& x) const
+	{
+		switch (x.t_vType) // TODO: Maybe look into how to best carry out these hashings? For example, is hashing the Value's type also necessary?
+		{
+		case(Value::vType::Integer):
+			return std::hash<Value::JoaoInt>()(x.t_value.as_int);
+		case(Value::vType::Double):
+			return std::hash<double>()(x.t_value.as_double);
+		case(Value::vType::String):
+			return std::hash<std::string>()(*x.t_value.as_string_ptr);
+		default:
+			throw std::runtime_error("Invalid hashing of Value!");
+		}
+	}
 };
