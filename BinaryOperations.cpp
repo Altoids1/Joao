@@ -7,7 +7,7 @@
 #include "Parser.h"
 
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
-#define EXOR(a,b) ((a || b) && !(a && b))
+#define EXOR(a,b) ((a ? !(b) : b))
 
 /* WARNING: Chaotically-aligned programming */
 // For doing bitwise on double-with-double. Wanted to use templates but I don't think you conveniently can in this odd instance.
