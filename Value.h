@@ -199,6 +199,18 @@ public:
 	//And this is the assignment operator?? Kill me.
 	Value& operator=(const Value&);
 
+	Value& operator=(Value&& other) noexcept
+	{
+		if (this != &other) // I thought the definition of an rvalue was that it lacked a distinct pointer...? Why the fuck can I do this?
+		{
+			t_vType = other.t_vType;
+			t_value = other.t_value;
+			other.t_vType = Value::vType::Null;
+			other.t_value.as_int = 0; // FIXME: this'll be unnecessary once NativeFunction's weird error codes are removed. :)
+		}
+		return *this;
+	}
+
 	//I am become death, the destroyer of malloc()
 	~Value();
 public:
