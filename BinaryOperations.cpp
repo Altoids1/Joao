@@ -9,8 +9,7 @@
 #define BIN_ENUMS(a,b,c) ( (uint32_t(a) << 16) | (uint32_t(b) << 8)  | uint32_t(c) )
 #define EXOR(a,b) ((a ? !(b) : b))
 
-
-#if __has_builtin(__builtin_bit_cast) // Making use of the fact that this compiler probably has C++20 spec internally
+#if defined (__has_builtin) && __has_builtin (__builtin_bit_cast) // Making use of the fact that this compiler probably has C++20 spec internally
 #define DND(op) return __builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double)
 #define DNI(op) return __builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,static_cast<int64_t>(rhs.t_value.as_int))
 #define IND(op) return __builtin_bit_cast(uint64_t,static_cast<int64_t>(lhs.t_value.as_int)) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double)
