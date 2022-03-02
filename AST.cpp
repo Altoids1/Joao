@@ -462,7 +462,7 @@ Value ForEachBlock::resolve(Interpreter& interp)
 	interp.init_var(value_name, Value(), this);
 	//Normal array keys
 	size_t array_it = 0;
-	for (; tbl->length(); array_it++)
+	for (;array_it < tbl->length(); array_it++)
 	{
 		interp.override_var(key_name, Value(array_it), this);
 		interp.override_var(value_name,tbl->t_array.at(array_it) , this); // FIXME: Maybe it'd be better if this used a Value& instead of copying it? :thinking:
@@ -480,7 +480,9 @@ Value ForEachBlock::resolve(Interpreter& interp)
 		}
 	}
 	//Silly keys, still attempting to go incrementally
-	for (array_it += 1;; array_it++)
+	//Note that array_it is already at a value that is 1 more than the array portion's length
+	//due to the nuance of how for loops are evaluated :)
+	for (;;array_it++)
 	{
 		Value v = tbl->at(interp, Value(array_it));
 		if (v.t_vType == Value::vType::Null)
@@ -501,7 +503,7 @@ Value ForEachBlock::resolve(Interpreter& interp)
 		}
 	}
 	//Normal hash keys
-	for (auto it = tbl->t_hash.begin(); it != tbl->t_hash.end(); ++it) // Doesn't fucking work yet since table doesn't actually remember the damned keys >:(
+	for (auto it = tbl->t_hash.begin(); it != tbl->t_hash.end(); ++it)
 	{
 		const Value& key = it->first;
 		if (key.t_vType == Value::vType::Integer && key.t_value.as_int < array_it) // Skipping over "silly keys" that we've already iterated over
