@@ -159,11 +159,11 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	}
 	for (auto it = t_program.definedMethods.begin(); it != t_program.definedMethods.end(); ++it) // Ask all the functions
 	{
-		Function* fptr = it->second;
+		Function *const fptr = *it;
 
-		std::string function_fullname = it->second->get_name();
+		const std::string& function_fullname = fptr->get_name();
 
-		std::string function_shortname = it->first;
+		std::string function_shortname = Directory::lastword(function_fullname);
 
 		if (list_of_funcs.count(function_fullname))
 		{

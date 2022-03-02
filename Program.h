@@ -11,7 +11,8 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	std::unordered_map<std::string, Function*> definedFunctions;
 
 	//Methods. Separate from definedFunctions so that they are not in globalscope at runtime.
-	std::unordered_map<std::string, Function*> definedMethods;
+	//Stored as an unordered SET because their base name is not uniquely identifying; there can be a /foo/bar() and /fuck/bar() in the same program.
+	std::unordered_set<Function*> definedMethods;
 
 	Scopelet<Value> globals;
 
@@ -55,9 +56,7 @@ public:
 		}
 		for (auto it = definedMethods.begin(); it != definedMethods.end(); ++it)
 		{
-			Function* fuh = it->second;
-
-			std::cout << fuh->dump(0);
+			std::cout << (*it)->dump(0);
 		}
 	}
 
@@ -72,15 +71,19 @@ public:
 	{
 		if (name.find_first_of('/') != std::string::npos)
 			name = Directory::lastword(name);
-
-
+#ifndef JOAO_SAFE
+		if (definedFunctions.count(name))
+		{
+			std::cout << "WARNING: " << name << " overridden with alternate definition!";
+		}
+#endif
 		definedFunctions[name] = f;
 	}
 	void set_meth(std::string name, Function* f)
 	{
 		if (name.find_first_of('/') != std::string::npos)
 			name = Directory::lastword(name);
-		definedMethods[name] = f;
+		definedMethods.insert(f);
 	}
 	
 	//FIXME: I don't want Program to have any friends!! >:(

@@ -432,7 +432,7 @@ protected:
 public:
 	
 	Value& to_value() { return my_value; }
-	std::string get_name() const { return t_name; }
+	const std::string& get_name() const { return t_name; }
 	Object* get_obj() const { return obj; }
 	void set_obj(Object* o) { obj = o; };
 	Function(std::string name, Expression* expr)
