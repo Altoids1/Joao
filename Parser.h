@@ -594,7 +594,7 @@ ACCESS_END:
 		}
 	}
 
-	void consume_open_brace(int here)
+	void consume_open_brace(int here) // FIXME: Kinda weird; this should increment tokenheader.
 	{
 		Token* t = tokens[here];
 		if (t->class_enum() != Token::cEnum::PairSymbolToken)

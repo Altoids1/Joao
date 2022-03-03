@@ -437,11 +437,38 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			tokenheader = here + 1;
 			lvalue = new Literal(Value());
 			break;
-		case(PairSymbolToken::pairOp::Brace): // tableconstructor
-			ParserError(t, "Unexpected or underimplemented use of brace token!");
+		case(PairSymbolToken::pairOp::Brace):	// tableconstructor ::= '{' [exp] {',' exp} [',']'}' | '{'[Name '=' exp]{ ','[Name '=' exp] }[','] '}'
+		{
+			consume_open_brace(here);
 			tokenheader = here + 1;
-			lvalue = new Literal(Value());
+			//Try to read in the key-value version and fallback to the value-array one if it fails
+			Token* trytoken = tokens[tokenheader];
+			if (trytoken->class_enum() == Token::cEnum::WordToken)
+			{
+				if (tokens[tokenheader + 1]->class_enum() == Token::cEnum::SymbolToken)
+				{
+					SymbolToken* st = static_cast<SymbolToken*>(tokens[tokenheader + 1]);
+					if (symbol_to_aOp(st) == AssignmentStatement::aOps::Assign)
+					{
+						//Key-value pairs!
+						//'{'[Name '=' exp]{ ','[Name '=' exp] }[','] '}'
+						ParserError(t, "Brace-initialized tables with key-value pair are not implemented!");
+						break;
+					}
+				}
+			}
+			//Value array!
+			//'{' [exp] {',' exp}[',']'}'
+			int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Brace, tokenheader);
+			if (yonder == tokenheader) // Special case where it's a blank init; "{}"
+			{
+				lvalue = new Construction("/table", {}, tokens[tokenheader]->line);
+				++tokenheader;
+				break;
+			}
+			ParserError(t, "Brace-initialized tables with value array are not implemented!");
 			break;
+		}
 		case(PairSymbolToken::pairOp::Paren): // '(' exp ')'
 			consume_paren(true, t);
 			int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, here+1);
