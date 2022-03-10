@@ -140,7 +140,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 	//Step 1. Get a list of all classes that exist in some way
 	uncooked_types.merge(t_program.construct_natives()); //Aghast! C++17 be required to run this line!
-	std::unordered_map<std::string, bool> list_of_funcs; // Not as used here, mostly for the ParserError
+	std::unordered_set<std::string> list_of_funcs; // Not as used here, mostly for the ParserError
 
 	for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
 	{
@@ -170,7 +170,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 			ParserError(nullptr, "Duplicate function definition detected!"); // FIXME: Allow for this (with suppressable warnings anyways)
 			continue;
 		}
-		list_of_funcs[function_fullname] = true;
+		list_of_funcs.insert(function_fullname);
 
 		std::string dir_f = Directory::DotDot(function_fullname);
 		
@@ -649,7 +649,7 @@ LocalAssignmentStatement* Parser::readLocalAssignment(int here, int there) // Va
 		tuh = static_cast<LocalTypeToken*>(t)->t_type;
 		break;
 	case(LocalType::Local):
-		ParserError(t, "'local' is a reserved word; use 'Local' instead!");
+		ParserError(t, "'local' is a reserved word!");
 		return nullptr;
 	default:
 		ParserError(t, "Underimplemented LocalTypeToken detected!");

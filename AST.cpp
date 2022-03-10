@@ -212,13 +212,13 @@ Value BinaryExpression::resolve(Interpreter& interp)
 
 
 
-void Function::give_args(Interpreter& interp, const std::vector<Value>& args, Object* o = nullptr)
+void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* o = nullptr)
 {
 	if (o)
 	{
 		obj = o;
 	}
-	t_args = args;
+	t_args = std::move(args);
 	if (t_args.size() < t_argnames.size()) // If we were not given enough arguments
 	{
 		for (size_t i = t_args.size(); i < t_argnames.size(); ++i)
