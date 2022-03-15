@@ -308,15 +308,6 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 	return Value(prog->definedObjTypes[str]->makeObject(*this, std::move(eval_args)));
 }
 
-Value Interpreter::makeObject(std::string str, const std::vector<Value>& eval_args, ASTNode* maker)
-{
-
-	if (!(prog->definedObjTypes.count(str)))
-		RuntimeError(maker, "Constructor attempts to instantiate unknown type! (" + str + ")"); // FIXME: This should really be a Parsetime error
-
-	return Value(prog->definedObjTypes[str]->makeObject(*this, eval_args));
-}
-
 Value Interpreter::makeBaseTable()
 {
 	return Value(prog->definedObjTypes["/table"]->makeObject(*this, {}));
