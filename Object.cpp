@@ -102,7 +102,7 @@ Function* Object::has_method(Interpreter& interp, std::string name)
 
 /* Object Type */
 
-Object* ObjectType::makeObject(Interpreter& interp, const std::vector<Value>& args)
+Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>&& args)
 {
 	Object* o;
 	if (is_table_type)

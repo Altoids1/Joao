@@ -306,18 +306,16 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 		eval_args.push_back(args[i]->resolve(*this));
 	}
 
-	return Value(prog->definedObjTypes[str]->makeObject(*this, eval_args));
+	return Value(prog->definedObjTypes[str]->makeObject(*this, std::move(eval_args)));
 }
 Value Interpreter::makeBaseTable()
 {
-	std::vector<Value> dumb_ref; // Hate this language, why even have a distinction between rvalues and lvalues
-	return Value(prog->definedObjTypes["/table"]->makeObject(*this, dumb_ref));
+	return Value(prog->definedObjTypes["/table"]->makeObject(*this, {}));
 }
 
 Value Interpreter::makeBaseTable( std::vector<Value> elements, std::unordered_map<std::string,Value> entries, ASTNode* maker = nullptr)
 {
-	std::vector<Value> dumb_ref; // Hate this language, why even have a distinction between rvalues and lvalues
-	Object* objdesk = prog->definedObjTypes["/table"]->makeObject(*this,dumb_ref);
+	Object* objdesk = prog->definedObjTypes["/table"]->makeObject(*this,{});
 	
 	Table* desk = static_cast<Table*>(objdesk);
 	for(size_t i = 0; i < elements.size(); ++i)
