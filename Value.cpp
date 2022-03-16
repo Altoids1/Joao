@@ -2,8 +2,8 @@
 #include "Value.h"
 #include "Object.h"
 
-std::unordered_map<void*, uint32_t> Value::cached_ptrs;
-std::unordered_map<std::string, std::string*> Value::str_to_ptr;
+Hashtable<void*, uint32_t> Value::cached_ptrs;
+Hashtable<std::string, std::string*> Value::str_to_ptr;
 Value Value::dev_null = Value();
 
 Value::Value(Object* o)

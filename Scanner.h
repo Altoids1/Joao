@@ -399,7 +399,7 @@ class Scanner
 		Logical //  && || ~~
 	};
 
-	const std::unordered_map<std::string, OperationPrecedence> str_to_precedence = {
+	const Hashtable<std::string, OperationPrecedence> str_to_precedence = {
 		{"!",OperationPrecedence::Unary},
 		{"~",OperationPrecedence::Unary},
 		{"#",OperationPrecedence::Unary},
@@ -459,7 +459,7 @@ class Scanner
 
 	OperationPrecedence lowop = OperationPrecedence::NONE;
 
-	const std::unordered_map<std::string, KeywordToken::Key> keywordhash = {
+	const Hashtable<std::string, KeywordToken::Key> keywordhash = {
 		{"if",KeywordToken::Key::If},
 		{"elseif",KeywordToken::Key::Elseif},
 		{"else",KeywordToken::Key::Else},
@@ -472,13 +472,13 @@ class Scanner
 		{"catch",KeywordToken::Key::Catch},
 		{"throw",KeywordToken::Key::Throw}
 	};
-	const std::unordered_map<std::string, LiteralToken::Literal> literalhash = {
+	const Hashtable<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},
 		{"false",LiteralToken::Literal::False},
 		{"true",LiteralToken::Literal::True}
 	};
 
-	const std::unordered_map<std::string, LocalType> typehash = {
+	const Hashtable<std::string, LocalType> typehash = {
 		{"Value",LocalType::Value},
 		{"Number",LocalType::Number},
 		{"Object",LocalType::Object},
@@ -713,7 +713,7 @@ public:
 		fist.open(filename, static_cast<std::ios_base::openmode>(static_cast<int>(drapes))); //VS2019 doesn't make me do this static-casting nonsense but g++ does. :weary:
 	}
 
-	//Reads in an istream (most likely an ifstream) line-by-line as an ASCII text file which is supposed to contain João code.
+	//Reads in an istream (most likely an ifstream) line-by-line as an ASCII text file which is supposed to contain Joï¿½o code.
 	void scan(std::istream&);
 
 	//These functions mostly exist to get convenient access to sub-Scanners invoked by the 'include' keyword and its functionality

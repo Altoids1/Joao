@@ -53,7 +53,7 @@ class ObjectTree
 
 	//Allows for instant lookup of a given ObjectType's location in the node structure 
 	//Can't use ObjectType* as a key unfortunately since sometimes we may know of a type before we know its pointer (such as when /A/B/C is defined before /A or /A/B)
-	std::unordered_map<std::string, Node*> dir2node;
+	Hashtable<std::string, Node*> dir2node;
 
 	//Tell derived classes of a new base class we found for them
 	void propagate_downstream(ObjectType* base, Node* inheriter)

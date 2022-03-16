@@ -67,7 +67,7 @@ public:
 	//Constructs an empty base table.
 	Value makeBaseTable();
 	//Constructs an anonymous table with no derived classes and returns it.
-	Value makeBaseTable( std::vector<Value>, std::unordered_map<std::string,Value>, ASTNode*);
+	Value makeBaseTable( std::vector<Value>, Hashtable<std::string,Value>, ASTNode*);
 
 	void RuntimeError()
 	{

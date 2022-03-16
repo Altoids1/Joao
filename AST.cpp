@@ -624,9 +624,9 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	return Value::dev_null;
 }
 
-std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
+Hashtable<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
 {
-	std::unordered_map<std::string, Value> svluh;
+	Hashtable<std::string, Value> svluh;
 
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{

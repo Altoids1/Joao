@@ -45,9 +45,7 @@ public:
 	{
 		for (auto it = definedFunctions.begin(); it != definedFunctions.end(); ++it)
 		{
-			Function* fuh = it->second;
-
-			std::cout << fuh->dump(0);
+			std::cout << it->second->dump(0);
 		}
 		for (auto it = definedMethods.begin(); it != definedMethods.end(); ++it)
 		{

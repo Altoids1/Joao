@@ -25,6 +25,7 @@ using Hashtable = HashTable<K,V>;
 #endif
 #endif
 
+#define DEBUG
 #ifdef DEBUG
 #define _DEBUG
 #endif

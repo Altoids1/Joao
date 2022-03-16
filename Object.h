@@ -6,9 +6,9 @@
 class Object 
 {
 protected:
-	std::unordered_map<std::string, Value> properties; // A general container for all Value-type properties of this object. Functions are stored in the Program's ObjectTree.
-	std::unordered_map<std::string, Value>* base_properties; //A pointer to our ObjectType's property hashtable, to look up default values when needed
-	std::unordered_map<std::string, Function*>* base_funcs; // Pointer to object's base functions.
+	Hashtable<std::string, Value> properties; // A general container for all Value-type properties of this object. Functions are stored in the Program's ObjectTree.
+	Hashtable<std::string, Value>* base_properties; //A pointer to our ObjectType's property hashtable, to look up default values when needed
+	Hashtable<std::string, Function*>* base_funcs; // Pointer to object's base functions.
 	Metatable* mt = nullptr;
 public:
 	std::string object_type; // A string denoting the directory position of this object.
@@ -24,7 +24,7 @@ public:
 	Value call_method(Interpreter&, std::string, std::vector<Value>& args);
 	Function* has_method(Interpreter&, std::string);
 
-	Object(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh, Metatable* m = nullptr)
+	Object(std::string objty, Hashtable<std::string, Value>* puh, Hashtable<std::string, Function*>* fuh, Metatable* m = nullptr)
 		:base_properties(puh)
 		,base_funcs(fuh)
 		,object_type(objty)
@@ -37,7 +37,7 @@ public:
 	{
 		std::string st = object_type + "/{";
 
-		for (auto& it : properties) {
+		for (auto it : properties) {
 			// Do stuff
 			st += "(" + it.first + "," + it.second.to_string() + ") ";
 		}
@@ -55,8 +55,8 @@ class ObjectType // Stores the default methods and properties of this type of Ob
 //it either has the property, or it doesn't, or it has the function, or it does not.
 {
 	std::string object_type;
-	std::unordered_map<std::string, Function*> typefuncs;
-	std::unordered_map<std::string, Value> typeproperties;
+	Hashtable<std::string, Function*> typefuncs;
+	Hashtable<std::string, Value> typeproperties;
 	Metatable* mt = nullptr;
 public:
 	
@@ -73,7 +73,7 @@ public:
 	{
 
 	}
-	ObjectType(std::string n, std::unordered_map<std::string, Value> typep)
+	ObjectType(std::string n, Hashtable<std::string, Value> typep)
 		:object_type(n)
 		,typeproperties(typep)
 	{
@@ -115,7 +115,7 @@ class Metatable
 	//These properties should be accessed by nobody but the metatable's metamethods themselves.
 	std::vector<void*> privates;
 
-	std::unordered_map<std::string, void*> metamethods; // by "void" I mean "NativeMethod"
+	Hashtable<std::string, void*> metamethods; // by "void" I mean "NativeMethod
 
 public:
 	template<typename Lambda>

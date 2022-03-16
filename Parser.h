@@ -22,7 +22,7 @@ class Parser
 
 	std::vector<Scanner::OperationPrecedence> lowest_ops;
 
-	const std::unordered_map<BinaryExpression::bOps, Scanner::OperationPrecedence> bOp_to_precedence =
+	const Hashtable<BinaryExpression::bOps, Scanner::OperationPrecedence> bOp_to_precedence =
 	{
 		{BinaryExpression::bOps::Add,Scanner::OperationPrecedence::Term},
 		{BinaryExpression::bOps::Subtract,Scanner::OperationPrecedence::Term},
@@ -503,7 +503,7 @@ ACCESS_END:
 			}
 				
 		}
-		return 0; // Safe because it is impossible for the first token of a valid João program to be a CommaToken
+		return 0; // Safe because it is impossible for the first token of a valid Joï¿½o program to be a CommaToken
 	}
 
 	//Here-there-update;

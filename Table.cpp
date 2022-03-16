@@ -168,7 +168,9 @@ Value& Table::talloc(Value index, const Value& newval)
 	}
 
 	//If we won't cause a rehash by adding this new element to the hashtable...
-	if (static_cast<float>((t_hash.size() + 1)) / t_hash.bucket_count() < t_hash.max_load_factor())
+	//FIXME: This sucks, and is likely going to be hilariously inaccurate with this novel hashtable implementation.
+	//if (static_cast<float>((t_hash.size() + 1)) / t_hash.bucket_count() < t_hash.max_load_factor())
+	if (static_cast<float>(t_hash.size()) / t_hash.capacity() > 0.8)
 	{
 		// Just stick it in there, then, tbh
 		t_hash[index] = newval;
@@ -241,7 +243,7 @@ void Table::tfree(const Value& index)
 		//and just do an "oops it just erases it and shifts the elements afterwards! lol" for now
 
 		//Before we do this, imagine that there's an index [9] present in the hashtable, and the array only goes from [0] to [8].
-		//Inserting naïvely in that case would clobber the 9th element, which is a bad.
+		//Inserting naï¿½vely in that case would clobber the 9th element, which is a bad.
 		//talloc() tries to prevent this, but it's still possible, so lets do some checks first.
 
 		//FIXME: This nonsense shouldn't really be in tfree(); it'd be better as something that insert() and remove() have sovereignly,

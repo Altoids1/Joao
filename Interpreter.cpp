@@ -318,7 +318,7 @@ Value Interpreter::makeBaseTable()
 	return Value(prog->definedObjTypes["/table"]->makeObject(*this, {}));
 }
 
-Value Interpreter::makeBaseTable( std::vector<Value> elements, std::unordered_map<std::string,Value> entries, ASTNode* maker = nullptr)
+Value Interpreter::makeBaseTable( std::vector<Value> elements, Hashtable<std::string,Value> entries, ASTNode* maker = nullptr)
 {
 	Object* objdesk = prog->definedObjTypes["/table"]->makeObject(*this,{});
 	
@@ -330,7 +330,7 @@ Value Interpreter::makeBaseTable( std::vector<Value> elements, std::unordered_ma
 	
 	for(auto it = entries.begin(); it != entries.end(); ++it)
 	{
-		desk->at_set(*this,Value(it->first), it->second);
+		desk->at_set(*this,Value(it.key()), it.value());
 	}
 	
 	return Value(objdesk);

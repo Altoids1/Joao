@@ -28,8 +28,8 @@ public:
 	void tfree(const Value&);
 
 	std::vector<Value> t_array;
-	std::unordered_map<Value, Value> t_hash;
-	Table(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
+	Hashtable<Value, Value> t_hash;
+	Table(std::string objty, Hashtable<std::string, Value>* puh, Hashtable<std::string, Function*>* fuh)
 		:Object(objty,puh,fuh,nullptr)
 	{
 

@@ -106,8 +106,8 @@ public:
 };
 
 class Value : public UnmanagedValue { // A general pseudo-typeless Value used to store data within the programming language. Garbage collected.
-	static std::unordered_map<void*,uint32_t> cached_ptrs;
-	static std::unordered_map<std::string, std::string*> str_to_ptr;
+	static Hashtable<void*,uint32_t> cached_ptrs;
+	static Hashtable<std::string, std::string*> str_to_ptr;
 
 	inline void deref_as_str()
 	{
