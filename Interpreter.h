@@ -115,11 +115,10 @@ public:
 	{
 		if (!globalscope.table.count(name))
 		{
-			globalscope.table[name] = new Value();
-			return globalscope.table[name];
+			return &(globalscope.table[name]);
 		}
 
-		return globalscope.table.at(name);
+		return globalscope.at(name);
 	}
 
 	Value& get_global(std::string name, ASTNode* getter)
@@ -127,11 +126,10 @@ public:
 		if (!globalscope.table.count(name))
 		{
 			RuntimeError(getter, ErrorCode::BadAccess, "Unable to access global value: " + name); // Works, just returns null and yells.
-			globalscope.table[name] = new Value();
-			return *globalscope.table[name];
+			return globalscope.table[name];
 		}
 			
-		return *globalscope.table.at(name);
+		return globalscope.table.at(name);
 	}
 	void set_global(std::string name, Value& val, ASTNode* setter)
 	{

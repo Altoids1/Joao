@@ -131,9 +131,7 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 	//Then try globalscope
 	if (globalscope.table.count(varname))
 	{
-		delete globalscope.table[varname];
-		Value* vuh = new Value(val);
-		globalscope.table[varname] = vuh;
+		globalscope.table[varname] = val;
 		return;
 	}
 
@@ -161,7 +159,7 @@ Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
 	//Then try globalscope
 	if (globalscope.table.count(varname))
 	{
-		return *globalscope.table.at(varname);
+		return globalscope.table.at(varname);
 	}
 
 	//Give up :(

@@ -1,10 +1,12 @@
 #pragma once
 #include "Forward.h"
+#include "HashTable.h"
 
 template <typename _Tysc>
 struct Scopelet
 {
-	std::unordered_map < std::string, _Tysc*> table;
+	HashTable< std::string, _Tysc> table;
+	_Tysc* at(const std::string& key) { return &(table.at(key));}
 };
 
 template <typename _Ty>
@@ -21,14 +23,6 @@ class Scope {
 	std::string top_scope_name; // Usually the name of the function which owns this scope.
 
 public:
-	static void blank_table(Scopelet<_Ty>* sc)
-	{
-		for (auto it = sc->table.begin(); it != sc->table.end(); ++it)
-		{
-			delete it->second; // Hopefully this works, heh.
-		}
-		sc->table.clear();
-	}
 
 	Scope(const std::string& sc)
 		:top_scope_name(sc)
@@ -40,28 +34,28 @@ public:
 	_Ty* get(const std::string& name)
 	{
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
-		for (auto it = stack.begin(); it != stack.end(); ++it)
+		for (auto it = stack.begin(); it != stack.end(); it++)
 		{
 			Scopelet<_Ty>& sc = **it;
 			//std::cout << "Looking at scope " << sc.scopename << "...\n";
 
-			if (sc.table.count(name))
-				return sc.table.at(name);
+			if (sc.table.contains(name))
+				return sc.at(name);
 		}
 		return nullptr; // Give up.
 	}
 
 	_Ty* get_front(const std::string& name)
 	{
-		if (stack.front()->table.count(name))
-			return stack.front()->table.at(name);
+		if (stack.front()->table.contains(name))
+			return stack.front()->at(name);
 		return nullptr;
 	}
 
 	_Ty* get_back(const std::string& name)
 	{
-		if (top_scope->table.count(name))
-			return top_scope->table.at(name);
+		if (top_scope->table.contains(name))
+			return top_scope->at(name);
 
 		return nullptr;
 	}
@@ -73,24 +67,19 @@ public:
 
 	void set(const std::string& name, _Ty& t)
 	{
-		_Ty* tuh = new _Ty(t);
-
-		(stack.front()->table[name]) = tuh;
+		(stack.front()->table[name]) = t;
 	}
 
 	bool Override(const std::string& name, _Ty& t)
 	{
-		for (auto it = stack.begin(); it != stack.end(); ++it)
+		for (auto it = stack.begin(); it != stack.end(); it++)
 		{
 			Scopelet<_Ty>* sc = *it;
 			//std::cout << "Looking at scope " << sc.scopename << "...\n";
 
-			if (sc->table.count(name))
+			if (sc->table.contains(name))
 			{
-				//FIXME: This might be a memory leak.
-				_Ty* tuh = new _Ty(t);
-				sc->table.erase(name);
-				sc->table[name] = tuh;
+				sc->table[name] = t;
 				return true;
 			}
 		}
@@ -114,8 +103,6 @@ public:
 		}
 
 		Scopelet<_Ty>* popped = stack.front();
-
-		blank_table(popped);
 		delete popped;
 
 		stack.pop_front();

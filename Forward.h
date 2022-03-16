@@ -11,6 +11,7 @@
 #include <forward_list>
 #include <list>
 #include <stack>
+#include <queue>
 #include "config.h"
 
 
