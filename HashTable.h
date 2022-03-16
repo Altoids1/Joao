@@ -1,5 +1,4 @@
-#include "Forward.h"
-
+#pragma once
 /*
 A Hashtable implementation that allocates all of its memory in one contiguous block,
 without no deleted buckets.
@@ -31,6 +30,10 @@ class HashTable
         //FIXME: I would prefer it if Bucket's destruction was controlled by HashTable rather than implicitly happening on every bucket-destruct,
         //since sometimes the bucket has no real data to even destruct in the first place.
         ~Bucket()
+        {
+            clear();
+        }
+        inline void clear()
         {
             if(used)
             {
@@ -109,6 +112,10 @@ class HashTable
         }
         Iterator operator++(int)
         {
+            return this->operator++();
+        }
+        Iterator& operator++()
+        {
             if(next_bucket) // Try going deeper in the linked list
             {
                 next_bucket = next_bucket->next_collision_bucket;
@@ -178,6 +185,12 @@ class HashTable
             :capacity((total * collision_block_percent / 100) ?: 1) // ELVIS OPERATOR WARNING
             ,begin(b + (total - capacity))
             ,next(0)
+        {
+
+        }
+
+        //Dummy construct. Use wisely.
+        CollisionData(bool)
         {
 
         }
@@ -272,6 +285,8 @@ class HashTable
 public:
     //Basic helpers
     [[nodiscard]] size_t capacity() const { return total_capacity;}
+    [[nodiscard]] size_t bucket_count() const { return total_capacity;}
+    [[nodiscard]] constexpr float max_load_factor() const { return 1.0;}
     [[nodiscard]] size_t size() const { return used_bucket_count;}
     [[nodiscard]] bool contains(const Key& key) const { return at_bucket(key) != nullptr;}
     [[nodiscard]] size_t count(const Key& key) const { return contains(key);}
@@ -332,6 +347,20 @@ public:
     {
 
     }
+    HashTable(std::initializer_list<std::pair<Key,Value>> list)
+    :bucket_block(nullptr)
+    ,total_capacity(0)
+    ,main_capacity(0)
+    ,used_bucket_count(0)
+    ,collision_data(false)
+    {
+        rehash(list.size()); // FIXME: This is weird.
+        for(auto& ptr : list)
+        {
+            insert(ptr);
+        }
+    }
+
     HashTable(const HashTable& other)
     :bucket_block(new Bucket[other.total_capacity])
     ,total_capacity(other.total_capacity)
@@ -386,7 +415,7 @@ public:
     }
 
     //throwing
-    Value& at(const Key& key)
+    Value& at(const Key& key) const
     {
         Bucket* buck = at_bucket(key);
         if(!buck)
@@ -504,4 +533,16 @@ public:
         return;
     }
     inline void erase(const Key& key) { return remove(key);}
+
+    void insert(Iterator begin, const Iterator& end)
+    {
+        for(;begin != end; ++begin)
+        {
+            this->operator[](begin.key()) = begin.value();
+        }
+    }
+    void insert(const std::pair<Key,Value>& pair)
+    {
+        this->operator[](pair.first) = pair.second; // FIXME: Implement an insert variant that skips over the unnecessary default-construct that operator[] does.
+    }
 };
