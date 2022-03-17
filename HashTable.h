@@ -25,7 +25,6 @@ class HashTable
         Bucket() = default;
         Bucket(const Bucket&) = default;
         Bucket& operator=(Bucket& dead_buck) = default;
-        Bucket(Bucket&) = default;
 
         //FIXME: I would prefer it if Bucket's destruction was controlled by HashTable rather than implicitly happening on every bucket-destruct,
         //since sometimes the bucket has no real data to even destruct in the first place.
@@ -182,7 +181,11 @@ class HashTable
         size_t next; // The next slot in collision memory available for link use.
         std::queue<Bucket*> known_holes; // Known holes behind $next that should be filled before $next's hole.
         CollisionData(Bucket* b, size_t total)
+#ifdef __GNUC__
             :capacity((total * collision_block_percent / 100) ?: 1) // ELVIS OPERATOR WARNING
+#else
+            :capacity((total* collision_block_percent / 100) ? (total * collision_block_percent / 100) : 1) // :(
+#endif
             ,begin(b + (total - capacity))
             ,next(0)
         {
@@ -309,7 +312,7 @@ public:
         return Iterator(bucket_block,main_capacity,true);
     }
 #ifdef DEBUG
-    void dump()
+    void dump() const
     {
         bool unprinted_collision_ptr = true;
         for(size_t i = 0; i < total_capacity; ++i)
