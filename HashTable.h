@@ -615,11 +615,19 @@ public:
     {
         for(;begin != end; ++begin)
         {
+            if (at_bucket(begin.key())) // If this already has a bucket
+            {
+                continue; // Don't overwrite. This behaviour is a layover from std::unordered_map.
+            }
             this->operator[](begin.key()) = begin.value();
         }
     }
     void insert(const std::pair<Key,Value>& pair)
     {
+        if (at_bucket(pair.first)) // If this already has a bucket
+        {
+            return; // Don't overwrite. This behaviour is a layover from std::unordered_map.
+        }
         this->operator[](pair.first) = pair.second; // FIXME: Implement an insert variant that skips over the unnecessary default-construct that operator[] does.
     }
 };
