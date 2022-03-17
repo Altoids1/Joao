@@ -246,6 +246,11 @@ class HashTable
                 new (&new_buck) Bucket(std::move(old_buck));
                 continue;
             }
+            Bucket* shits_dad = &new_buck;
+            while (shits_dad->next_collision_bucket)
+            {
+                shits_dad = shits_dad->next_collision_bucket;
+            }
             Bucket* shit = new_collision_data.allocate_collision_bucket();
             if(!shit) [[unlikely]] // SHIT!!!
             {
@@ -254,6 +259,7 @@ class HashTable
                 return;
             }
             new (shit) Bucket(std::move(old_buck));
+            shits_dad->next_collision_bucket = shit;
         }
         delete[] bucket_block;
         bucket_block = new_block;
