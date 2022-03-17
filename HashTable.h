@@ -225,6 +225,26 @@ class HashTable
     } collision_data;
     [[no_unique_address]] std::hash<Key> hasher;
 
+    inline size_t generate_index(const Key& key, size_t m_capacity) const
+    {
+        if constexpr (std::is_same<Key, std::string>())
+        {
+            if (m_capacity < 122)
+            {
+                return static_cast<size_t>(key.at(0)) % m_capacity;
+            }
+            else
+            {
+                return hasher(key) % m_capacity;
+            }
+        }
+        else
+        {
+           return hasher(key) % m_capacity;
+        }
+    }
+    inline size_t generate_index(const Key& key) const { return generate_index(key, main_capacity); }
+
     //FIXME: It's somewhat problematic that we iterate over *all* old buckets during a rehash.
     void rehash(size_t new_capacity)
     {
@@ -239,7 +259,7 @@ class HashTable
             old_buck.next_collision_bucket = nullptr; // The collision chains are all broken by the rehash.
             //Ain't too much use to keep'em.
 
-            size_t new_index = hasher(*old_buck.key()) % new_main_capacity;
+            size_t new_index = generate_index(*old_buck.key(),new_main_capacity);
             Bucket& new_buck = new_block[new_index];
             if(!new_buck.used)
             {
@@ -272,7 +292,7 @@ class HashTable
     //Returns nullptr if none found.
     Bucket* at_bucket(const Key& key) const
     {
-        size_t index = hasher(key) % main_capacity;
+        size_t index = generate_index(key);
         Bucket* buck = bucket_block + index;
         if(!buck->used)
             return nullptr;
@@ -503,7 +523,7 @@ public:
     //non-throwing; will default-construct a Value into a novel bucket if this key doesn't exist
     Value& operator[](const Key& key)
     {
-        size_t index = hasher(key) % main_capacity;
+        size_t index = generate_index(key);
         Bucket* buck = bucket_block + index;
         Bucket* fav_buck = nullptr; // the bucket we'll construct into if we confirm that nothing can be found
         if(buck->used)
@@ -573,7 +593,7 @@ public:
 
     void remove(const Key& key)
     {
-        size_t index = hasher(key) % main_capacity;
+        size_t index = generate_index(key);
         Bucket* buck = bucket_block + index;
         if(!buck->used) [[unlikely]]
             return;
