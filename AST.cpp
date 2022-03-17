@@ -128,6 +128,10 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	increment();
 #endif
 	Value rhs = t_rhs->resolve(interp);
+	if (interp.error) // If we seemed to have caused an error
+	{
+		return Value(); // Propagate it up the stack!
+	}
 	Value::vType rtype = rhs.t_vType;
 
 
@@ -204,8 +208,15 @@ Value BinaryExpression::resolve(Interpreter& interp)
 #endif
 	//The Chef's ingredients: t_op, t_lhs, t_rhs
 	Value lhs = t_lhs->resolve(interp);
+	if (interp.error) // If we somehow gained a novel error in the course of resolving the operands
+	{
+		return Value(); // Propagate that. I'm a BinaryExpression, not a TryCatch.
+	}
 	Value rhs = t_rhs->resolve(interp); //TODO: This fails the principle of short-circuiting but we'll be fine for now
-
+	if (interp.error) // Ditto.
+	{
+		return Value();
+	}
 	return BinaryOperation(lhs, rhs, t_op, interp);
 }
 
