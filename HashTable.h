@@ -480,6 +480,17 @@ public:
         delete[] bucket_block;
     }
 
+    //Tries to find something for this key, returns nullptr if we don't have it. Non-throwing, non-allocating.
+    Value* lazy_at(const Key& key) const
+    {
+        Bucket* buck = at_bucket(key);
+        if (buck)
+        {
+            return buck->value();
+        }
+        return nullptr;
+    }
+
     //throwing
     Value& at(const Key& key) const
     {

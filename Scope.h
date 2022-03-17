@@ -39,25 +39,21 @@ public:
 			Scopelet<_Ty>& sc = **it;
 			//std::cout << "Looking at scope " << sc.scopename << "...\n";
 
-			if (sc.table.contains(name))
-				return sc.at(name);
+			_Ty* maybe = sc.table.lazy_at(name);
+			if (maybe)
+				return maybe;
 		}
 		return nullptr; // Give up.
 	}
 
 	_Ty* get_front(const std::string& name)
 	{
-		if (stack.front()->table.contains(name))
-			return stack.front()->at(name);
-		return nullptr;
+		return stack.front()->table.lazy_at(name);
 	}
 
 	_Ty* get_back(const std::string& name)
 	{
-		if (top_scope->table.contains(name))
-			return top_scope->at(name);
-
-		return nullptr;
+		return top_scope->table.lazy_at(name);
 	}
 	
 	const std::string& get_back_name() const

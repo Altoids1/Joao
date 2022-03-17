@@ -157,10 +157,9 @@ Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
 	}
 
 	//Then try globalscope
-	if (globalscope.table.count(varname))
-	{
-		return globalscope.table.at(varname);
-	}
+	Value* globptr = globalscope.table.lazy_at(varname);
+	if (globptr)
+		return *globptr;
 
 	//Give up :(
 	RuntimeError(getter, ErrorCode::BadAccess, std::string("Unable to access variable named ") + varname + std::string("!"));
