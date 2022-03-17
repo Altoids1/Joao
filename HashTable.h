@@ -291,6 +291,49 @@ class HashTable
         }
         return nullptr;
     }
+
+    //Used the handle the pointer-induced awkwardness of copying from another HashTable.
+    //This class making use of Bucket* over size_t indexes probably does improve speed by reducing pointer arithmetic,
+    //but it does mean that copies are complex and slowed down by the process seen below.
+    inline void block_copy(const HashTable& other)
+    {
+        bool is_negative; // My glorious 65th bit, everyone
+        size_t byte_offset;
+        if (bucket_block > other.bucket_block) // if our pointer is bigger than theirs
+        { // the offset is positive, we're moving higher up the address space
+            is_negative = false;
+            byte_offset = reinterpret_cast<size_t>(bucket_block) - reinterpret_cast<size_t>(other.bucket_block);
+            //We have to do a reinterpret to size_t to ensure that there isn't a ghost floor-division caused by the nuances of pointer arithmetic.
+        }
+        else // Theirs is bigger than ours
+        { // the offset is negative.
+            is_negative = true;
+            byte_offset = reinterpret_cast<size_t>(other.bucket_block) - reinterpret_cast<size_t>(bucket_block);
+        }
+        for (size_t i = 0; i < total_capacity; ++i)
+        {
+            Bucket& other_buck = other.bucket_block[i];
+            if (other_buck.used)
+            {
+                Bucket& buck = bucket_block[i];
+                buck.used = true;
+                new (buck.key()) Key(*other_buck.key());
+                new (buck.value()) Value(*other_buck.value());
+                if (other_buck.next_collision_bucket)
+                {
+                    if (is_negative)
+                        buck.next_collision_bucket = reinterpret_cast<Bucket*>(reinterpret_cast<size_t>(other_buck.next_collision_bucket) - byte_offset);
+                    else
+                        buck.next_collision_bucket = reinterpret_cast<Bucket*>(reinterpret_cast<size_t>(other_buck.next_collision_bucket) + byte_offset);
+                }
+            }
+        }
+        if (is_negative)
+            collision_data.begin = reinterpret_cast<Bucket*>(reinterpret_cast<size_t>(collision_data.begin) - byte_offset);
+        else
+            collision_data.begin = reinterpret_cast<Bucket*>(reinterpret_cast<size_t>(collision_data.begin) + byte_offset);
+        collision_data.known_holes = {}; //FIXME.
+    }
 public:
     //Basic helpers
     [[nodiscard]] size_t capacity() const { return total_capacity;}
@@ -324,6 +367,7 @@ public:
         for(size_t i = 0; i < total_capacity; ++i)
         {
             Bucket& buck = bucket_block[i];
+            std::cout << std::to_string(reinterpret_cast<size_t>(&buck));
             if(&buck == collision_data.begin)
             {
                 std::cout << "There's more.\n"; // No!!
@@ -344,6 +388,10 @@ public:
             {
                 std::cout << std::to_string(static_cast<size_t>(*buck.key()));
             }
+            else if constexpr (std::is_pointer<Key>())
+            {
+                std::cout << std::to_string(reinterpret_cast<size_t>(*buck.key()));
+            }
             else
             {
                 std::cout << std::to_string(*buck.key());
@@ -357,6 +405,10 @@ public:
             {
                 std::cout << std::to_string(static_cast<size_t>(*buck.value()));
             }
+            else if constexpr (std::is_pointer<Value>())
+            {
+                std::cout << std::to_string(reinterpret_cast<size_t>(*buck.value()));
+            }
             else
             {
                 std::cout << std::to_string(*buck.value());
@@ -366,7 +418,7 @@ public:
         if(unprinted_collision_ptr)
         {
             std::cout << "Dangling collision_block_begin pointer!\n";
-            std::cout << std::to_string(reinterpret_cast<size_t>(bucket_block)) << std::endl;
+            std::cout << std::to_string(reinterpret_cast<size_t>(collision_data.begin)) << std::endl;
             std::cout << std::to_string(collision_data.begin - bucket_block) << std::endl;
         }
     }
@@ -405,43 +457,22 @@ public:
     {
         //So, there's a lot of Bucket* data in the current implementation.
         //We're going to have to... awkwardly move all that around. :/
-        ptrdiff_t offset = bucket_block - other.bucket_block;
-        for(size_t i = 0; i < total_capacity; ++i)
-        {
-            Bucket& other_buck = other.bucket_block[i];
-            if(other_buck.used)
-            {
-                Bucket& buck = bucket_block[i];
-                buck.used = true;
-                new (buck.key()) Key(*other_buck.key());
-                new (buck.value()) Value(*other_buck.value()); 
-                if(other_buck.next_collision_bucket)
-                    buck.next_collision_bucket = other_buck.next_collision_bucket + offset;
-            }
-        }
-        collision_data.begin += offset;
-        collision_data.known_holes = {}; //FIXME.
+        block_copy(other);
     }
     HashTable& operator=(const HashTable& other)
     {
         //So, there's a lot of Bucket* data in the current implementation.
         //We're going to have to... awkwardly move all that around. :/
-        ptrdiff_t offset = bucket_block - other.bucket_block;
-        for(size_t i = 0; i < total_capacity; ++i)
-        {
-            Bucket& other_buck = other.bucket_block[i];
-            if(other_buck.used)
-            {
-                Bucket& buck = bucket_block[i];
-                buck.used = true;
-                new (buck.key()) Key(*other_buck.key());
-                new (buck.value()) Value(*other_buck.value()); 
-                if(other_buck.next_collision_bucket)
-                    buck.next_collision_bucket = other_buck.next_collision_bucket + offset;
-            }
+        if (used_bucket_count)
+        { // FIXME: Try to make a faster path for when we happen to have the same capacity as the new table, even though we're dirtied with elements.
+            delete[] bucket_block;
         }
-        collision_data.begin += offset;
-        collision_data.known_holes = {}; //FIXME.
+        bucket_block = new Bucket[other.total_capacity];
+        total_capacity = other.total_capacity;
+        main_capacity = other.main_capacity;
+        used_bucket_count = other.used_bucket_count;
+        collision_data = other.collision_data;
+        block_copy(other);
         return *this;
     }
     ~HashTable()
@@ -516,6 +547,10 @@ public:
         if (fav_buck->used) [[unlikely]]
         {
            throw "Warning, overriding previously-used bucket!";
+        }
+        if (fav_buck->next_collision_bucket) [[unlikely]]
+        {
+            throw "fav_buck started out with fraudulent bucket pointer!";
         }
 #endif
         ++used_bucket_count;
