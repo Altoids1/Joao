@@ -329,7 +329,33 @@ public:
                 continue;
             }
             
-            std::cout << "This is a bucket: {" << *buck.key() << "\t" << *buck.value() << "}\n"; // Dear god...
+            std::cout << "This is a bucket: {";
+            if constexpr (std::is_same<Key, std::string>() || std::is_same<Key,::Value>()) // FIXME: Really need a more general solution to this.
+            {
+                std::cout << *buck.key();
+            }
+            else if constexpr (std::is_enum<Key>())
+            {
+                std::cout << std::to_string(static_cast<size_t>(*buck.key()));
+            }
+            else
+            {
+                std::cout << std::to_string(*buck.key());
+            }
+            std::cout << "\t";
+            if constexpr (std::is_same<Value, std::string>() || std::is_same<Value, ::Value>())
+            {
+                std::cout << *buck.value();
+            }
+            else if constexpr (std::is_enum<Value>())
+            {
+                std::cout << std::to_string(static_cast<size_t>(*buck.value()));
+            }
+            else
+            {
+                std::cout << std::to_string(*buck.value());
+            }
+            std::cout << "}\n"; // Dear god...
         }
         if(unprinted_collision_ptr)
         {
@@ -480,6 +506,10 @@ public:
         if(fav_buck < bucket_block || fav_buck >= bucket_block + total_capacity) [[unlikely]]
         {
             throw std::out_of_range("Bucket found for assignment was out of scope!");
+        }
+        if (fav_buck->used) [[unlikely]]
+        {
+           throw "Warning, overriding previously-used bucket!";
         }
 #endif
         ++used_bucket_count;
