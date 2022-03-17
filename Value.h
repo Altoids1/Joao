@@ -228,3 +228,11 @@ struct std::hash<Value>
 		}
 	}
 };
+
+#ifdef _DEBUG // FOR DEBUGGING ONLY. DO NOT SWALLOW OR SUBMERGE IN ACID
+static std::ostream& operator<<(std::ostream& os, const Value& obj)
+{
+	os << obj.to_string();
+	return os;
+}
+#endif
