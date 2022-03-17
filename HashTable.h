@@ -594,15 +594,18 @@ public:
         Bucket* next_buck = buck->next_collision_bucket;
         while(next_buck)
         {
-            if(next_buck->used && *next_buck->key() == key)
+            if(!next_buck->used)
+                return;
+            if(*next_buck->key() == key)
             {
-                buck->next_collision_bucket = next_buck->next_collision_bucket;
+                buck->next_collision_bucket = next_buck->next_collision_bucket; // Bridge the pointer gap we're making in the linked list
                 next_buck->clear();
                 collision_data.known_holes.push(next_buck);
                 --used_bucket_count;
                 return;
             }
-            next_buck = buck->next_collision_bucket;
+            buck = next_buck;
+            next_buck = next_buck->next_collision_bucket;
         }
         return;
     }
