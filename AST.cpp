@@ -398,14 +398,16 @@ Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 		{
 			ReturnStatement rt = *static_cast<ReturnStatement*>(ptr);
 
-			interp.FORCE_RETURN = true;
+			
 			if (rt.has_expr) // If this actually has something to return
 			{
 				Value ret = rt.resolve(interp); // Get the return		
 				//interp.pop_block(); // THEN pop the stack
+				interp.FORCE_RETURN = true;
 				return ret; // THEN return the value.
 			}
 			//interp.pop_block();
+			interp.FORCE_RETURN = true;
 			return Value();
 		}
 		else if (ptr->class_name() == "BreakStatement")
@@ -449,9 +451,7 @@ Value IfBlock::resolve(Interpreter& interp)
 	interp.push_block("if");
 	Value blockret = iterate_statements(interp);
 	interp.pop_block();
-	if (interp.FORCE_RETURN || interp.BREAK_COUNTER || interp.error)
-		return blockret;
-	return Value();
+	return blockret;
 }
 
 Value ForBlock::resolve(Interpreter& interp)
