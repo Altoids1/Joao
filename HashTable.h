@@ -1,4 +1,7 @@
 #pragma once
+
+//#define HASHTABLE_DEBUG
+
 /*
 A Hashtable implementation that allocates all of its memory in one contiguous block,
 without no deleted buckets.
@@ -150,7 +153,7 @@ class HashTable
             }
             return *next_bucket->value();
         }
-#ifdef DEBUG
+#ifdef HASHTABLE_DEBUG
         size_t index() const { return main_index; }
 #endif
         //Perhaps slow; prefer using key() and value().
@@ -202,7 +205,7 @@ class HashTable
             if(!known_holes.empty())
             {
                 Bucket* ptr = known_holes.front();
-#ifdef DEBUG
+#ifdef HASHTABLE_DEBUG
                 if(ptr < begin || ptr > begin + capacity) [[unlikely]]
                 {
                     throw;
@@ -381,7 +384,7 @@ public:
     {
         return Iterator(bucket_block,main_capacity,true);
     }
-#ifdef DEBUG
+#ifdef HASHTABLE_DEBUG
     void dump() const
     {
         bool unprinted_collision_ptr = true;
@@ -529,7 +532,7 @@ public:
         Bucket* fav_buck = nullptr; // the bucket we'll construct into if we confirm that nothing can be found
         if(buck->used)
         {
-#ifdef DEBUG
+#ifdef HASHTABLE_DEBUG
             hash_collisions++;
 #endif
             if(*buck->key() == key)
@@ -571,7 +574,7 @@ public:
             fav_buck = buck;
             
         }
-#ifdef DEBUG
+#ifdef HASHTABLE_DEBUG
         if(fav_buck < bucket_block || fav_buck >= bucket_block + total_capacity) [[unlikely]]
         {
             throw std::out_of_range("Bucket found for assignment was out of scope!");
