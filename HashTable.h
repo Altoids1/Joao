@@ -22,19 +22,22 @@ class HashTable
         alignas(Key) std::byte key_bytes[sizeof(Key)];
         alignas(Value) std::byte value_bytes[sizeof(Value)];
         Bucket* next_collision_bucket = nullptr;
-        Key* key() { return reinterpret_cast<Key*>(key_bytes);}
-        Value* value() { return reinterpret_cast<Value*>(value_bytes);}
+        Key* key() { return reinterpret_cast<Key*>(key_bytes); }
+        Value* value() { return reinterpret_cast<Value*>(value_bytes); }
 
         Bucket() = default;
         Bucket(const Bucket&) = default;
         Bucket& operator=(Bucket& dead_buck) = default;
 
-        //FIXME: I would prefer it if Bucket's destruction was controlled by HashTable rather than implicitly happening on every bucket-destruct,
-        //since sometimes the bucket has no real data to even destruct in the first place.
+#ifdef HASHTABLE_DEBUG
         ~Bucket()
         {
-            clear();
+            if (used) [[unlikely]]
+            {
+                std::cout << "Bucket was deleted with un-deleted contents inside!\n";
+            }
         }
+#endif
         inline void clear()
         {
             if(used)
@@ -44,6 +47,7 @@ class HashTable
                 value()->~Value();
             }
             used = false;
+            //Intentionally does not reset next_collision_bucket. Check ~Hashtable() for why.
         }
 
         //Move constructor! woo!
@@ -296,21 +300,23 @@ class HashTable
     Bucket* at_bucket(const Key& key) const
     {
         size_t index = generate_index(key);
-        Bucket* buck = bucket_block + index;
-        if(!buck->used)
+        Bucket& buck = bucket_block[index];
+        if(!buck.used)
             return nullptr;
-        if(*buck->key() == key)
+        if(*buck.key() == key)
         {
-            return buck;
+            return &buck;
         }
-        while((buck = buck->next_collision_bucket))
+        Bucket* collision_ptr = buck.next_collision_bucket;
+        while(collision_ptr)
         {
-            if(!buck->used)
+            if(!collision_ptr->used) [[unlikely]]
                 return nullptr;
-            if(*buck->key() == key)
+            if(*collision_ptr->key() == key)
             {
-                return buck;
+                return collision_ptr;
             }
+            collision_ptr = collision_ptr->next_collision_bucket;
         }
         return nullptr;
     }
@@ -501,6 +507,28 @@ public:
     }
     ~HashTable()
     {
+        size_t buckets_left = used_bucket_count;
+        for (size_t i = 0; i < main_capacity; ++i)
+        {
+            Bucket& buck = bucket_block[i];
+            if (!buck.used) continue;
+            Bucket* buck_ptr = buck.next_collision_bucket;
+            while(buck_ptr)
+            {
+                buck_ptr->clear();
+                --buckets_left;
+                buck_ptr = buck_ptr->next_collision_bucket;
+            }
+            buck.clear();
+            --buckets_left;
+            if (!buckets_left) break;
+        }
+#ifdef HASHTABLE_DEBUG
+        if (buckets_left)
+        {
+            std::cout << "Hashtable failed to delete " << std::to_string(used_bucket_count) << " entries! Or something.\n";
+        }
+#endif
         delete[] bucket_block;
     }
 
