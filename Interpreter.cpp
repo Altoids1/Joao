@@ -61,7 +61,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 		std::cout << "Unknown!"; // Eventually things should be configured to never do this
 	}
 	
-	std::cout << "\nRuntime in " << blockscope.top().get_back_name() << ", a " << whatfunk << std::endl;
+	std::cout << "\nRuntime in " << blockscope.top().get_back_name().to_string() << ", a " << whatfunk << std::endl;
 	if(!is_interactive)
 		exit(1);
 }
@@ -92,7 +92,7 @@ void Interpreter::UncaughtRuntime(const Value& err)
 #endif
 }
 
-void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
+void Interpreter::init_var(const ImmutableString& varname, const Value& val, ASTNode* setter)
 {
 #ifdef JOAO_SAFE
 	++value_init_count;
@@ -138,7 +138,7 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 	RuntimeError(setter, "Unable to override value of variable named " + varname + "!");
 }
 
-Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
+Value& Interpreter::get_var(const ImmutableString& varname, ASTNode *getter)
 {
 	//First try blockscope
 	Scope<Value>& varscope = blockscope.top();
@@ -150,7 +150,7 @@ Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
 	Object* objscope = objectscope.top();
 	if(objscope)
 	{
-		vptr = objscope->has_property(*this, varname);
+		vptr = objscope->has_property(*this, varname.to_string());
 		if (vptr)
 			return *vptr;
 	}
@@ -161,13 +161,14 @@ Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
 		return *globptr;
 
 	//Give up :(
-	RuntimeError(getter, ErrorCode::BadAccess, std::string("Unable to access variable named ") + varname + std::string("!"));
+	RuntimeError(getter, ErrorCode::BadAccess, std::string("Unable to access variable named ") + varname.to_string() + std::string("!"));
 	return Value::dev_null;
 }
 
 Function* Interpreter::get_func(const std::string& funkname, ASTNode *caller, bool loud)
 {
 	//Try to find an objectscope function with this name
+
 	Object* obj = objectscope.top();
 	if (obj)
 	{

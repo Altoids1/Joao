@@ -352,7 +352,8 @@ class HashTable
             collision_data.begin = reinterpret_cast<Bucket*>(reinterpret_cast<size_t>(collision_data.begin) - byte_offset);
         else
             collision_data.begin = reinterpret_cast<Bucket*>(reinterpret_cast<size_t>(collision_data.begin) + byte_offset);
-        collision_data.known_holes = {}; //FIXME.
+        if(!collision_data.known_holes.empty())
+            collision_data.known_holes = {}; //FIXME.
     }
 public:
     //Basic helpers

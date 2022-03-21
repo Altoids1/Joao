@@ -1,12 +1,13 @@
 #pragma once
 #include "Forward.h"
 #include "HashTable.h"
+#include "ImmutableString.h"
 
 template <typename _Tysc>
 struct Scopelet
 {
-	HashTable< std::string, _Tysc> table;
-	_Tysc* at(const std::string& key) { return &(table.at(key));}
+	HashTable< ImmutableString, _Tysc> table;
+	_Tysc* at(const ImmutableString& key) { return &(table.at(key));}
 };
 
 template <typename _Ty>
@@ -27,7 +28,7 @@ public:
 		stack.push_front(Scopelet<_Ty>());
 	}
 
-	_Ty* get(const std::string& name)
+	_Ty* get(const ImmutableString& name)
 	{
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 		for (auto it = stack.begin(); it != stack.end(); it++)
@@ -39,27 +40,27 @@ public:
 		return nullptr; // Give up.
 	}
 
-	_Ty* get_front(const std::string& name)
+	_Ty* get_front(const ImmutableString& name)
 	{
 		return stack.front().table.lazy_at(name);
 	}
 
-	_Ty* get_back(const std::string& name)
+	_Ty* get_back(const ImmutableString& name)
 	{
 		return stack.back().table.lazy_at(name);
 	}
 	
-	const std::string& get_back_name() const
+	const ImmutableString& get_back_name() const
 	{
 		return top_scope_name;
 	}
 
-	void set(const std::string& name, _Ty& t)
+	void set(const ImmutableString& name, const _Ty& t)
 	{
 		(stack.front().table[name]) = t;
 	}
 
-	bool Override(const std::string& name, _Ty& t)
+	bool Override(const ImmutableString& name, _Ty& t)
 	{
 		for (auto it = stack.begin(); it != stack.end(); it++)
 		{

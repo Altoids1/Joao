@@ -4,6 +4,7 @@
 #include <assert.h> 
 
 #include "Forward.h"
+#include "ImmutableString.h"
 #include "SharedEnums.h"
 #include "Error.h"
 #include "Value.h"
@@ -66,14 +67,14 @@ public:
 
 class Identifier : public ASTNode
 {
-	std::string t_name;
+	ImmutableString t_name;
 public:
 	Identifier(std::string s)
 		:t_name(s)
 	{
 		//std::cout << "I've been created with name " + s + "!\n";
 	}
-	const std::string& get_str() const
+	const ImmutableString& get_str() const
 	{
 		return t_name;
 	}
@@ -82,7 +83,7 @@ public:
 	virtual Value& handle(Interpreter&) override;
 	
 	virtual const std::string class_name() const override { return "Identifier"; }
-	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name + "\n"; }
+	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name.to_string() + "\n"; }
 };
 
 class AssignmentStatement : public Expression

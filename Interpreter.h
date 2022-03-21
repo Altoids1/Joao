@@ -45,11 +45,11 @@ public:
 	///Blockscope/omniscope
 
 	//Initializes variable at the lowest blockscope available.
-	void init_var(std::string, Value, ASTNode*);
+	void init_var(const ImmutableString&, const Value&, ASTNode*);
 	//Override the value of an already-existing variable at the lowest scope available.
 	void override_var(std::string, Value, ASTNode*);
 	//Get variable at the lowest scope available.
-	Value& get_var(const std::string&, ASTNode*);
+	Value& get_var(const ImmutableString&, ASTNode*);
 	bool has_var(std::string, ASTNode*);
 
 

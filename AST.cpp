@@ -59,7 +59,7 @@ Value& Identifier::handle(Interpreter& interp)
 {
 	//We actually have to evaluate here whether or not the identifier present is pointing to a function or not, at the current scope.
 
-	Function* funky = interp.get_func(t_name,this,false);
+	Function* funky = interp.get_func(t_name.to_string(),this,false);
 	if (funky)
 	{
 		return funky->to_value();
@@ -186,7 +186,7 @@ Value UnaryExpression::resolve(Interpreter& interp)
 std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
 {
 	//step 1. get string
-	std::string suh = static_cast<Identifier*>(id)->get_str();
+	std::string suh = static_cast<Identifier*>(id)->get_str().to_string();
 
 	//step 2. get value
 	Value ruh = rhs->const_resolve(parser, true);
@@ -580,13 +580,13 @@ Value MemberAccess::resolve(Interpreter& interp)
 	if (back->class_name() == "Identifier") // This should pretty much always be the case.
 	{
 		Object*& ptr = fr.t_value.as_object_ptr;
-		Value* v = ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
+		Value* v = ptr->has_property(interp, static_cast<Identifier*>(back)->get_str().to_string());
 		if (v) return *v;
-		Function* f = ptr->has_method(interp, static_cast<Identifier*>(back)->get_str());
+		Function* f = ptr->has_method(interp, static_cast<Identifier*>(back)->get_str().to_string());
 		if (f) return Value(f);
 		if (ptr->is_table())
 		{
-			return static_cast<Table*>(ptr)->at(interp, static_cast<Identifier*>(back)->get_str());
+			return static_cast<Table*>(ptr)->at(interp, static_cast<Identifier*>(back)->get_str().to_string());
 		}
 		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "MemberAccess failed because member does not exist!");
 		return Value();
@@ -607,9 +607,9 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	}
 	if (back->class_name() == "Identifier")
 	{
-		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str().to_string());
 		if (v) return *v;
-		Function* meth = fr.t_value.as_object_ptr->has_method(interp, static_cast<Identifier*>(back)->get_str());
+		Function* meth = fr.t_value.as_object_ptr->has_method(interp, static_cast<Identifier*>(back)->get_str().to_string());
 		if (!meth)
 		{
 			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "MemberAccess failed because member does not exist!");
