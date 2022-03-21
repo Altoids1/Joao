@@ -61,7 +61,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 		std::cout << "Unknown!"; // Eventually things should be configured to never do this
 	}
 	
-	std::cout << "\nRuntime in " << blockscope.top()->get_back_name() << ", a " << whatfunk << std::endl;
+	std::cout << "\nRuntime in " << blockscope.top().get_back_name() << ", a " << whatfunk << std::endl;
 	if(!is_interactive)
 		exit(1);
 }
@@ -101,18 +101,17 @@ void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
 		throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
 	}
 #endif
-	Scope<Value>* varscope = blockscope.top();
-	varscope->set(varname, val);
+	blockscope.top().set(varname, val);
 }
 
 void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 {
 	//First try blockscope
-	Scope<Value>* varscope = blockscope.top();
-	Value* vptr = varscope->get(varname);
+	Scope<Value>& varscope = blockscope.top();
+	Value* vptr = varscope.get(varname);
 	if (vptr)
 	{
-		varscope->Override(varname, val);
+		varscope.Override(varname, val);
 		return;
 	}
 
@@ -142,8 +141,8 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
 {
 	//First try blockscope
-	Scope<Value>* varscope = blockscope.top();
-	Value* vptr = varscope->get(varname);
+	Scope<Value>& varscope = blockscope.top();
+	Value* vptr = varscope.get(varname);
 	if (vptr)
 		return *vptr;
 

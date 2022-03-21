@@ -17,7 +17,7 @@ class Interpreter
 	std::stack<Object*> objectscope;
 
 	//The scopes of each block of each function in the function stack.
-	std::stack<Scope<Value>*> blockscope;
+	std::stack<Scope<Value>> blockscope;
 
 	const bool is_interactive;
 public:
@@ -96,16 +96,14 @@ public:
 			throw error::maximum_recursion(std::string("Program reached the limit of ") + std::to_string(MAX_RECURSION) + std::string("recursive calls!"));
 		}
 #endif
-		blockscope.push(new Scope<Value>(name));
+		blockscope.push(Scope<Value>(name));
 		objectscope.push(obj);
 	}
 
 	//Pops both the blockstack and objstack layer
 	void pop_stack()
 	{
-		Scope<Value>* scuh = blockscope.top();
 		blockscope.pop();
-		delete scuh;
 
 		objectscope.pop();
 	}
@@ -133,17 +131,19 @@ public:
 	}
 	void set_global(std::string name, Value& val, ASTNode* setter)
 	{
-		globalscope.table[name] = new Value(val);
+		globalscope.table[name] = Value(val);
 	}
 
-	void push_block(std::string name = "")
+	void push_block(const char* dummy)
 	{
-		Scope<Value>* scuh = blockscope.top();
-		scuh->push(name);
+		blockscope.top().push();
+	}
+	void push_block()
+	{
+		blockscope.top().push();
 	}
 	void pop_block()
 	{
-		Scope<Value>* scuh = blockscope.top();
-		scuh->pop();
+		blockscope.top().pop();
 	}
 };
