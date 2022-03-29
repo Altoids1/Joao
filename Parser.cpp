@@ -488,6 +488,7 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 		return readPower(here, there);
 	}
 
+	std::vector<ASTNode*> concat_node_stack; // A mysterious local that's part of the (slightly goofy) process for construction a MassConcatenation ASTNode.
 
 	ASTNode* lhs = nullptr;
 
@@ -553,17 +554,27 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 				if (!lhs)
 				{
 					lhs = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), here, where-1);
+					if (op == Scanner::OperationPrecedence::Concat) //FIXME: This if should be latched somehow
+					{
+						concat_node_stack.push_back(lhs);
+					}
 				}
 
 				ASTNode* right = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), where+1, there);
-				
-				lhs = new BinaryExpression(boopitybeep, lhs, right, t2->line);
-				
+				if (op == Scanner::OperationPrecedence::Concat) //FIXME: This if should be latched somehow
+				{
+					concat_node_stack.push_back(right);
+				}
+				else
+				{
+
+					lhs = new BinaryExpression(boopitybeep, lhs, right, t2->line);
+				}
 				continue;
 			}
 			else if (bOp_to_precedence.at(boopitybeep) > op)
 			{
-				goto READBOP_LEAVE_BOPSEARCH;
+				goto READBOP_LEAVE_BOPSEARCH; //break 2;
 			}
 
 			//we don't got a hit. :(
@@ -580,7 +591,13 @@ READBOP_LEAVE_BOPSEARCH:
 #endif
 	tokenheader = where; // FIXME: I don't even really know what exactly there is to fix here, just know that readBinExp does some funky bullshit with the tokenheader that may cause it to malpoint in anything readBinExp calls
 	if (lhs)
+	{
+		if (op == Scanner::OperationPrecedence::Concat) //FIXME: This if should be latched somehow
+		{
+			lhs = new MassConcatenation(concat_node_stack);
+		}
 		return lhs;
+	}
 
 	//ParserError(tokens[here], "readBinExp failed to read binary expression!");
 

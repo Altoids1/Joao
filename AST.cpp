@@ -762,3 +762,19 @@ Value ThrowStatement::resolve(Interpreter& interp)
 
 	return Value(); // If anything.
 }
+
+Value MassConcatenation::resolve(Interpreter& interp)
+{
+#ifdef JOAO_SAFE
+	size_t opsize = operands.size();
+	for(size_t i = 0; i < opsize; ++i)
+		increment();
+#endif
+	std::string& ret = *(new std::string());
+	ret.reserve(estimated_evaluated_size);
+	for (ASTNode* nodeptr : operands)
+	{
+		ret.append(nodeptr->resolve(interp).to_string());
+	}
+	return Value(&ret);
+}
