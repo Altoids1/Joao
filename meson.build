@@ -43,11 +43,17 @@ configure_file(input : 'config.h.in', output : 'config.h',
 )
 
 exe = executable('joao', nativefuncs + src)
-test('hello world', exe, args : ['./testprograms/tests/1_helloworld.jao'], workdir : meson.source_root())
-test('blocks', exe, args : ['./testprograms/tests/2_blocks.jao'], workdir : meson.source_root())
-test('functions', exe, args : ['./testprograms/tests/3_functions.jao'], workdir : meson.source_root())
-test('objects', exe, args : ['./testprograms/tests/4_objects.jao'], workdir : meson.source_root())
-test('strings', exe, args : ['./testprograms/tests/5_strings.jao'], workdir : meson.source_root())
-test('parser', exe, args : ['./testprograms/tests/6_parser.jao'], workdir : meson.source_root())
-test('rvalues', exe, args : ['./testprograms/tests/7_rvalues.jao'], workdir : meson.source_root())
-test('tablelib', exe, args : ['./testprograms/tests/8_tablelib.jao'], workdir : meson.source_root())
+
+# Diagnostic tests
+test('hello world', exe, args : ['./testprograms/tests/1_helloworld.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('blocks', exe, args : ['./testprograms/tests/2_blocks.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('functions', exe, args : ['./testprograms/tests/3_functions.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('objects', exe, args : ['./testprograms/tests/4_objects.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('strings', exe, args : ['./testprograms/tests/5_strings.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('parser', exe, args : ['./testprograms/tests/6_parser.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('rvalues', exe, args : ['./testprograms/tests/7_rvalues.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('tablelib', exe, args : ['./testprograms/tests/8_tablelib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+
+# Benchmark tests
+benchmark('primegen', exe, args : ['./testprograms/bench/primegen.jao'], workdir : meson.source_root())
+benchmark('ackermann', exe, args : ['./testprograms/bench/ackermann.jao'], workdir : meson.source_root())
