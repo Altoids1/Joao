@@ -515,7 +515,22 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 				++tokenheader;
 				break;
 			}
-			ParserError(t, "Brace-initialized tables with value array are not implemented!");
+			std::vector<ASTNode*> nodes;
+			do
+			{
+				int valueyonder = find_comma(tokenheader, yonder - 1); // Where the value expression ought to end
+				if (!valueyonder) // Failed to find comma
+				{
+					nodes.push_back(readExp(tokenheader, yonder - 1));
+				}
+				else
+				{
+					nodes.push_back(readExp(tokenheader, valueyonder - 1));
+					++tokenheader; // Consume the comma
+				}
+			} while (tokenheader < yonder);
+			lvalue = new Construction("/table", nodes, tokens[tokenheader]->line);
+			tokenheader = yonder + 1; // Make sure we consume the ending brace
 			break;
 		}
 		case(PairSymbolToken::pairOp::Paren): // '(' exp ')'
