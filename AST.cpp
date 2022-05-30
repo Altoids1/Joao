@@ -814,6 +814,13 @@ Value BaseTableConstruction::resolve(Interpreter& interp)
 	for (auto& it : nodes)
 	{
 		resolved_entries[it.first] = it.second->resolve(interp);
+#ifdef JOAO_SAFE
+		++interp.value_init_count;
+		if (interp.value_init_count > MAX_VARIABLES)
+		{
+			throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
+		}
+#endif
 	}
 	if (interp.error)
 	{
