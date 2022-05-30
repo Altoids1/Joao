@@ -162,7 +162,7 @@ void Program::construct_string_library()
 			pos = new_pos + 1; // Move to the next character
 		}
 
-		return Value(interp.makeObject("/table",new_arr,nullptr));
+		return Value(interp.makeObject("/table",std::move(new_arr),nullptr));
 	}));
 }
 
