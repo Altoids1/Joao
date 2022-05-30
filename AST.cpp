@@ -806,3 +806,18 @@ Value ThrowStatement::resolve(Interpreter& interp)
 
 	return Value(); // If anything.
 }
+
+Value BaseTableConstruction::resolve(Interpreter& interp)
+{
+	std::unordered_map<std::string, Value> resolved_entries;
+	resolved_entries.reserve(nodes.size());
+	for (auto& it : nodes)
+	{
+		resolved_entries[it.first] = it.second->resolve(interp);
+	}
+	if (interp.error)
+	{
+		return interp.makeBaseTable();
+	}
+	return interp.makeBaseTable({}, resolved_entries,this);
+}

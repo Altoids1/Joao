@@ -74,7 +74,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	constructor ::= directory '/New(' [explist] ')' [func_access]
 	
 	tableconstructor ::= '{' [exp] {',' exp} [',']'}' |
-		'{' [Name '=' exp] {',' [Name '=' exp]}[','] '}'
+		'{' [(Name | LiteralString) '=' exp] {',' [(Name | LiteralString) '=' exp]}[','] '}'
 	
 	assignop ::= '=' | '+=' | '-=' | '*=' | '/='
 

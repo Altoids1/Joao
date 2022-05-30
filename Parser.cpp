@@ -443,17 +443,66 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			tokenheader = here + 1;
 			//Try to read in the key-value version and fallback to the value-array one if it fails
 			Token* trytoken = tokens[tokenheader];
-			if (trytoken->class_enum() == Token::cEnum::WordToken)
+			if (trytoken->class_enum() == Token::cEnum::WordToken || trytoken->class_enum() == Token::cEnum::StringToken)
 			{
+				//Not incrementing tokenheader yet since this is a bit of a peak-ahead
 				if (tokens[tokenheader + 1]->class_enum() == Token::cEnum::SymbolToken)
 				{
 					SymbolToken* st = static_cast<SymbolToken*>(tokens[tokenheader + 1]);
 					if (symbol_to_aOp(st) == AssignmentStatement::aOps::Assign)
 					{
-						//Key-value pairs!
+						//This is definitely Key-value pairs!
 						//'{'[Name '=' exp]{ ','[Name '=' exp] }[','] '}'
-						ParserError(t, "Brace-initialized tables with key-value pair are not implemented!");
-						break;
+						/*
+						FIXME:
+						Right now, this specific way to initialize a table has a snowflake ASTNode type to handle its execution.
+						In the future, it would probably be best to have this just pass into the normal /table constructor,
+						with each key-value pair being a Value of type Tuple (a thing that does not exist yet in this language)
+						*/
+						std::unordered_map<std::string,ASTNode*> nodes;
+						int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Brace, tokenheader + 2);
+						do
+						{
+							Token* nametoken = tokens[tokenheader];
+							std::string namestr;
+							if (nametoken->class_enum() == Token::cEnum::WordToken)
+							{
+								namestr = static_cast<WordToken*>(nametoken)->word;
+							}
+							else if (nametoken->class_enum() == Token::cEnum::StringToken)
+							{
+								namestr = static_cast<StringToken*>(nametoken)->word;
+							}
+							else
+							{
+								ParserError(nametoken, "Unexpected token when table key expected in table constructor!");
+								break; // Out of while(true)
+							}
+							++tokenheader;
+							//Consume an assign symbol
+							if (tokens[tokenheader]->class_enum() != Token::cEnum::SymbolToken || // Either not a symbol at all or
+								symbol_to_aOp(static_cast<SymbolToken*>(tokens[tokenheader])) != AssignmentStatement::aOps::Assign) // not '='
+							{
+								ParserError(tokens[tokenheader], "Unexpected token when '=' symbol expected in table constructor!");
+								break;
+							}
+							++tokenheader;
+							int valueyonder = find_comma(tokenheader, yonder - 1); // Where the value expression ought to end
+							ASTNode* valuenode;
+							if (!valueyonder) // Failed to find comma
+							{
+								valuenode = readExp(tokenheader, yonder - 1);
+							}
+							else
+							{
+								valuenode = readExp(tokenheader, valueyonder - 1);
+								++tokenheader; // Consume the comma
+							}
+							nodes[namestr] = valuenode;
+						} while (tokenheader < yonder);
+						lvalue = new BaseTableConstruction(nodes, tokens[tokenheader]->line);
+						tokenheader = yonder + 1;
+						break; // Out of case(PairSymbolToken::pairOp::Brace)
 					}
 				}
 			}

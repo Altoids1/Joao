@@ -986,3 +986,30 @@ public:
 		return ind + "Throw\n" + err_node->dump(indent + 1);
 	}
 };
+
+//Weird hack of a class to support key-value table initiatialization.
+class BaseTableConstruction : public ASTNode
+{
+	std::unordered_map<std::string, ASTNode*> nodes;
+public:
+	BaseTableConstruction(const std::unordered_map<std::string, ASTNode*>& n, int linenum = 0)
+		:nodes(n)
+	{
+		my_line = linenum;
+	}
+
+	virtual const std::string class_name() const override { return "BaseTableConstruction"; }
+	virtual std::string dump(int indent) override
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = std::string(indent, ' ') + "BaseTableConstruction\n";
+		str += ind + "(Args:\n";
+		for (auto &it : nodes)
+		{
+			str += ind + it.first + "\t" + it.second->dump(0) + "\n";
+		}
+		str += ind + ")\n";
+		return str;
+	}
+	virtual Value resolve(Interpreter&) override;
+};
