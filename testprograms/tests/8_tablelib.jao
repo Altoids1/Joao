@@ -28,5 +28,17 @@
 		throw /error/New(TEST_NUMBER,"/table.remove failed!");
 	}
 	
+	Object t2 = {1,2,3,4,5};
+	if(t2[4] != 5)
+	{
+		throw /error/New(TEST_NUMBER,"Value-based /table brace-init failed!");
+	}
+	Object t2 = {apple = "Good","banan a" = "Bad",__ = 5};
+	for(k,v in t2) { print(k,v);}
+	if(!t2.apple || t2["banan a"] != "Bad" || t2.__ != 5)
+	{
+		throw /error/New(TEST_NUMBER,"Key-value /table brace-init failed!");
+	}
+	
 	print("Test #" .. TEST_NUMBER .. " passed");
 }
