@@ -1,5 +1,6 @@
 #include "../Program.h"
 #include "../Object.h"
+#include "../AST.hpp"
 
 ObjectType* Program::construct_error_library()
 {
@@ -24,16 +25,15 @@ ObjectType* Program::construct_error_library()
 	}
 	*/
 
-	error->set_typemethod_raw("#constructor", new NativeMethod("#constructor", [](std::vector<Value> args, Object* obj) {
+	NATIVEMETHOD(error,"#constructor",
+	[](const std::vector<Value>& args, Object* obj) {
 
 		switch (args.size())
 		{
 		default:
 		case(2):
-#ifdef _DEBUG
 			if (args[1].t_vType != Value::vType::String)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-#endif
 			obj->set_property_raw("what", args[1]);
 			[[fallthrough]];
 		case(1):
@@ -46,10 +46,12 @@ ObjectType* Program::construct_error_library()
 		}
 
 		return Value(); // If anything.
-	}));
-	error->set_typemethod_raw("#tostring", new NativeMethod("#tostring", [](std::vector<Value> args, Object* obj) {
+	});
+
+	NATIVEMETHOD(error,"#tostring",
+	[](const std::vector<Value>& args, Object* obj) {
 		return obj->get_property_raw("what");
-	}));
+	});
 
 	return error;
 }

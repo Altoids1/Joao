@@ -23,10 +23,13 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 		'break' [PositiveInteger] ';' |
 		'while(' exp '){' block '}' |
 		'if(' exp '){' block '}' {'elseif(' exp '){' block '}'} ['else(' exp '){' block '}'] |
-		'for('[varstat | exp] ';' [exp] ';' [varstat | exp] '){' block '}' |
+		'for('for_generic_init | for_each_init'){' block '}' |
 		'try{' block '}catch(' Name '){' block ')' |
 		'throw' [exp] ';'
-		
+	
+	for_generic_init ::= '[varstat | exp] ';' [exp] ';' [varstat | exp]
+	
+	for_each_init ::= Name ',' Name ' in ' exp
 	
 	init_var ::= ('Value' | 'Object' | 'Number' | 'String' | 'Boolean') Name
 	
@@ -70,8 +73,8 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 			
 	constructor ::= directory '/New(' [explist] ')' [func_access]
 	
-	tableconstructor ::= '{' [exp] {',' exp} '}' |
-		'{' [Name '=' exp] {',' [Name '=' exp] '}'
+	tableconstructor ::= '{' [exp] {',' exp} [',']'}' |
+		'{' [(Name | LiteralString) '=' exp] {',' [(Name | LiteralString) '=' exp]}[','] '}'
 	
 	assignop ::= '=' | '+=' | '-=' | '*=' | '/='
 

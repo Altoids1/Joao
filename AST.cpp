@@ -341,52 +341,7 @@ Value& CallExpression::handle(Interpreter& interp)
 	return interp.tempvalue;
 }
 
-Value NativeFunction::resolve(Interpreter& interp)
-{
-	Value result = lambda(t_args);
-	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
-	{
-		switch (result.t_value.as_int)
-		{
-		case(static_cast<Value::JoaoInt>((ErrorCode::NoError))): // An expected null, function returned successfully.
-			break;
-		case(static_cast<Value::JoaoInt>(ErrorCode::BadArgType)):
-			interp.RuntimeError(this, ErrorCode::BadArgType, "Args of improper type given to NativeFunction!");
-			break;
-		case(static_cast<Value::JoaoInt>(ErrorCode::NotEnoughArgs)):
-			interp.RuntimeError(this, ErrorCode::NotEnoughArgs, "Not enough args provided to NativeFunction!");
-			break;
-		default:
-			interp.RuntimeError(this, "Unknown RuntimeError in NativeFunction!");
-		}
-	}
-	return result; // Woag.
-}
 
-Value NativeMethod::resolve(Interpreter& interp)
-{
-	if(!obj && !is_static)
-		interp.RuntimeError(this, "Cannot call NativeMethod without an Object!");
-
-	Value result = lambda(t_args,obj);
-	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
-	{
-		switch (result.t_value.as_int)
-		{
-		case(static_cast<Value::JoaoInt>(ErrorCode::NoError)): // An expected null, function returned successfully.
-			break;
-		case(static_cast<Value::JoaoInt>(ErrorCode::BadArgType)):
-			interp.RuntimeError(this, ErrorCode::BadArgType, "Args of improper type given to NativeMethod!");
-			break;
-		case(static_cast<Value::JoaoInt>(ErrorCode::NotEnoughArgs)):
-			interp.RuntimeError(this, ErrorCode::NotEnoughArgs, "Not enough args provided to NativeMethod!");
-			break;
-		default:
-			interp.RuntimeError(this, "Unknown RuntimeError in NativeMethod!");
-		}
-	}
-	return result; // Woag.
-}
 
 Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 {
@@ -479,6 +434,95 @@ Value ForBlock::resolve(Interpreter& interp)
 			return blockret;
 		}
 		increment->resolve(interp);
+	}
+	interp.pop_block();
+	return Value();
+}
+
+Value ForEachBlock::resolve(Interpreter& interp)
+{
+#ifdef JOAO_SAFE
+	Expression::increment();
+#endif
+	Value tblval = table_node->resolve(interp);
+	if (tblval.t_vType != Value::vType::Object || !tblval.t_value.as_object_ptr->is_table())
+	{
+		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "for-each iterator must be an Object which inherits from /table!");
+		return Value();
+	}
+
+	Table* tbl = static_cast<Table*>(tblval.t_value.as_object_ptr);
+	/*
+	Iterates over the elements of the /table given.
+	It first attempts to go in numerical order along the keys, starting at 0 and going up until the associated numerical key cannot be found.
+	At that point, it iterates over all remaining keys in an unspecified order until all elements have been iterated over.
+	*/
+	interp.push_block();
+	interp.init_var(key_name, Value(), this);
+	interp.init_var(value_name, Value(), this);
+	//Normal array keys
+	size_t array_it = 0;
+	for (;array_it < tbl->length(); array_it++)
+	{
+		interp.override_var(key_name, Value(array_it), this);
+		interp.override_var(value_name,tbl->t_array.at(array_it) , this); // FIXME: Maybe it'd be better if this used a Value& instead of copying it? :thinking:
+		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
+			return blockret;
+		}
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
+			return blockret;
+		}
+	}
+	//Silly keys, still attempting to go incrementally
+	//Note that array_it is already at a value that is 1 more than the array portion's length
+	//due to the nuance of how for loops are evaluated :)
+	for (;;array_it++)
+	{
+		Value v = tbl->at(interp, Value(array_it));
+		if (v.t_vType == Value::vType::Null)
+			break;
+		interp.override_var(key_name, Value(array_it), this);
+		interp.override_var(value_name, v, this);
+		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
+			return blockret;
+		}
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
+			return blockret;
+		}
+	}
+	//Normal hash keys
+	for (auto it = tbl->t_hash.begin(); it != tbl->t_hash.end(); ++it)
+	{
+		const Value& key = it->first;
+		if (key.t_vType == Value::vType::Integer && key.t_value.as_int < array_it) // Skipping over "silly keys" that we've already iterated over
+			continue;
+
+		interp.override_var(key_name, key, this);
+		interp.override_var(value_name, it->second, this);
+		Value blockret = iterate_statements(interp);
+		if (interp.BREAK_COUNTER)
+		{
+			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
+			interp.pop_block();
+			return blockret;
+		}
+		if (interp.FORCE_RETURN || interp.error)
+		{
+			interp.pop_block();
+			return blockret;
+		}
 	}
 	interp.pop_block();
 	return Value();
@@ -761,4 +805,26 @@ Value ThrowStatement::resolve(Interpreter& interp)
 	interp.RuntimeError(this, val);
 
 	return Value(); // If anything.
+}
+
+Value BaseTableConstruction::resolve(Interpreter& interp)
+{
+	std::unordered_map<std::string, Value> resolved_entries;
+	resolved_entries.reserve(nodes.size());
+	for (auto& it : nodes)
+	{
+		resolved_entries[it.first] = it.second->resolve(interp);
+#ifdef JOAO_SAFE
+		++interp.value_init_count;
+		if (interp.value_init_count > MAX_VARIABLES)
+		{
+			throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
+		}
+#endif
+	}
+	if (interp.error)
+	{
+		return interp.makeBaseTable();
+	}
+	return interp.makeBaseTable({}, resolved_entries,this);
 }

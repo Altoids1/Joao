@@ -252,6 +252,7 @@ public:
 		Else,
 		While,
 		For,
+		In, // Used for foreaches; "for(key,val in arr)"
 		Return,
 		Break,
 		Try,
@@ -464,6 +465,7 @@ class Scanner
 		{"else",KeywordToken::Key::Else},
 		{"while",KeywordToken::Key::While},
 		{"for",KeywordToken::Key::For},
+		{"in",KeywordToken::Key::In},
 		{"return",KeywordToken::Key::Return},
 		{"break",KeywordToken::Key::Break},
 		{"try",KeywordToken::Key::Try},

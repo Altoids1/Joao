@@ -81,6 +81,7 @@ public:
 	}
 
 	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
+	//It is presumed that whoever is calling this function will take ownership of this novel heap pointer and ensure that it be properly GC'd in the future.
 	Object* makeObject(Interpreter&, std::vector<Value>&&);
 
 	Value get_typeproperty(Interpreter&, std::string, ASTNode*);
@@ -114,10 +115,11 @@ class Metatable
 	//These properties should be accessed by nobody but the metatable's metamethods themselves.
 	std::vector<void*> privates;
 
-	std::unordered_map<std::string, NativeMethod*> metamethods;
+	std::unordered_map<std::string, void*> metamethods; // by "void" I mean "NativeMethod"
 
 public:
-	void append_method(std::string str, NativeMethod* newmethod)
+	template<typename Lambda>
+	void append_method(std::string str, NativeMethod<Lambda>* newmethod)
 	{
 		metamethods[str] = newmethod;
 	}

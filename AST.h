@@ -484,29 +484,22 @@ public:
 	}
 };
 
-class NativeFunction final : public Function
+template <typename Lambda>
+class NativeFunction : public Function
 {
+protected:
 	/*
 	So this kinda overrides a lot of the typical behavior of a function, instead deferring it into some kickass lambda stored within.
 	*/
-	Value(*lambda)(std::vector<Value>) = nullptr;
+	Lambda lambda;
 	// Value lambda() {};
 public:
-	NativeFunction(std::string n)
+	NativeFunction(std::string n, Lambda lamb)
 		:Function()
+		,lambda(lamb)
 	{
+		my_line = 0; // These functions aren't really supposed to BE anywhere in the code per se so..
 		t_name = n;
-		lambda = [](std::vector<Value> args)
-		{
-			return Value();
-		};
-	}
-	NativeFunction(std::string n, Value(*luh)(std::vector<Value>), int linenum = 0)
-		:Function()
-	{
-		t_name = n;
-		lambda = luh;
-		my_line = linenum;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -518,30 +511,18 @@ public:
 };
 
 //Similar to a NativeFunction except it requires a handle to an object its acting within.
+template <typename Lambda>
 class NativeMethod final : public Function
 {
-	/*
-	So this kinda overrides a lot of the typical behavior of a function, instead deferring it into some kickass lambda stored within.
-	*/
-	Value(*lambda)(std::vector<Value>,Object*) = nullptr;
-	// Value lambda() {};
+	Lambda lambda;
 public:
 	bool is_static = false; // True if it actually doesn't need an object to act on
-	NativeMethod(std::string n)
+	NativeMethod(std::string n, Lambda lamb)
 		:Function()
+		,lambda(lamb)
 	{
+		my_line = 0;
 		t_name = n;
-		lambda = [](std::vector<Value> args,Object*)
-		{
-			return Value();
-		};
-	}
-	NativeMethod(std::string n, Value(*luh)(std::vector<Value>,Object*), int linenum = 0)
-		:Function()
-	{
-		t_name = n;
-		lambda = luh;
-		my_line = linenum;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -659,6 +640,40 @@ public:
 		str += ind + "=Init:\n" + initializer->dump(indent + 2);
 		str += ind + "?Cond:\n" + condition->dump(indent + 2);
 		str += ind + "+Inc:\n" + increment->dump(indent + 2);
+
+		for (size_t i = 0; i < statements.size(); ++i)
+		{
+			str += statements[i]->dump(indent + 1);
+		}
+
+		return str;
+	}
+};
+
+class ForEachBlock final : public Block
+{
+	std::string key_name;
+	std::string value_name;
+	ASTNode* table_node;
+public:
+	ForEachBlock(const std::string& k , const std::string& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
+		:key_name(k),
+		value_name(v),
+		table_node(tn)
+	{
+		my_line = linenum;
+		statements = st;
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "ForEachBlock"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "ForEachBlock\n";
+
+		str += ind + "=Pair: " + key_name + "," + value_name + "\n";
+		str += ind + "<in:\n" + table_node->dump(indent + 2);
 
 		for (size_t i = 0; i < statements.size(); ++i)
 		{
@@ -970,4 +985,31 @@ public:
 		const std::string ind = std::string(indent, ' ');
 		return ind + "Throw\n" + err_node->dump(indent + 1);
 	}
+};
+
+//Weird hack of a class to support key-value table initiatialization.
+class BaseTableConstruction : public ASTNode
+{
+	std::unordered_map<std::string, ASTNode*> nodes;
+public:
+	BaseTableConstruction(const std::unordered_map<std::string, ASTNode*>& n, int linenum = 0)
+		:nodes(n)
+	{
+		my_line = linenum;
+	}
+
+	virtual const std::string class_name() const override { return "BaseTableConstruction"; }
+	virtual std::string dump(int indent) override
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = std::string(indent, ' ') + "BaseTableConstruction\n";
+		str += ind + "(Args:\n";
+		for (auto &it : nodes)
+		{
+			str += ind + it.first + "\t" + it.second->dump(0) + "\n";
+		}
+		str += ind + ")\n";
+		return str;
+	}
+	virtual Value resolve(Interpreter&) override;
 };

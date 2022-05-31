@@ -1,24 +1,30 @@
 #include "../Program.h"
 #include "../Object.h"
 #include "../Table.h"
+#include "../AST.hpp"
+#include "../Interpreter.h"
+
+
+
 
 ObjectType* Program::construct_table_library()
 {
+	
 	ObjectType* table = new ObjectType("/table");
 	table->is_table_type = true;
 	
-	table->set_typemethod_raw("#constructor",new NativeMethod("#constructor",[](std::vector<Value> args, Object* obj){
-		
+	NATIVEMETHOD(table, "#constructor", [](const std::vector<Value>& args, Object* obj) {
+
 		Table* t = static_cast<Table*>(obj);
 
-		for(size_t i = 0; i < args.size(); ++i)
+		for (size_t i = 0; i < args.size(); ++i)
 		{
 			t->t_array.push_back(args[i]);
 		}
 
 		return Value(true); // If anything.
-	}));
-	table->set_typemethod_raw("implode",new NativeMethod("implode",[](std::vector<Value> args, Object* obj){
+		});
+	NATIVEMETHOD(table,"implode",[](const std::vector<Value>& args, Object* obj){
 		Table* t = static_cast<Table*>(obj);
 
 		std::string sep = ", ";
@@ -33,11 +39,13 @@ ObjectType* Program::construct_table_library()
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			stop = args[2].t_value.as_int;
 			//Falls over into the other arguments
+			[[fallthrough]];
 		case(2):
 			if(args[1].t_vType != Value::vType::Integer)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 			start = args[1].t_value.as_int;
 			//Falls over into the other arguments
+			[[fallthrough]];
 		case(1):
 			sep = args[0].to_string();
 		case(0):
@@ -54,25 +62,25 @@ ObjectType* Program::construct_table_library()
 			result += sep + t->t_array[start].to_string();
 		}
 		return Value(result);
-	}));
+	});
 
-	table->set_typemethod_raw("pick", new NativeMethod("pick", [](std::vector<Value> args, Object* obj) {
+	NATIVEMETHOD(table,"pick", [](const std::vector<Value>& args, Object* obj) {
 		Table* t = static_cast<Table*>(obj);
 
 		if (!t->t_array.size())
 			return Value();
 
 		return Value(t->t_array[rand() % t->t_array.size()]);
-	}));
+	});
 
-	definedFunctions["pick"] = new NativeFunction("pick", [](std::vector<Value> args)
+	definedFunctions["pick"] = new NativeFunction("pick", [](Interpreter& interp, const std::vector<Value>& args)
 		{
 			if (!args.size())
 				return Value();
 			return Value(args[rand() % args.size()]);
 		});
 
-	table->set_typemethod_raw("insert", new NativeMethod("insert", [](std::vector<Value> args, Object* obj) {
+	NATIVEMETHOD(table,"insert", [](const std::vector<Value>& args, Object* obj) {
 		if (args.size() < 2)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& vindex = args[0];
@@ -119,9 +127,9 @@ ObjectType* Program::construct_table_library()
 			}
 			return Value();
 		}
-	}));
+	});
 
-	table->set_typemethod_raw("remove",new NativeMethod("remove",[](std::vector<Value> args, Object* obj){
+	NATIVEMETHOD(table,"remove",[](const std::vector<Value>& args, Object* obj){
 		if(args.size() < 1)
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& vindex = args[0];
@@ -135,7 +143,7 @@ ObjectType* Program::construct_table_library()
 			static_cast<Table*>(obj)->tfree(vindex);
 			return Value();
 		}
-	}));
+	});
 
 	return table;
 }

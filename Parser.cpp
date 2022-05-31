@@ -429,7 +429,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	}
 	case(Token::cEnum::PairSymbolToken): // tableconstructor | '(' exp ')'
 	{
-		PairSymbolToken pst = *static_cast<PairSymbolToken*>(t);
+		const PairSymbolToken& pst = *static_cast<PairSymbolToken*>(t);
 		switch (pst.t_pOp)
 		{
 		default:
@@ -437,15 +437,107 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 			tokenheader = here + 1;
 			lvalue = new Literal(Value());
 			break;
-		case(PairSymbolToken::pairOp::Brace): // tableconstructor
-			ParserError(t, "Unexpected or underimplemented use of brace token!");
+		case(PairSymbolToken::pairOp::Brace):	// tableconstructor ::= '{' [exp] {',' exp} [',']'}' | '{'[Name '=' exp]{ ','[Name '=' exp] }[','] '}'
+		{
+			consume_open_brace(here);
 			tokenheader = here + 1;
-			lvalue = new Literal(Value());
+			//Try to read in the key-value version and fallback to the value-array one if it fails
+			Token* trytoken = tokens[tokenheader];
+			if (trytoken->class_enum() == Token::cEnum::WordToken || trytoken->class_enum() == Token::cEnum::StringToken)
+			{
+				//Not incrementing tokenheader yet since this is a bit of a peak-ahead
+				if (tokens[tokenheader + 1]->class_enum() == Token::cEnum::SymbolToken)
+				{
+					SymbolToken* st = static_cast<SymbolToken*>(tokens[tokenheader + 1]);
+					if (symbol_to_aOp(st) == AssignmentStatement::aOps::Assign)
+					{
+						//This is definitely Key-value pairs!
+						//'{'[Name '=' exp]{ ','[Name '=' exp] }[','] '}'
+						/*
+						FIXME:
+						Right now, this specific way to initialize a table has a snowflake ASTNode type to handle its execution.
+						In the future, it would probably be best to have this just pass into the normal /table constructor,
+						with each key-value pair being a Value of type Tuple (a thing that does not exist yet in this language)
+						*/
+						std::unordered_map<std::string,ASTNode*> nodes;
+						int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Brace, tokenheader + 2);
+						do
+						{
+							Token* nametoken = tokens[tokenheader];
+							std::string namestr;
+							if (nametoken->class_enum() == Token::cEnum::WordToken)
+							{
+								namestr = static_cast<WordToken*>(nametoken)->word;
+							}
+							else if (nametoken->class_enum() == Token::cEnum::StringToken)
+							{
+								namestr = static_cast<StringToken*>(nametoken)->word;
+							}
+							else
+							{
+								ParserError(nametoken, "Unexpected token when table key expected in table constructor!");
+								break; // Out of while(true)
+							}
+							++tokenheader;
+							//Consume an assign symbol
+							if (tokens[tokenheader]->class_enum() != Token::cEnum::SymbolToken || // Either not a symbol at all or
+								symbol_to_aOp(static_cast<SymbolToken*>(tokens[tokenheader])) != AssignmentStatement::aOps::Assign) // not '='
+							{
+								ParserError(tokens[tokenheader], "Unexpected token when '=' symbol expected in table constructor!");
+								break;
+							}
+							++tokenheader;
+							int valueyonder = find_comma(tokenheader, yonder - 1); // Where the value expression ought to end
+							ASTNode* valuenode;
+							if (!valueyonder) // Failed to find comma
+							{
+								valuenode = readExp(tokenheader, yonder - 1);
+							}
+							else
+							{
+								valuenode = readExp(tokenheader, valueyonder - 1);
+								++tokenheader; // Consume the comma
+							}
+							nodes[namestr] = valuenode;
+						} while (tokenheader < yonder);
+						lvalue = new BaseTableConstruction(nodes, tokens[tokenheader]->line);
+						tokenheader = yonder + 1;
+						break; // Out of case(PairSymbolToken::pairOp::Brace)
+					}
+				}
+			}
+			//Value array!
+			//'{' [exp] {',' exp}[',']'}'
+			int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Brace, tokenheader);
+			if (yonder == tokenheader) // Special case where it's a blank init; "{}"
+			{
+				lvalue = new Construction("/table", {}, tokens[tokenheader]->line);
+				++tokenheader;
+				break;
+			}
+			std::vector<ASTNode*> nodes;
+			do
+			{
+				int valueyonder = find_comma(tokenheader, yonder - 1); // Where the value expression ought to end
+				if (!valueyonder) // Failed to find comma
+				{
+					nodes.push_back(readExp(tokenheader, yonder - 1));
+				}
+				else
+				{
+					nodes.push_back(readExp(tokenheader, valueyonder - 1));
+					++tokenheader; // Consume the comma
+				}
+			} while (tokenheader < yonder);
+			lvalue = new Construction("/table", nodes, tokens[tokenheader]->line);
+			tokenheader = yonder + 1; // Make sure we consume the ending brace
 			break;
+		}
 		case(PairSymbolToken::pairOp::Paren): // '(' exp ')'
+			consume_paren(true, t);
 			int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, here+1);
 			
-			lvalue = readExp(here + 1, close - 1); // ReadExp will increment tokenheader for us, hopefully. Can't say for sure, this recursion is confusing.
+			lvalue = readExp(here + 1, close - 1); // ReadExp will increment tokenheader for us, hopefully.
 
 			consume_paren(false); // Consumes that paren we found
 		}
@@ -712,7 +804,43 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				consume_paren(true); // (
 				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
 
-				size_t semicolon = find_first_semicolon(tokenheader, yonder-1);
+				size_t semicolon = find_first_semicolon(tokenheader, yonder-1); // Using "find" instead of "get" here,
+				//since we not sure whether this is a generic for-loop or a for-each.
+
+				if (!semicolon) // Can't be a generic for-loop, then. Attempt to read foreach
+				{
+					WordToken* keytoken, *valtoken; // This syntax is so borked
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //keytoken
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
+					}
+					keytoken = static_cast<WordToken*>(tokens[tokenheader]);
+					++tokenheader;
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::CommaToken) // The comma
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when Comma expected while reading for-each!");
+					}
+					++tokenheader;
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //valtoken
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
+					}
+					valtoken = static_cast<WordToken*>(tokens[tokenheader]);
+					++tokenheader;
+					if (tokens[tokenheader]->class_enum() != Token::cEnum::KeywordToken
+						|| static_cast<KeywordToken*>(tokens[tokenheader])->t_key != KeywordToken::Key::In) //"in" keyword
+					{
+						ParserError(tokens[tokenheader], "Unexpected token when 'in' keyword expected while reading for-each!");
+					}
+					++tokenheader;
+					ASTNode* table_node = readExp(tokenheader, yonder - 1);
+					consume_paren(false);
+
+					ASTs.push_back(new ForEachBlock(keytoken->word, valtoken->word, table_node, readBlock(BlockType::For, tokenheader, there)));
+					where = tokenheader - 1; // decrement to counteract imminent increment
+					continue;
+				}
+
 				ASTNode* init;
 				if (find_aOp(tokenheader, static_cast<int>(semicolon)))
 				{
@@ -727,7 +855,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				}
 
 				where = static_cast<int>(semicolon + 1);
-				semicolon = find_first_semicolon(where, yonder-1);
+				semicolon = get_first_semicolon(where, yonder-1);
 				ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in Jo�o so putting one in a conditional is silly
 				where = static_cast<int>(semicolon + 1);
 				ASTNode* inc;
@@ -939,7 +1067,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				}
 				else // #2
 				{
-					int yonder = find_first_semicolon(where + 1, there);
+					int yonder = get_first_semicolon(where + 1, there);
 					ASTs.push_back(new ThrowStatement(readExp(where, yonder-1)));
 					consume_semicolon();
 					where = tokenheader - 1;
@@ -976,7 +1104,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 		//If the Grammar serves me right, this is either a varstat or a functioncall.
 		//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
 		{
-			int yonder = static_cast<int>(find_first_semicolon(where+1, there));
+			int yonder = static_cast<int>(get_first_semicolon(where+1, there));
 			int found_aop = find_aOp(where + 1, yonder - 1);
 
 			if(found_aop) // varstat

@@ -1,5 +1,8 @@
 #include "Program.h"
 #include "Object.h"
+#include "AST.hpp"
+
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
 
 std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 {
@@ -9,7 +12,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 	globals.table["__VERSION_PATCH"] = new Value(VERSION_PATCH);
 
 	//TEXT MANIPULATION
-	definedFunctions["print"] = new NativeFunction("print", [](std::vector<Value> args) // Lua-style print() function
+	NATIVE_FUNC("print") // Lua-style print() function
 	{
 		if (args.size())
 		{
@@ -21,8 +24,8 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		}
 		std::cout << "\n";
 		return Value();
-	});
-	definedFunctions["input"] = new NativeFunction("input", [](std::vector<Value> args) // Analogous to Lua's io.read() function.
+	}));
+	NATIVE_FUNC("input") // Analogous to Lua's io.read() function.
 	{
 		if (args.size())
 		{
@@ -40,12 +43,12 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		if(imp.empty())
 			return Value();
 		return Value(imp);
-	});
-	definedFunctions["tostring"] = new NativeFunction("tostring", [](std::vector<Value> args)
+	}));
+	NATIVE_FUNC("tostring")
 	{
 		return Value(args[0].to_string());
-	});
-	definedFunctions["tointeger"] = new NativeFunction("tointeger", [](std::vector<Value> args)
+	}));
+	NATIVE_FUNC("tointeger")
 	{
 		if(!args.size())
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
@@ -66,9 +69,9 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 		return Value(args[0].to_string());
-	});
+	}));
 	
-	definedFunctions["typeof"] = new NativeFunction("typeof", [](std::vector<Value> args)
+	NATIVE_FUNC("typeof")
 	{
 		if(!args.size())
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
@@ -103,12 +106,12 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 			break;
 		}
 		return Value(str);
-	});
-	definedFunctions["istable"] = new NativeFunction("istable", [](std::vector<Value> args)
+	}));
+	NATIVE_FUNC("istable")
 	{
 		if(!args.size())
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
-		Value arg = args[0];
+		const Value& arg = args[0];
 
 		switch (arg.t_vType)
 		{
@@ -117,15 +120,15 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		default:
 			return Value(false);
 		}
-	});
-	definedFunctions["isnull"] = new NativeFunction("isnull", [](std::vector<Value> args)
+	}));
+	NATIVE_FUNC("isnull")
 	{
 		if(!args.size())
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		return Value(args[0].t_vType == Value::vType::Null);
-	});
+	}));
 	
-	definedFunctions["classof"] = new NativeFunction("classof", [](std::vector<Value> args)
+	NATIVE_FUNC("classof")
 	{
 		if(!args.size())
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
@@ -135,12 +138,12 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
 		return Value(arg.t_value.as_object_ptr->object_type);
-	});
+	}));
 	
-	definedFunctions["void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud"] = new NativeFunction("void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud", [](std::vector<Value> args)
+	NATIVE_FUNC("void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud")
 	{
 		return Value(7); // No I'm never removing this function fuck you
-	});
+	}));
 
 	std::unordered_map<std::string, ObjectType*> cooked_classes;
 

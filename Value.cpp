@@ -188,3 +188,34 @@ Value& Value::operator=(const Value& rhs)
 	t_vType = rhs.t_vType;
 	return *this;
 }
+
+/*
+This exists pretty much exclusively for internal use, and is incomparable to the implementation of the == operator within João itself.
+DO NOT SWALLOW OR SUBMERGE IN ACID
+*/
+bool Value::operator==(const Value& rhs) const
+{
+	if (t_vType != rhs.t_vType)
+	{
+		return false;
+	}
+	switch (t_vType)
+	{
+	case(vType::Bool):
+		return t_value.as_bool == rhs.t_value.as_bool; // Lustfully desiring for an XNOR operator
+	case(vType::Double):
+		return t_value.as_double == rhs.t_value.as_double;
+	case(vType::Integer):
+		return t_value.as_int == rhs.t_value.as_int;
+	case(vType::Null): // Null == Null ; using Null as a key would 100% never work ever otherwise
+		return true;
+	case(vType::Object):
+		return t_value.as_object_ptr == rhs.t_value.as_object_ptr;
+	case(vType::String):
+		return t_value.as_string_ptr == rhs.t_value.as_string_ptr;
+	case(vType::Function):
+		return t_value.as_function_ptr == rhs.t_value.as_function_ptr;
+	default: //what?
+		return false;
+	}
+}

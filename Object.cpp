@@ -73,7 +73,7 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 	}
 	else if (mt && mt->metamethods.count(name))
 	{
-		fuh = mt->metamethods.at(name);
+		fuh = static_cast<Function*>(mt->metamethods.at(name));
 	}
 	else
 	{
@@ -95,7 +95,7 @@ Function* Object::has_method(Interpreter& interp, std::string name)
 	}
 	else if (mt && mt->metamethods.count(name))
 	{
-		return mt->metamethods.at(name);
+		return static_cast<Function*>(mt->metamethods.at(name));
 	}
 	return nullptr;
 }
@@ -108,7 +108,7 @@ Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>&& args)
 	if (is_table_type)
 		o = new Table(object_type, &typeproperties, &typefuncs);
 	else
-		o = new Object(object_type, &typeproperties, &typefuncs, mt); // FIXME: Make these instantiated objects capable of being garbage-collected; this is a memory leak right now!
+		o = new Object(object_type, &typeproperties, &typefuncs, mt);
 
 	if (typefuncs.count("#constructor"))
 	{
@@ -116,7 +116,6 @@ Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>&& args)
 		fuh->give_args(interp, args, o);
 		fuh->resolve(interp);
 	}
-
 
 	return o;
 }
@@ -136,7 +135,7 @@ Function* ObjectType::has_typemethod(Interpreter& interp, std::string str, ASTNo
 	if (!typefuncs.count(str))
 	{
 		if (mt && mt->metamethods.count(str))
-			return mt->metamethods.at(str);
+			return static_cast<Function*>(mt->metamethods.at(str));
 		return nullptr;
 	}
 	return typefuncs.at(str);

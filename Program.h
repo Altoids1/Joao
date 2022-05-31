@@ -20,7 +20,6 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	//
 	//THE ENTIRE OBJECT TREE (FLATTENED)
 	std::unordered_map<std::string, ObjectType*> definedObjTypes;
-	Interpreter* myinterp{ nullptr };
 public:
 
 	bool is_malformed = false;
@@ -34,10 +33,6 @@ public:
 	{
 		definedFunctions["/main"] = f;
 		construct_natives();
-	}
-	void set_interp(Interpreter& interp)
-	{
-		myinterp = &interp;
 	}
 	std::unordered_map<std::string, ObjectType*> construct_natives();
 	void construct_math_library();

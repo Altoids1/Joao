@@ -594,7 +594,7 @@ ACCESS_END:
 		}
 	}
 
-	void consume_open_brace(int here)
+	void consume_open_brace(int here) // FIXME: Kinda weird; this should increment tokenheader.
 	{
 		Token* t = tokens[here];
 		if (t->class_enum() != Token::cEnum::PairSymbolToken)
@@ -608,7 +608,8 @@ ACCESS_END:
 		}
 	}
 
-	size_t find_first_semicolon(int here, int there)
+	//Parsetimes if it cannot find the semicolon.
+	size_t get_first_semicolon(int here, int there)
 	{
 		for (int where = here; where <= there; ++where)
 		{
@@ -619,6 +620,19 @@ ACCESS_END:
 		}
 		ParserError(tokens[here], "Failed to find expected semicolon!");
 		return tokens.size() - 1;
+	}
+
+	//Does not parsetime; used for lookahead.
+	size_t find_first_semicolon(int here, int there)
+	{
+		for (int where = here; where <= there; ++where)
+		{
+			Token* t = tokens[where];
+
+			if (t->class_enum() == Token::cEnum::EndLineToken)
+				return where;
+		}
+		return 0; // Actually works since it is impossible for the first token to be a semicolon in a valid way, weirdly enough
 	}
 
 	//Does not update tokenheader, and so is a "wanderer" sorta function. Finds the closing pairlet token of the type desired.

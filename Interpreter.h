@@ -62,6 +62,7 @@ public:
 
 	//Construct an object and return it as a Value.
 	Value makeObject(std::string,std::vector<ASTNode*>&,ASTNode*);
+	Value makeObject(std::string,std::vector<Value>&&,ASTNode*);
 	
 	//Constructs an empty base table.
 	Value makeBaseTable();

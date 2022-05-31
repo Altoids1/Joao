@@ -21,5 +21,6 @@ namespace string
 
 namespace math
 {
-	Value round(std::vector<Value>);
+	Value round(const std::vector<Value>&);
+	Value round_safe(Interpreter& interp, const std::vector<Value>&);
 }

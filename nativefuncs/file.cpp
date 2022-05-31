@@ -1,6 +1,7 @@
 #include "../Program.h"
 #include "../Object.h"
 #include "../Table.h"
+#include "../AST.hpp"
 
 //#define NATIVE_FUNC_TABLE(name) static_cast<Function*>(new NativeFunction( name , [](std::vector<Value> args)
 
@@ -13,7 +14,8 @@ ObjectType* Program::construct_file_library()
 		FSTREAM
 	};
 
-	__mt->append_method("open", new NativeMethod("open", [](std::vector<Value> args, Object* obj)
+	APPENDMETHOD(__mt,"open",
+	[](std::vector<Value> args, Object* obj)
 	{
 		size_t argnum = args.size();
 
@@ -64,12 +66,13 @@ ObjectType* Program::construct_file_library()
 		}
 		mt->set_private(static_cast<size_t>(PrivIndex::FSTREAM), our_file);
 		return Value(our_file->good());
-	}));
+	});
 
 	/*
 	Returns a table with its array part filled with the lines of this file.
 	*/
-	__mt->append_method("lines", new NativeMethod("lines", [](std::vector<Value> args, Object* obj)
+	APPENDMETHOD(__mt, "lines",
+	[](std::vector<Value> args, Object* obj)
 	{
 		Metatable* mt = obj->get_metatable();
 		std::fstream* our_file = static_cast<std::fstream*>(mt->get_private(static_cast<size_t>(PrivIndex::FSTREAM)));
@@ -89,8 +92,11 @@ ObjectType* Program::construct_file_library()
 
 
 		return Value(tuh);
-	}));
-	__mt->append_method("write", new NativeMethod("write", [](std::vector<Value> args, Object* obj)
+	});
+
+
+	APPENDMETHOD(__mt, "write",
+	[](std::vector<Value> args, Object* obj)
 	{
 		Metatable* mt = obj->get_metatable();
 		std::fstream* our_file = static_cast<std::fstream*>(mt->get_private(static_cast<size_t>(PrivIndex::FSTREAM)));
@@ -104,8 +110,11 @@ ObjectType* Program::construct_file_library()
 		}
 
 		return Value(our_file->good());
-	}));
-	__mt->append_method("close", new NativeMethod("close", [](std::vector<Value> args, Object* obj)
+	});
+
+
+	APPENDMETHOD(__mt,"close",
+	[](std::vector<Value> args, Object* obj)
 	{
 		Metatable* mt = obj->get_metatable();
 		std::fstream* our_file = static_cast<std::fstream*>(mt->get_private(static_cast<size_t>(PrivIndex::FSTREAM)));
@@ -121,7 +130,7 @@ ObjectType* Program::construct_file_library()
 		mt->set_private(static_cast<size_t>(PrivIndex::FSTREAM), nullptr);
 
 		return Value(true);
-	}));
+	});
 
 	return (new ObjectType("/file", __mt));
 }
