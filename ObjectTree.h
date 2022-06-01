@@ -217,7 +217,7 @@ public:
 			return;
 		}
 
-		std::cout << ind << Directory::lastword(nude->me->object_type) << std::endl;
+		std::cout << ind << Directory::lastword(nude->me->object_type.to_string()) << std::endl;
 		for (Node* child : nude->children)
 		{
 			dump_node(child, indent + 1);

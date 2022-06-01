@@ -20,7 +20,7 @@ struct ImmutableString
 
 	}
 	ImmutableString(const std::string& str)
-		:data(strcpy(new char[str.size() + 1],str.c_str()))
+		:data(strcpy(new char[str.size() + 1],str.c_str())) // +1 to include the null character
 		,heap(true)
 		,precomputed_hash(std::hash<std::string>()(str))
 	{

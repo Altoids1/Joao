@@ -137,7 +137,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		if(arg.t_vType != Value::vType::Object)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
-		return Value(arg.t_value.as_object_ptr->object_type);
+		return Value(arg.t_value.as_object_ptr->object_type.to_string());
 	}));
 	
 	NATIVE_FUNC("void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud")

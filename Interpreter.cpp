@@ -44,7 +44,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 	std::string whatfunk;
 	if(objectscope.top()) // If we runtimed within a method
 	{
-		whatfunk = "method of object of type " + objectscope.top()->object_type;
+		whatfunk = "method of object of type " + objectscope.top()->object_type.to_string();
 	}
 	else
 	{
@@ -104,7 +104,7 @@ void Interpreter::init_var(const ImmutableString& varname, const Value& val, AST
 	blockscope.top().set(varname, val);
 }
 
-void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
+void Interpreter::override_var(const ImmutableString& varname, Value val, ASTNode* setter)
 {
 	//First try blockscope
 	Scope<Value>& varscope = blockscope.top();
@@ -135,7 +135,7 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 	}
 
 	//Give up. How the hell did we even fail to set it in globalscope?
-	RuntimeError(setter, "Unable to override value of variable named " + varname + "!");
+	RuntimeError(setter, "Unable to override value of variable named " + varname.to_string() + "!");
 }
 
 Value& Interpreter::get_var(const ImmutableString& varname, ASTNode *getter)
@@ -221,7 +221,7 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 		return Value();
 	}
 
-	std::string dir = obj->object_type;
+	std::string dir = obj->object_type.to_string();
 
 	for (unsigned int i = 0; i < depth; ++i)
 	{
@@ -252,11 +252,11 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 		return Value::dev_null;
 	}
 
-	std::string dir = obj->object_type;
+	std::string dir = obj->object_type.to_string();
 
 	for (unsigned int i = 0; i < depth; ++i)
 	{
-		std::string dir = Directory::DotDot(dir);
+		dir = Directory::DotDot(dir);
 	}
 	if (dir == "/")
 	{

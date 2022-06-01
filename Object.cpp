@@ -3,7 +3,7 @@
 #include "Parser.h"
 #include "Table.h"
 
-Value* Object::has_property(Interpreter& interp, std::string name)
+Value* Object::has_property(Interpreter& interp, const ImmutableString& name)
 {
 	if (properties.count(name))
 		return &(properties.at(name));
@@ -12,7 +12,7 @@ Value* Object::has_property(Interpreter& interp, std::string name)
 
 	return nullptr;
 }
-Value Object::get_property(Interpreter& interp, std::string name)
+Value Object::get_property(Interpreter& interp, const ImmutableString& name)
 {
 	if (properties.count(name))
 		return properties.at(name);
@@ -22,7 +22,7 @@ Value Object::get_property(Interpreter& interp, std::string name)
 	interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access property of object!");
 	return Value();
 }
-Value Object::get_property_raw(std::string name)
+Value Object::get_property_raw(const ImmutableString& name)
 {
 	if (properties.count(name))
 		return properties.at(name);
@@ -30,7 +30,7 @@ Value Object::get_property_raw(std::string name)
 		return base_properties->at(name);
 	return Value();
 }
-void Object::set_property(Interpreter& interp, std::string name, Value rhs)
+void Object::set_property(Interpreter& interp, const ImmutableString& name, Value rhs)
 {
 	if (base_properties->count(name) == 0)
 	{
@@ -47,7 +47,7 @@ void Object::set_property(Interpreter& interp, std::string name, Value rhs)
 		properties[name] = rhs;
 	}
 }
-void Object::set_property_raw(std::string name, Value rhs)
+void Object::set_property_raw(const ImmutableString& name, Value rhs)
 {
 	if (base_properties->count(name) == 0)
 		return;
@@ -63,7 +63,7 @@ void Object::set_property_raw(std::string name, Value rhs)
 	}
 }
 
-Value Object::call_method(Interpreter& interp, std::string name, std::vector<Value> &args)
+Value Object::call_method(Interpreter& interp, const ImmutableString& name, std::vector<Value> &args)
 {
 	Function* fuh;
 
@@ -77,7 +77,7 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 	}
 	else
 	{
-		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access method of object: " + name);
+		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access method of object: " + name.to_string());
 		return Value();
 	}
 	
@@ -87,7 +87,7 @@ Value Object::call_method(Interpreter& interp, std::string name, std::vector<Val
 }
 
 //If it fails, it simply returns a nullptr w/o throwing a Runtime. Part of scope resolution of function calls.
-Function* Object::has_method(Interpreter& interp, std::string name)
+Function* Object::has_method(Interpreter& interp, const ImmutableString& name)
 {
 	if (base_funcs->count(name))
 	{
@@ -120,17 +120,17 @@ Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>&& args)
 	return o;
 }
 
-Value ObjectType::get_typeproperty(Interpreter& interp, std::string str, ASTNode* getter)
+Value ObjectType::get_typeproperty(Interpreter& interp, const ImmutableString& str, ASTNode* getter)
 {
 	if (!typeproperties.count(str))
 	{
-		interp.RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to access property " + str + " of grandparent " + object_type + "!");
+		interp.RuntimeError(getter, ErrorCode::BadMemberAccess, "Failed to access property " + str.to_string() + " of grandparent " + object_type.to_string() + "!");
 		return Value();
 	}
 	return typeproperties.at(str);
 }
 
-Function* ObjectType::has_typemethod(Interpreter& interp, std::string str, ASTNode* getter)
+Function* ObjectType::has_typemethod(Interpreter& interp, const ImmutableString& str, ASTNode* getter)
 {
 	if (!typefuncs.count(str))
 	{

@@ -653,8 +653,8 @@ public:
 
 class ForEachBlock final : public Block
 {
-	std::string key_name;
-	std::string value_name;
+	ImmutableString key_name;
+	ImmutableString value_name;
 	ASTNode* table_node;
 public:
 	ForEachBlock(const std::string& k , const std::string& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
@@ -673,7 +673,7 @@ public:
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ForEachBlock\n";
 
-		str += ind + "=Pair: " + key_name + "," + value_name + "\n";
+		str += ind + "=Pair: " + key_name.to_string() + "," + value_name.to_string() + "\n";
 		str += ind + "<in:\n" + table_node->dump(indent + 2);
 
 		for (size_t i = 0; i < statements.size(); ++i)
@@ -777,7 +777,7 @@ class ClassDefinition final : public ASTNode
 {
 	std::vector<LocalAssignmentStatement*> statements;
 public:
-	std::string direct;
+	ImmutableString direct;
 	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*> &s, int linenum = 0)
 		:statements(s)
 		,direct(d)
@@ -788,14 +788,14 @@ public:
 
 	//virtual Value resolve(Interpreter&) override;
 
-	Hashtable<std::string, Value> resolve_properties(Parser&);
+	Hashtable<ImmutableString, Value> resolve_properties(Parser&);
 	void append_properties(Parser&, ObjectType*);
 
 	virtual const std::string class_name() const override { return "ClassDefinition"; }
 	virtual std::string dump(int indent)
 	{
 		std::string ind = std::string(indent, ' ');
-		std::string str = ind + "ClassDefinition " + direct + ";\n";
+		std::string str = ind + "ClassDefinition " + direct.to_string() + ";\n";
 		for (size_t i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);

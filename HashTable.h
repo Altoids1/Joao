@@ -141,7 +141,7 @@ class HashTable
             }
             return *this;
         }
-        Key& key()
+        const Key& key()
         {
             if(!next_bucket) [[unlikely]]
             {

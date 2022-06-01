@@ -505,12 +505,12 @@ Value ForEachBlock::resolve(Interpreter& interp)
 	//Normal hash keys
 	for (auto it = tbl->t_hash.begin(); it != tbl->t_hash.end(); ++it)
 	{
-		const Value& key = it->first;
+		const Value& key = it.key();
 		if (key.t_vType == Value::vType::Integer && key.t_value.as_int < array_it) // Skipping over "silly keys" that we've already iterated over
 			continue;
 
 		interp.override_var(key_name, key, this);
-		interp.override_var(value_name, it->second, this);
+		interp.override_var(value_name, it.value(), this);
 		Value blockret = iterate_statements(interp);
 		if (interp.BREAK_COUNTER)
 		{
@@ -624,9 +624,9 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	return Value::dev_null;
 }
 
-Hashtable<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
+Hashtable<ImmutableString, Value> ClassDefinition::resolve_properties(Parser& parse)
 {
-	Hashtable<std::string, Value> svluh;
+	Hashtable<ImmutableString, Value> svluh;
 
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
@@ -801,7 +801,7 @@ Value ThrowStatement::resolve(Interpreter& interp)
 	}
 
 	Value val = err_node->resolve(interp);
-	if (!val || val.t_vType != Value::vType::Object || val.t_value.as_object_ptr->object_type != "/error")
+	if (!val || val.t_vType != Value::vType::Object || strcmp(val.t_value.as_object_ptr->object_type.data,"/error"))
 	{
 		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "Throw keyword invoked with non-error operand!");
 		return Value();
@@ -814,8 +814,8 @@ Value ThrowStatement::resolve(Interpreter& interp)
 
 Value BaseTableConstruction::resolve(Interpreter& interp)
 {
-	std::unordered_map<std::string, Value> resolved_entries;
-	resolved_entries.reserve(nodes.size());
+	Hashtable<std::string, Value> resolved_entries;
+	resolved_entries.ensure_capacity(nodes.size());
 	for (auto& it : nodes)
 	{
 		resolved_entries[it.first] = it.second->resolve(interp);

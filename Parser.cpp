@@ -145,9 +145,9 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
 	{
 		ClassDefinition* cdptr = *it;
-		std::string cdstr = cdptr->direct;
+		ImmutableString cdstr = cdptr->direct;
 
-		if (uncooked_types.count(cdstr))
+		if (uncooked_types.count(cdstr.to_string()))
 		{
 			ParserError(nullptr, "Duplicate class definition detected!"); // FIXME: Allow for this (with perhaps suppressable warnings regardless)
 			continue;
@@ -155,7 +155,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 		ObjectType* objtype = new ObjectType(cdstr, cdptr->resolve_properties(*this));
 
-		uncooked_types[cdstr] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
+		uncooked_types[cdstr.to_string()] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
 	}
 	for (auto it = t_program.definedMethods.begin(); it != t_program.definedMethods.end(); ++it) // Ask all the functions
 	{

@@ -29,7 +29,7 @@ public:
 
 	std::vector<Value> t_array;
 	Hashtable<Value, Value> t_hash;
-	Table(std::string objty, Hashtable<std::string, Value>* puh, Hashtable<std::string, Function*>* fuh)
+	Table(ImmutableString objty, Hashtable<ImmutableString, Value>* puh, Hashtable<ImmutableString, Function*>* fuh)
 		:Object(objty,puh,fuh,nullptr)
 	{
 
