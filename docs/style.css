@@ -105,3 +105,13 @@ table.index td
 {
     vertical-align: top;
 }
+table.index a
+{
+    color: #006;
+} 
+
+.warning
+{
+    color: #e33;
+    font-style: italic;
+}

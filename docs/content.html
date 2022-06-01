@@ -22,8 +22,8 @@
 			<p><b>João</b> is a programming language. You can use it to tell your computer to do stuff.</p>
 			<p>
 				There is a lot of software on the internet can declare that, but João has a few gimmicks: It is lightweight and made to be easy to learn.
-				It uses a novel <em>directory-oriented</em> manner of articulating object-orientation that's tolerable to experts
-				and palatable to new programmers who are tired of the concept being obfuscated by the syntax and mechanics OOP often has in other languages.
+				It uses a novel <em>directory-oriented</em> manner of representing object-orientation that's tolerable to experts
+				and palatable to new programmers who are tired of the concept being confused by the syntax and strange mechanics OOP often has in other languages.
 			</p>
 			<p>
 				Initially developed to suit my personal taste in programming languages, I have come to realize that other people may have some interest in learning it themselves,
@@ -31,14 +31,14 @@
 				and taking some time to play with new concepts before trying to learn new ones. An associated guide, more suited for first-time programmers, will be published at a
 				later time.
 			</p>
-			<p>
+			<p class="warning">
 				There <em>are</em> bugs in this language; it is not complete and it never will be. Please report any bug or undesirable behaviour on the
 				associated <a href='https://github.com/Altoids1/Joao/issues'>Github repository</a> of this project, especially if it clashes with the information presented in this documentation.
 			</p>
 
 			<h2>1.1 - <a name='1.1'>Installation & Use</a></h2>
 			<p>
-				The current singular official software that can run João programs is an interpreter located on Github. Its source code may be viewed there,
+				The current only official software that can run João programs is an interpreter located on Github. Its source code may be viewed there,
 				and it may be <a href='https://github.com/Altoids1/Joao/releases'>downloaded there as well.</a> The official releases ship out with a 64-bit pre-compiled binary for Windows and a Linux binary created on a Linux Mint system.
 				João may be capable of compiling on other systems, but those are the only ones officially supported, and resolving my build system is an exercise passive-aggressively left to the reader.
 			</p>
@@ -138,7 +138,7 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 /main()
 {
 	Object my_player = /player/New();
-	print("My player has " .. my_player.health .. " HP!"); ## Prints 'My player has 100 HP'!
+	print("My player has " .. my_player.health .. " HP!"); ## Prints 'My player has 100 HP!'
 }</pre>
 			</p>
 			<p>
@@ -187,7 +187,7 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 }</pre>
 			</p>
 			<p>
-				Unlike some other languages, the classes (and functions) of João can be declared in any particular order, regardless of how the inheritence resolves itself.
+				Unlike some other languages, the classes (and functions) of João can be declared in any particular order, regardless of how they inherit from one another. The inheritence scheme is only calculated after all code has been read by the interpreter.
 			</p>
 
 			<h2>2.2 - <a name='2.2'>Arithmetic and other Operations</a></h2>
@@ -292,13 +292,18 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 		Such behaviour is achieved through the for and while keywords.
 	</p>
 	<p>
-		The only for-loop in João is the explicit, C-like variety. It has three statements that describe its behaviour: an initializer,
-		a condition to test against (making the program exit the loop if the condition resolves to false), and an increment line to run at the end of every loop around.
-		Its syntax looks as follows:
+		There are two varieties of for-loop in João. The first is the explicit, C-like variety. It has three statements that describe its behaviour:
+	</p>
+	<ol>
+		<li>an initializer,</li>
+		<li>a condition to test against (making the program exit the loop if the condition resolves to false), and</li>
+		<li>an increment line to run at the end of every loop around.</li>
+	</ol>
+	<p>Its syntax looks as follows:</p>
 		<pre class='joaocode'>
 /main()
 {
-	for(Number i = 0; i < 100; i += 1)
+	for(Number i = 0; i &lt; 100; i += 1)
 	{
 		if(i % 2 == 0) ## If i is even
 		{
@@ -307,10 +312,36 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 	}
 }
 </pre>
-	</p>
 	<p>
-		While-loops have the same behaviour as C while loops.
+		The second variety of for-loop acts on table Objects, and anything that derives from the /table class. It is especially useful when you need to iterate over a table which has Strings as keys, instead of just being a contiguous array.
 	</p>
+	<pre class='joaocode'>
+/main()
+{
+	Object tbl = {a = 1, b = 2, c = 3}; ## Constructs a Table
+	for(key,value in tbl)
+	{
+		print(key,value); ## Prints, in some unknown order, the strings 'a   1', 'b   2', and 'c   3'.
+	}
+}
+</pre>
+<p>
+	There is a particular order that this variety of for-loop goes in. First, it iterates in consecutive order all non-negative integer indices, 0 and up. When it runs out or hits a non-consecutive integer, it begins to iterate over all other elements in the table in an undefined order, depending on the internal hashtable in which those elements are stored. There is no currently-implemented way of iterating over the keys in any other ordering.
+</p>
+	<p>
+		While-loops have the same behaviour as C while loops:
+	</p>
+	<pre class='joaocode'>
+/main()
+{
+	Number x = 128;
+	while(x != 1)
+	{
+		x /= 2;
+		print(x); ## Prints all the powers of 2 between 1 and 128.
+	}
+}
+</pre>
 			<h2>2.4 - <a name='2.4'>Tables</a></h2>
 			<p>
 				The table class implements associative arrays.
@@ -353,6 +384,30 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 				which is a human-readable String which attempts to explain the error. 
 			</p>
 			<p>
+				The error code is just an integer. The following is a table the lists each error code that can be emitted from João and what it signifies:
+			</p>
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Error Code</th>
+						<th>Meaning</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr><td>NoError</td><td>0</td><td>No error. This will eventually have special significance, but for now is a reserved error code value.</td></tr>
+					<tr><td>Unknown</td><td>1</td><td>An unknown error has taken place.</td></tr>
+					<tr><td>FailedTypecheck</td><td>2</td><td>A value failed to be of a certain type during a type-check.</td></tr>
+					<tr><td>FailedOperation</td><td>3</td><td>An operation failed because its operand(s) were of invalid type.</td></tr>
+					<tr><td>BadBreak</td><td>4</td><td>Signifies that a break statement held an integer value too large to make sense.</td></tr>
+					<tr><td>BadCall</td><td>5</td><td>There was an attempt to call something that isn't a function.</td></tr>
+					<tr><td>BadArgType</td><td>6</td><td>The arguments given to a native function were of the wrong type.</td></tr>
+					<tr><td>NotEnoughArgs</td><td>7</td><td>An insufficient number of arguments were given to a native function.</td></tr>
+					<tr><td>BadMemberAccess</td><td>8</td><td>There was an attempt to access a member which doesn't exist, or to do a member access on something that isn't an Object.</td></tr>
+					<tr><td>BadAccess</td><td>9</td><td>There was an attempt to access a variable which doesn't exist.</td></tr>
+				</tbody>
+			</table>
+			<p>
 				Error objects can also be constructed and thrown by the user, via the throw keyword:
 				<pre class='joaocode'>
 /main()
@@ -387,7 +442,7 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 				 and other functionality.</p>
 			<p>These functions are usually preferrable to any implementation made directly in João, as their body is typically written in compiled C++, making them faster,
 				 and are allowed access to things otherwise inaccessible by the João user.</p>
-			<h2>3.1 - The Standard Standard Library</h2>
+			<h2>3.1 - <a name='3.1'>The Standard Standard Library</a></h2>
 			
 			<h3>/print(...)</h3>
 			Receives any number of arguments and prints their values to stdout, converting each argument to a string following the same rules of tostring.
@@ -396,9 +451,6 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 			<h3>/input([len])</h3>
 			Receives character input from stdin, up to a limit of len characters if len is provided.
 			Result is always of String type, unless no input is provided, in which case null is returned.
-
-			<h3>/tostring(val)</h3>
-			Receives a value of any type and coerces it into a human-readable string. Any type in João can be coerced into being a string through this method, without error.
 
 			<h3>/tointeger(val)</h3>
 			Attempts to convert the value given into an integer. Throws an /error if the conversion is not sensibly possible or unimplemented.
@@ -414,8 +466,16 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 
 			<h3>/pick(...)</h3>
 			Randomly chooses one of its arguments through an internal call to rand() and returns it.
+
+			<h2>3.2 - <a name='3.2'>The String Library</a></h2>
+
+			<h3>/tostring(val)</h3>
+			Receives a value of any type and coerces it into a human-readable string. Any type in João can be coerced into being a string through this method, without error.
+
+			<h3>/replace(hay,needle,better_needle)</h3>
+			Replaces all instances of the substring needle within hay with the alternative String better_needle. Returns the resulting String.
 	
-			<h2>3.2 - <a name='3.2'>The Table Library</a></h2>
+			<h2>3.3 - <a name='3.3'>The Table Library</a></h2>
 
 			<h3>/istable(val)</h3>
 			Returns a Boolean denoting whether the given value is an Object whose class inherits from (or is) /table.
@@ -436,7 +496,7 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 			<h3>/table/remove(index)</h3>
 				Removes the element at the index given, if it exists.
 
-			<h2>3.3 - <a name='3.3'>The File Library</a></h2>
+			<h2>3.4 - <a name='3.4'>The File Library</a></h2>
 
 			The /file type is used to read from and write to files on disk. It is not available in Safe Mode.
 

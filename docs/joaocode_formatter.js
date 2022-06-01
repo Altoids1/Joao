@@ -47,8 +47,6 @@ let codes = document.getElementsByClassName("joaocode");
 for(index in codes)
 {
     let element = codes[index];
-    console.log(element);
-    console.log(element.innerHTML);
     if(element.innerHTML)
     {
         element.innerHTML = joao_format(element.innerHTML);
