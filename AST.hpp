@@ -66,6 +66,7 @@ Value NativeMethod<Lambda>::resolve(Interpreter& interp)
 //NOTE: NativeFunction also needs these macros in order to instantiate, and so this is an incomplete patch.
 //However, by the time I got this far, I had figured out how to avoid 8.1 altogether, mashallah.
 //This dead code shall remain as a testament to my triumph and a clue in case this (or a similar) problem comes up again.
+#error "GCC 8 and below have bugs in their template type deduction that make compilation impossible. Please use a newer version or a different compiler."
 #else
 //The version of this define for the good boys and girls who actually fucking comply with standard
 #define NATIVEMETHOD(objtype,func,lambda) objtype->set_typemethod_raw(func, new NativeMethod(func,lambda));
