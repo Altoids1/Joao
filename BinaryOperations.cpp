@@ -134,12 +134,12 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Double, Value::vType::Double)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(chaos >> Value::JoaoInt(rhs.t_value.as_double));
+		return Value(static_cast<int64_t>(chaos >> Value::JoaoInt(rhs.t_value.as_double)));
 	}
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Double, Value::vType::Double)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(chaos << Value::JoaoInt(rhs.t_value.as_double));
+		return Value(static_cast<int64_t>(chaos << Value::JoaoInt(rhs.t_value.as_double)));
 	}
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Double)):
@@ -196,12 +196,12 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Double, Value::vType::Integer)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(chaos >> rhs.t_value.as_int);
+		return Value(static_cast<int64_t>(chaos >> rhs.t_value.as_int));
 	}
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Double, Value::vType::Integer)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(chaos << rhs.t_value.as_int);
+		return Value(static_cast<int64_t>(chaos << rhs.t_value.as_int));
 	}
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Integer)):
@@ -490,12 +490,12 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Double, Value::vType::Bool)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(chaos >> rhs.t_value.as_bool);
+		return Value(static_cast<int64_t>(chaos >> rhs.t_value.as_bool));
 	}
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Double, Value::vType::Bool)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(chaos << rhs.t_value.as_bool);
+		return Value(static_cast<int64_t>(chaos << rhs.t_value.as_bool));
 	}
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Bool)):
