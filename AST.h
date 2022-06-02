@@ -13,6 +13,8 @@ class ASTNode // ASTNodes are abstract symbols which together form a "flow chart
 {
 
 public:
+	virtual ~ASTNode() = default;
+
 	int my_line = 0; // Hypothetically, the line that this ASTNode happens on. This is remembered for the sake of improving runtime legibility.
 
 	virtual const std::string class_name() const { return "ASTNode"; } // FIXME: Make better use of typeid() calls instead of this shit
@@ -108,6 +110,11 @@ public:
 		my_line = linenum;
 		
 		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
+	}
+	~AssignmentStatement()
+	{
+		delete id;
+		delete rhs;
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual std::string dump(int indent)
@@ -207,6 +214,10 @@ class UnaryExpression : public Expression
 		my_line = linenum;
 
 	}
+	~UnaryExpression()
+	{
+		delete t_rhs;
+	}
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "UnaryExpression"; }
 	virtual std::string dump(int indent) override
@@ -284,6 +295,11 @@ public:
 		my_line = linenum;
 		
 	}
+	~BinaryExpression()
+	{
+		delete t_lhs;
+		delete t_rhs;
+	}
 	virtual Value resolve(Interpreter&) override;
 	virtual std::string dump(int indent)
 	{
@@ -358,6 +374,10 @@ public:
 		my_line = linenum;
 		has_expr = true;
 	}
+	~ReturnStatement()
+	{
+		delete held_expr;
+	}
 	virtual Value resolve(Interpreter& interp) override
 	{
 		return held_expr->resolve(interp);
@@ -389,6 +409,14 @@ public:
 	{
 		my_line = linenum;
 
+	}
+	~CallExpression()
+	{
+		delete func_expr;
+		for (ASTNode* ptr : args)
+		{
+			delete ptr;
+		}
 	}
 	CallExpression* append_arg(ASTNode* expr)
 	{
@@ -431,7 +459,14 @@ protected:
 
 	}
 public:
-	
+	~Function()
+	{
+		//we don't actually own that $obj value so
+		for (Expression* exp : statements)
+		{
+			delete exp;
+		}
+	}
 	Value& to_value() { return my_value; }
 	const std::string& get_name() const { return t_name; }
 	Object* get_obj() const { return obj; }
@@ -548,6 +583,13 @@ protected:
 	{
 
 	}
+	~Block()
+	{
+		for (Expression* exp : statements)
+		{
+			delete exp;
+		}
+	}
 
 	//A more abstract function used for iterating over any arbitrary block of statements.
 	//It's strange, but necessary for a class that is this abstract.
@@ -571,6 +613,11 @@ public:
 {
 		my_line = linenum;
 		statements = st;
+	}
+	~IfBlock()
+	{
+		delete condition;
+		delete Elseif;
 	}
 
 	void append_else(IfBlock* elif)
@@ -630,6 +677,12 @@ public:
 		my_line = linenum;
 		statements = st;
 	}
+	~ForBlock()
+	{
+		delete initializer;
+		delete condition;
+		delete increment;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ForBlock"; }
@@ -665,6 +718,10 @@ public:
 		my_line = linenum;
 		statements = st;
 	}
+	~ForEachBlock()
+	{
+		delete table_node;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ForEachBlock"; }
@@ -698,6 +755,10 @@ public:
 {
 		my_line = linenum;
 		statements = st;
+	}
+	~WhileBlock()
+	{
+		delete condition;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -753,6 +814,11 @@ public:
 		my_line = linenum;
 
 	}
+	~MemberAccess()
+	{
+		delete front;
+		delete back;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -785,6 +851,13 @@ public:
 		my_line = linenum;
 
 	}
+	~ClassDefinition()
+	{
+		for (LocalAssignmentStatement* ptr : statements)
+		{
+			delete ptr;
+		}
+	}
 
 	//virtual Value resolve(Interpreter&) override;
 
@@ -816,6 +889,13 @@ public:
 {
 		my_line = linenum;
 
+	}
+	~Construction()
+	{
+		for (ASTNode* arg : args)
+		{
+			delete arg;
+		}
 	}
 
 	virtual const std::string class_name() const override { return "Construction"; }
@@ -910,6 +990,11 @@ public:
 		my_line = linenum;
 
 	}
+	~IndexAccess()
+	{
+		delete container;
+		delete index;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -946,7 +1031,13 @@ public:
 	{
 
 	}
-
+	~TryBlock()
+	{
+		for (Expression* exp : catch_statements)
+		{
+			delete exp;
+		}
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "TryBlock"; }
@@ -977,6 +1068,10 @@ public:
 	{
 
 	}
+	~ThrowStatement()
+	{
+		delete err_node;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "Throw"; }
@@ -997,6 +1092,13 @@ public:
 		:nodes(n)
 	{
 		my_line = linenum;
+	}
+	~BaseTableConstruction()
+	{
+		for (auto& it : nodes)
+		{
+			delete it.second;
+		}
 	}
 
 	virtual const std::string class_name() const override { return "BaseTableConstruction"; }

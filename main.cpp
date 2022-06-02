@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 
 
 	//Typical execution of a file
-	Program parsed;
+	
 	std::chrono::steady_clock::time_point t1;
 	std::ifstream file;
 #ifdef _DEBUG
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 		std::cout << "Scanning took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 	t1 = std::chrono::steady_clock::now();
 	Parser pears(scn);
-	parsed = pears.parse();
+	Program parsed = pears.parse();
 	if (print_execution_times)
 		std::cout << "Parsing took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
 

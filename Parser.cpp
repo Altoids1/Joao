@@ -117,7 +117,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 
 	generate_object_tree(classdef_list);
 
-	return t_program;
+	return std::move(t_program);
 }
 
 void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)

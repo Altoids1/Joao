@@ -34,6 +34,34 @@ public:
 		definedFunctions["/main"] = f;
 		construct_natives();
 	}
+	~Program()
+	{
+		//Delete object types
+		for (auto& it : definedObjTypes)
+		{
+			delete it.second;
+		}
+		//Delete AST
+		for (Function* method : definedMethods)
+		{
+			delete method;
+		}
+		for (auto& it : definedFunctions)
+		{
+			delete it.second;
+		}
+	}
+	Program(const Program&) = delete;
+	Program(Program&& deadprog)
+		:definedFunctions(deadprog.definedFunctions)
+		,definedMethods(deadprog.definedMethods)
+		,definedObjTypes(deadprog.definedObjTypes)
+	{
+		deadprog.definedFunctions = {};
+		deadprog.definedMethods = {};
+		deadprog.definedObjTypes = {};
+	}
+
 	std::unordered_map<std::string, ObjectType*> construct_natives();
 	void construct_math_library();
 	void construct_string_library();

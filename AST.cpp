@@ -351,7 +351,7 @@ Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 		Expression* ptr = *it;
 		if (ptr->class_name() == "ReturnStatement")
 		{
-			ReturnStatement rt = *static_cast<ReturnStatement*>(ptr);
+			ReturnStatement& rt = *static_cast<ReturnStatement*>(ptr);
 
 			
 			if (rt.has_expr) // If this actually has something to return
