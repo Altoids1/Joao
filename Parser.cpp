@@ -57,7 +57,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 		{
 			int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
 
-			std::vector<std::string> pirate_noise;
+			std::vector<ImmutableString> pirate_noise;
 			if (close != tokenheader + 1)
 			{
 				pirate_noise.push_back(readName(tokenheader+1)); // Updates tokenheader hopefully
@@ -80,7 +80,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			std::vector<Expression*> funcblock = readBlock(BlockType::Function,close+1, static_cast<int>(tokens.size()-1));
 			--tokenheader;
 
-			Function* func = new Function(dir_name, funcblock, pirate_noise, t->line);
+			Function* func = new Function(dir_name, std::move(funcblock), std::move(pirate_noise), t->line);
 
 			if (Directory::DotDot(dir_name) == "/") // If this is a classless function in the globalscope
 				t_program.set_func(dir_name, func);

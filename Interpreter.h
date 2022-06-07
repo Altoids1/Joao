@@ -55,10 +55,10 @@ public:
 
 	Object* get_objectscope() const { return objectscope.top(); }
 	///Objectscope
-	Value get_property(std::string, ASTNode*);
-	void set_property(std::string, Value, ASTNode*);
-	Value grand_property(unsigned int, std::string, ASTNode*);
-	Value& grand_handle(unsigned int, std::string, ASTNode*);
+	Value get_property(const ImmutableString&, ASTNode*);
+	void set_property(const ImmutableString&, Value, ASTNode*);
+	Value grand_property(unsigned int, const ImmutableString&, ASTNode*);
+	Value& grand_handle(unsigned int, const ImmutableString&, ASTNode*);
 
 	//Construct an object and return it as a Value.
 	Value makeObject(std::string,std::vector<ASTNode*>&,ASTNode*);
@@ -109,7 +109,7 @@ public:
 	}
 
 	//Like get_global but returns the pointer instead, and quietly allocates a new global when you ask for one it hasn't seen before.
-	Value* has_global(std::string name, ASTNode* getter)
+	Value* has_global(const ImmutableString& name, ASTNode* getter)
 	{
 		if (!globalscope.table.count(name))
 		{
@@ -119,17 +119,17 @@ public:
 		return globalscope.at(name);
 	}
 
-	Value& get_global(std::string name, ASTNode* getter)
+	Value& get_global(const ImmutableString& name, ASTNode* getter)
 	{
 		if (!globalscope.table.count(name))
 		{
-			RuntimeError(getter, ErrorCode::BadAccess, "Unable to access global value: " + name); // Works, just returns null and yells.
+			RuntimeError(getter, ErrorCode::BadAccess, "Unable to access global value: " + name.to_string()); // Works, just returns null and yells.
 			return globalscope.table[name];
 		}
 			
 		return globalscope.table.at(name);
 	}
-	void set_global(std::string name, Value& val, ASTNode* setter)
+	void set_global(const ImmutableString& name, Value& val, ASTNode* setter)
 	{
 		globalscope.table[name] = Value(val);
 	}

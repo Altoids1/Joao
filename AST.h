@@ -111,7 +111,7 @@ public:
 		
 		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}
-	~AssignmentStatement()
+	virtual ~AssignmentStatement()
 	{
 		delete id;
 		delete rhs;
@@ -214,7 +214,7 @@ class UnaryExpression : public Expression
 		my_line = linenum;
 
 	}
-	~UnaryExpression()
+	virtual ~UnaryExpression()
 	{
 		delete t_rhs;
 	}
@@ -295,7 +295,7 @@ public:
 		my_line = linenum;
 		
 	}
-	~BinaryExpression()
+	virtual ~BinaryExpression()
 	{
 		delete t_lhs;
 		delete t_rhs;
@@ -374,7 +374,7 @@ public:
 		my_line = linenum;
 		has_expr = true;
 	}
-	~ReturnStatement()
+	virtual ~ReturnStatement()
 	{
 		delete held_expr;
 	}
@@ -410,7 +410,7 @@ public:
 		my_line = linenum;
 
 	}
-	~CallExpression()
+	virtual ~CallExpression()
 	{
 		delete func_expr;
 		for (ASTNode* ptr : args)
@@ -447,7 +447,7 @@ protected:
 	Value returnValue = Value(); // My return value
 	std::vector<Expression*> statements; // The statements which're executed when I am run
 	std::vector<Value> t_args;
-	std::vector<std::string> t_argnames;
+	std::vector<ImmutableString> t_argnames;
 	//std::vector<Expression> args;
 	std::string t_name; // My name
 	Object* obj = nullptr; // I don't know.
@@ -459,7 +459,7 @@ protected:
 
 	}
 public:
-	~Function()
+	virtual ~Function()
 	{
 		//we don't actually own that $obj value so
 		for (Expression* exp : statements)
@@ -482,7 +482,7 @@ public:
 		t_name = name;
 		statements = exprs;
 	}
-	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string>& sargs, int linenum = 0)
+	Function(std::string name, std::vector<Expression*>&& exprs, std::vector<ImmutableString>&& sargs, int linenum = 0)
 		:my_value(Value(this))
 	{
 		t_name = name;
@@ -507,7 +507,7 @@ public:
 		str += "@Params:\n";
 		for (size_t i = 0; i < t_argnames.size(); ++i)
 		{
-			str += " " + t_argnames[i] + "\n";
+			str += " " + t_argnames[i].to_string() + "\n";
 		}
 
 		str += "=Statements:\n";
@@ -583,7 +583,7 @@ protected:
 	{
 
 	}
-	~Block()
+	virtual ~Block()
 	{
 		for (Expression* exp : statements)
 		{
@@ -614,7 +614,7 @@ public:
 		my_line = linenum;
 		statements = st;
 	}
-	~IfBlock()
+	virtual ~IfBlock()
 	{
 		delete condition;
 		delete Elseif;
@@ -677,7 +677,7 @@ public:
 		my_line = linenum;
 		statements = st;
 	}
-	~ForBlock()
+	virtual ~ForBlock()
 	{
 		delete initializer;
 		delete condition;
@@ -718,7 +718,7 @@ public:
 		my_line = linenum;
 		statements = st;
 	}
-	~ForEachBlock()
+	virtual ~ForEachBlock()
 	{
 		delete table_node;
 	}
@@ -756,7 +756,7 @@ public:
 		my_line = linenum;
 		statements = st;
 	}
-	~WhileBlock()
+	virtual ~WhileBlock()
 	{
 		delete condition;
 	}
@@ -814,7 +814,7 @@ public:
 		my_line = linenum;
 
 	}
-	~MemberAccess()
+	virtual ~MemberAccess()
 	{
 		delete front;
 		delete back;
@@ -851,7 +851,7 @@ public:
 		my_line = linenum;
 
 	}
-	~ClassDefinition()
+	virtual ~ClassDefinition()
 	{
 		for (LocalAssignmentStatement* ptr : statements)
 		{
@@ -890,7 +890,7 @@ public:
 		my_line = linenum;
 
 	}
-	~Construction()
+	virtual ~Construction()
 	{
 		for (ASTNode* arg : args)
 		{
@@ -937,20 +937,20 @@ public:
 class GrandparentAccess : public ASTNode
 {
 	unsigned int depth;
-	std::string prop;
+	ImmutableString prop;
 
 public:
-	GrandparentAccess(unsigned int d,std::string p, int linenum = 0)
+	GrandparentAccess(unsigned int d,const ImmutableString& p, int linenum = 0)
 		:depth(d)
 		,prop(p)
-{
+	{
 		my_line = linenum;
 
 	}
 	virtual const std::string class_name() const override { return "GrandparentAccess"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "GrandparentAccess, property: " + prop + "; depth: " + std::to_string(depth) + "\n";
+		return std::string(indent, ' ') + "GrandparentAccess, property: " + prop.to_string() + "; depth: " + std::to_string(depth) + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -959,9 +959,9 @@ public:
 class GlobalAccess : public ASTNode
 {
 public:
-	std::string var;
+	ImmutableString var;
 
-	GlobalAccess(std::string v, int linenum = 0)
+	GlobalAccess(const ImmutableString& v, int linenum = 0)
 		:var(v)
 {
 		my_line = linenum;
@@ -970,7 +970,7 @@ public:
 	virtual const std::string class_name() const override { return "GlobalAccess"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "GlobalAccess, property: " + var + "\n";
+		return std::string(indent, ' ') + "GlobalAccess, property: " + var.to_string() + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -990,7 +990,7 @@ public:
 		my_line = linenum;
 
 	}
-	~IndexAccess()
+	virtual ~IndexAccess()
 	{
 		delete container;
 		delete index;
@@ -1031,7 +1031,7 @@ public:
 	{
 
 	}
-	~TryBlock()
+	virtual ~TryBlock()
 	{
 		for (Expression* exp : catch_statements)
 		{
@@ -1068,7 +1068,7 @@ public:
 	{
 
 	}
-	~ThrowStatement()
+	virtual ~ThrowStatement()
 	{
 		delete err_node;
 	}
@@ -1093,7 +1093,7 @@ public:
 	{
 		my_line = linenum;
 	}
-	~BaseTableConstruction()
+	virtual ~BaseTableConstruction()
 	{
 		for (auto& it : nodes)
 		{

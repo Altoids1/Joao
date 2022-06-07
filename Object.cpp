@@ -151,7 +151,7 @@ void ObjectType::set_typeproperty(Parser& parse, std::string name, Value v)
 	typeproperties[name] = v;
 }
 
-void ObjectType::set_typeproperty_raw(std::string name, Value v)
+void ObjectType::set_typeproperty_raw(const ImmutableString& name, Value v)
 {
 	typeproperties[name] = v;
 }
@@ -166,7 +166,7 @@ void ObjectType::set_typemethod(Parser& parse, std::string name, Function* f)
 	typefuncs[name] = f;
 }
 
-void ObjectType::set_typemethod_raw(std::string name, Function* f)
+void ObjectType::set_typemethod_raw(const ImmutableString& name, Function* f)
 {
 	typefuncs[name] = f;
 }

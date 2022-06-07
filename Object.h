@@ -24,7 +24,7 @@ public:
 	Value call_method(Interpreter&, const ImmutableString&, std::vector<Value>& args);
 	Function* has_method(Interpreter&, const ImmutableString&);
 
-	Object(ImmutableString objty, Hashtable<ImmutableString, Value>* puh, Hashtable<ImmutableString, Function*>* fuh, Metatable* m = nullptr)
+	Object(const ImmutableString& objty, Hashtable<ImmutableString, Value>* puh, Hashtable<ImmutableString, Function*>* fuh, Metatable* m = nullptr)
 		:base_properties(puh)
 		,base_funcs(fuh)
 		,object_type(objty)
@@ -100,9 +100,9 @@ public:
 
 	//Passed Parser-by-reference as the Interpreter should never be calling this; ObjectTypes are static at runtime (for now, anyways!)
 	void set_typeproperty(Parser&,std::string, Value);
-	void set_typeproperty_raw(std::string, Value);
+	void set_typeproperty_raw(const ImmutableString&, Value);
 	void set_typemethod(Parser&, std::string, Function*);
-	void set_typemethod_raw(std::string, Function*);
+	void set_typemethod_raw(const ImmutableString&, Function*);
 
 	friend class ObjectTree;
 };

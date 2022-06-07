@@ -188,7 +188,7 @@ Function* Interpreter::get_func(const std::string& funkname, ASTNode *caller, bo
 	return nullptr;
 }
 
-Value Interpreter::get_property(std::string str, ASTNode* getter)
+Value Interpreter::get_property(const ImmutableString& str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();
 	if (obj)
@@ -199,7 +199,7 @@ Value Interpreter::get_property(std::string str, ASTNode* getter)
 	return Value();
 }
 
-void Interpreter::set_property(std::string str, Value val, ASTNode* getter)
+void Interpreter::set_property(const ImmutableString& str, Value val, ASTNode* getter)
 {
 
 	Object* obj = objectscope.top();
@@ -212,7 +212,7 @@ void Interpreter::set_property(std::string str, Value val, ASTNode* getter)
 	return;
 }
 
-Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* getter)
+Value Interpreter::grand_property(unsigned int depth, const ImmutableString& str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();
 	if (!obj)
@@ -243,7 +243,7 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 	return objt->get_typeproperty(*this, str, getter);
 }
 
-Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* getter)
+Value& Interpreter::grand_handle(unsigned int depth, const ImmutableString& str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();
 	if (!obj)
