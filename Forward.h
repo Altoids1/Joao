@@ -13,6 +13,9 @@
 #include <queue>
 #include <deque>
 #include <initializer_list>
+#ifdef __GNUC__
+#include <cstring>
+#endif
 #include <unordered_map> // TODO: Abolish this header
 #include "HashTable.h"
 template <typename K, typename V>
