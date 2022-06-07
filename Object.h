@@ -32,6 +32,7 @@ public:
 	{
 
 	}
+	virtual ~Object() = default; // FIXME: make this not necessary to ensure tables are deleted.
 
 	std::string dump()
 	{

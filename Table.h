@@ -34,6 +34,7 @@ public:
 	{
 
 	}
+	virtual ~Table() = default;
 
 	//Returns the value stored at this index, or NULL if it cannot be found.
 	Value at(Interpreter&, Value);
