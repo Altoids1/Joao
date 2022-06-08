@@ -467,7 +467,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 							std::string namestr;
 							if (nametoken->class_enum() == Token::cEnum::WordToken)
 							{
-								namestr = static_cast<WordToken*>(nametoken)->word;
+								namestr = static_cast<WordToken*>(nametoken)->word.to_string();
 							}
 							else if (nametoken->class_enum() == Token::cEnum::StringToken)
 							{
@@ -1016,7 +1016,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				}
 				++tokenheader;
 				consume_paren(true); // (
-				std::string err_name = readName(tokenheader);
+				ImmutableString err_name = readName(tokenheader);
 				consume_paren(false); // )
 				std::vector<Expression*> catch_block = readBlock(BlockType::Catch, tokenheader, there);
 

@@ -11,8 +11,10 @@
 
 class ASTNode // ASTNodes are abstract symbols which together form a "flow chart" tree of symbols that the parser creates from the text that the interpreter then interprets.
 {
-
+protected:
+	ASTNode() = default;
 public:
+	ASTNode(const ASTNode&) = delete;
 	virtual ~ASTNode() = default;
 
 	int my_line = 0; // Hypothetically, the line that this ASTNode happens on. This is remembered for the sake of improving runtime legibility.

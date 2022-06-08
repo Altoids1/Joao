@@ -459,29 +459,6 @@ ACCESS_END:
 
 		ASTNode* rvalue = readExp(tokenheader, there);
 
-		/*
-		The way we handle the assign-and-op operators is basically just perceiving them as being equivalent to "id = id op rvalue" or whatever.
-		*/
-		switch (aesop)
-		{
-		case(AssignmentStatement::aOps::Assign):
-			break;
-		case(AssignmentStatement::aOps::AssignAdd):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Add, id, rvalue);
-			break;
-		case(AssignmentStatement::aOps::AssignSubtract):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Subtract, id, rvalue);
-			break;
-		case(AssignmentStatement::aOps::AssignMultiply):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Multiply, id, rvalue);
-			break;
-		case(AssignmentStatement::aOps::AssignDivide):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Divide, id, rvalue);
-			break;
-		default:
-			break;
-		}
-
 		return new AssignmentStatement(id, rvalue, aesop);
 	}
 
@@ -534,7 +511,7 @@ ACCESS_END:
 	}
 
 	//Updates tokenheader to be one token ahead of $here.
-	std::string readName(int here)
+	ImmutableString readName(int here)
 	{
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readName starting at " << std::to_string(here) << std::endl;

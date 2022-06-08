@@ -86,12 +86,26 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 		std::cout << "WARNING: Overwriting a Value which stores a function pointer!\n";
 	}
 
-	//While we do know our own assignment, we don't actually use that information in the AST (as of 7th May 2021)
-	//That's assumed to be handled by the parser.
-
-	lhs_val = rhs_val;
-
-	return rhs_val; // If anything.
+	switch (t_op) // FIXME: Make this suck less
+	{
+	case(aOps::AssignAdd):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Add, interp);
+		break;
+	case(aOps::AssignSubtract):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Subtract, interp);
+		break;
+	case(aOps::AssignMultiply):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Multiply, interp);
+		break;
+	case(aOps::AssignDivide):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Divide, interp);
+		break;
+	//TODO: Permit other sorts of ops to be mixed with assignment
+	case(aOps::Assign):
+		lhs_val = rhs_val;
+		break;
+	}
+	return lhs_val; // If anything.
 }
 
 Value LocalAssignmentStatement::resolve(Interpreter& interp)
@@ -253,7 +267,7 @@ Value Function::resolve(Interpreter & interp)
 		Expression* ptr = *it;
 		if (ptr->class_name() == "ReturnStatement")
 		{
-			ReturnStatement rt = *(static_cast<ReturnStatement*>(ptr));
+			ReturnStatement& rt = *(static_cast<ReturnStatement*>(ptr));
 
 			if (rt.has_expr) // If this actually has something to return
 			{
