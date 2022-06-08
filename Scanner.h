@@ -49,6 +49,7 @@ public:
 	{
 
 	}
+	virtual ~Token() = default;
 
 	virtual std::string dump() {
 		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + " " +  class_name();
@@ -555,8 +556,7 @@ class Scanner
 	}
 	void makeEndline() // This is its own function to allow for the read___() functions to quickly call it when they accidentally tread onto a semicolon while deciphering a token.
 	{
-		Token* t = new EndLineToken(linenum,syntactic_linenum);
-		append(t);
+		append(new EndLineToken(linenum,syntactic_linenum));
 		
 		//Order-of-operation optimization stuffs
 		lowest_ops.push_back(lowop);
@@ -697,6 +697,13 @@ public:
 		,syntactic_linenum(synline)
 	{
 
+	}
+	~Scanner()
+	{
+		for(Token* t_ptr : tokens)
+		{
+			delete t_ptr;
+		}
 	}
 
 	

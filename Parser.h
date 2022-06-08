@@ -687,9 +687,16 @@ protected:
 public: // Parser doesn't have much of an API but it does have something
 	Parser(Scanner&t)
 		:is_interactive(t.is_interactive)
-		,tokens(t.tokens)
+		,tokens(std::move(t.tokens)) // This steals all the tokens from Scanner. Now, we are the ones responsible for deleting all these token pointers later on.
 		,lowest_ops(t.lowest_ops)
 	{
+	}
+	~Parser()
+	{
+		for(Token* t_ptr : tokens)
+		{
+			delete t_ptr;
+		}
 	}
 	void ParserError()
 	{
