@@ -672,7 +672,7 @@ void ClassDefinition::append_properties(Parser& parse, ObjectType* objtype)
 
 Value Construction::resolve(Interpreter& interp)
 {
-	return interp.makeObject(type,args,this);
+	return interp.makeObject(type.to_string(),args,this); // FIXME: Should not be to_string-ing here >:/
 }
 
 Value ParentAccess::resolve(Interpreter& interp)

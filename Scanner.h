@@ -4,6 +4,7 @@
 
 #include "SharedEnums.h"
 #include "Directory.h"
+#include "ImmutableString.h"
 #include "Error.h"
 
 #define NAME_CONST_METHODS(the_thing) virtual cEnum class_enum() const override { return cEnum :: the_thing; } \
@@ -149,17 +150,17 @@ public:
 class WordToken final : public Token
 {
 public:
-	std::string word;
-	WordToken(uint32_t& l, uint32_t sl, std::string w)
+	ImmutableString word;
+	WordToken(uint32_t l, uint32_t sl, const ImmutableString& w)
+		:word(w)
 	{
 		line = l;
 		syntactic_line = sl;
-		word = w;
 	}
 
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" WORD: ") + word;
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" WORD: ") + word.to_string();
 	}
 	NAME_CONST_METHODS(WordToken);
 };

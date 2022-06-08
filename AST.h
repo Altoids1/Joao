@@ -73,7 +73,7 @@ class Identifier : public ASTNode
 {
 	ImmutableString t_name;
 public:
-	Identifier(std::string s)
+	Identifier(const ImmutableString& s)
 		:t_name(s)
 	{
 		//std::cout << "I've been created with name " + s + "!\n";
@@ -712,7 +712,7 @@ class ForEachBlock final : public Block
 	ImmutableString value_name;
 	ASTNode* table_node;
 public:
-	ForEachBlock(const std::string& k , const std::string& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
+	ForEachBlock(const ImmutableString& k , const ImmutableString& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
 		:key_name(k),
 		value_name(v),
 		table_node(tn)
@@ -882,13 +882,13 @@ public:
 class Construction : public ASTNode
 {
 
-	std::string type;
+	ImmutableString type;
 	std::vector<ASTNode*> args;
 public:
-	Construction(std::string t, std::vector<ASTNode*> a, int linenum = 0)
+	Construction(const ImmutableString& t, std::vector<ASTNode*> a, int linenum = 0)
 		:type(t)
 		,args(a)
-{
+	{
 		my_line = linenum;
 
 	}
@@ -904,7 +904,7 @@ public:
 	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
-		std::string str = std::string(indent, ' ') + "Construction, type: " + type + "\n";
+		std::string str = std::string(indent, ' ') + "Construction, type: " + type.to_string() + "\n";
 		str += ind + "(Args:\n";
 		for (size_t i = 0; i < args.size(); ++i)
 		{
@@ -919,18 +919,18 @@ public:
 class ParentAccess : public ASTNode
 {
 public:
-	std::string prop;
+	ImmutableString prop;
 
-	ParentAccess(std::string p, int linenum = 0)
+	ParentAccess(const ImmutableString& p, int linenum = 0)
 		:prop(p)
-{
+	{
 		my_line = linenum;
 
 	}
 	virtual const std::string class_name() const override { return "ParentAccess"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "ParentAccess, property: " + prop + "\n";
+		return std::string(indent, ' ') + "ParentAccess, property: " + prop.to_string() + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -1023,10 +1023,10 @@ Runs the associated code within the Try and tosses it at Catch if an exception o
 */
 class TryBlock : public Block
 {
-	std::string err_name;
+	ImmutableString err_name;
 	std::vector<Expression*> catch_statements; // TODO: Allow for multiple catchers based on error type :)
 public:
-	TryBlock(const std::vector<Expression*>& t, const std::string& err, const std::vector<Expression*>& c)
+	TryBlock(const std::vector<Expression*>& t, const ImmutableString& err, const std::vector<Expression*>& c)
 		:Block(t)
 		,err_name(err)
 		,catch_statements(c)
@@ -1052,7 +1052,7 @@ public:
 		{
 			str += statements[i]->dump(indent + 1);
 		}
-		str += ind + "?Catch: " + err_name + "\n";
+		str += ind + "?Catch: " + err_name.to_string() + "\n";
 		for (size_t i = 0; i < catch_statements.size(); ++i)
 		{
 			str += catch_statements[i]->dump(indent + 1);
