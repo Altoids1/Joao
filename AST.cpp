@@ -13,6 +13,7 @@
 int Expression::expr_count = 0;
 #endif
 
+Hashtable<const char*, size_t> ImmutableString::cstr_to_refcount;
 
 Value ASTNode::resolve(Interpreter& interp)
 {

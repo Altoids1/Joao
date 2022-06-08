@@ -8,7 +8,8 @@ instead of std::string.
 */
 struct ImmutableString
 {
-	const char* data = nullptr; // This is a C string on the heap.
+	static Hashtable<const char*, size_t> cstr_to_refcount;
+	const char* data = nullptr; // This is a C string, probably on the heap.
 	size_t precomputed_hash;
 	bool heap;
 
@@ -20,43 +21,64 @@ struct ImmutableString
 	{
 
 	}
+	//Expensive to construct this, but it significantly reduces low-byte free()s down the road :-)
 	ImmutableString(const std::string& str)
-		:data(strncpy(new char[str.size() + 1],str.c_str(), str.size()+1)) // +1 to include the null character
-		,heap(true)
+		:heap(true)
 		,precomputed_hash(std::hash<std::string>()(str))
 	{
-
+		for (auto it : cstr_to_refcount) // walking through a hashtable, ugh :weary:
+		{
+			if (str == it.first) // Oh, this string is already in here!
+			{
+				data = it.first;
+				cstr_to_refcount.at(data)++;
+				return; // return in constructor, lol
+			}
+		}
+		data = strncpy(new char[str.size() + 1], str.c_str(), str.size() + 1);
+		cstr_to_refcount[data] = 1u;
 	}
 	ImmutableString(const ImmutableString& other)
 		:precomputed_hash(other.precomputed_hash)
 		,heap(other.heap)
 	{
-		if (heap) // We make no attempt to ref-count so... just duplicate
+		data = other.data;
+		if (heap)
 		{
-			data = strncpy(new char[strlen(other.data)+1], other.data, strlen(other.data) + 1);
-		}
-		else
-		{
-			data = other.data;
-		}
+			cstr_to_refcount.at(data)++;
+		}	
 	}
 	ImmutableString& operator=(const ImmutableString& other)
 	{
-		precomputed_hash = other.precomputed_hash;
-		heap = other.heap;
 		if (data && heap)
 		{
-			//std::cout << "Deleting '" << data << "' in a funny way....\n";
-			delete[] data;
+			cstr_to_refcount.at(data)--;
+			if (cstr_to_refcount.at(data) == 0)
+			{
+				cstr_to_refcount.remove(data);
+			}
 		}
-		if (heap) // We make no attempt to ref-count so... just duplicate
+		precomputed_hash = other.precomputed_hash;
+		heap = other.heap;
+		data = other.data;
+		cstr_to_refcount.at(data)++;
+		return *this;
+	}
+	ImmutableString& operator=(ImmutableString&& other)
+	{
+		if (data && heap)
 		{
-			data = strncpy(new char[strlen(other.data) + 1], other.data, strlen(other.data) + 1);
+			cstr_to_refcount.at(data)--;
+			if (cstr_to_refcount.at(data) == 0)
+			{
+				cstr_to_refcount.remove(data);
+			}
 		}
-		else
-		{
-			data = other.data;
-		}
+		precomputed_hash = other.precomputed_hash;
+		heap = other.heap;
+		data = other.data;
+		other.data = nullptr;
+		other.heap = false;
 		return *this;
 	}
 
@@ -71,12 +93,13 @@ struct ImmutableString
 
 	~ImmutableString()
 	{
-		if (heap) // FIXME: We can probably use funky template madness to get rid of this if-statement and allow for trivial destruction in heapless cases.
+		if (heap && data) // FIXME: We can probably use funky template madness to get rid of this if-statement and allow for trivial destruction in heapless cases.
 		{
-			//if(data)
-				//std::cout << "Deleting '" << data << "'....\n";
-				//std::cout << reinterpret_cast<size_t>(data) << " deleted.\n";
-			delete[] data;
+			cstr_to_refcount.at(data)--;
+			if (cstr_to_refcount.at(data) == 0)
+			{
+				cstr_to_refcount.remove(data);
+			}
 		}
 	}
 
