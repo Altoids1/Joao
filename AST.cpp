@@ -83,7 +83,11 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 	if (lhs_val.t_vType == Value::vType::Function)
 	{
+#if !defined(JOAO_SAFE) && defined(DEBUG)
 		std::cout << "WARNING: Overwriting a Value which stores a function pointer!\n";
+#else
+		return Value();
+#endif
 	}
 
 	switch (t_op) // FIXME: Make this suck less
