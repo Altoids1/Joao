@@ -15,7 +15,7 @@ class HashTable
 {
     //What percent of the allocated memory to reserve for collision buckets.
     static constexpr size_t collision_block_percent = 25;
-
+    
     struct Bucket
     {
         bool used = false; // Used AT ALL. There are no deleted buckets; the pointer this stores is moot when the bucket is unused.
@@ -26,8 +26,8 @@ class HashTable
         Value* value() { return reinterpret_cast<Value*>(value_bytes); }
 
         Bucket() = default;
-        Bucket(const Bucket&) = default;
-        Bucket& operator=(Bucket& dead_buck) = default;
+        Bucket(const Bucket&) = delete;
+        Bucket& operator=(Bucket& dead_buck) = delete;
 
 #ifdef HASHTABLE_DEBUG
         ~Bucket()
@@ -47,6 +47,7 @@ class HashTable
                 value()->~Value();
             }
             used = false;
+            next_collision_bucket = nullptr;
             //Intentionally does not reset next_collision_bucket. Check ~Hashtable() for why.
         }
 
@@ -234,11 +235,12 @@ class HashTable
 
     inline size_t generate_index(const Key& key, size_t m_capacity) const
     {
+        /*
         if constexpr (std::is_same<Key, std::string>())
         {
             if (m_capacity < 122)
             {
-                return static_cast<size_t>(key.at(0)) % m_capacity;
+                return static_cast<size_t>(key.size() && key.at(0)) % m_capacity;
             }
             else
             {
@@ -247,8 +249,9 @@ class HashTable
         }
         else
         {
+        */
            return hasher(key) % m_capacity;
-        }
+        //}
     }
     inline size_t generate_index(const Key& key) const { return generate_index(key, main_capacity); }
 
@@ -279,8 +282,11 @@ class HashTable
                 shits_dad = shits_dad->next_collision_bucket;
             }
             Bucket* shit = new_collision_data.allocate_collision_bucket();
-            if(!shit) [[unlikely]] // SHIT!!!
+            if (!shit) [[unlikely]] // SHIT!!!
             {
+#ifdef HASHTABLE_DEBUG
+                std::cout << "Shit condition reached.\n";
+#endif
                 delete[] new_block;
                 rehash(new_capacity * 2);
                 return;
@@ -397,15 +403,20 @@ public:
         for(size_t i = 0; i < total_capacity; ++i)
         {
             Bucket& buck = bucket_block[i];
-            std::cout << std::to_string(reinterpret_cast<size_t>(&buck));
-            if(&buck == collision_data.begin)
+            if (&buck == collision_data.begin)
             {
                 std::cout << "There's more.\n"; // No!!
                 unprinted_collision_ptr = false;
             }
+            std::cout << std::to_string(reinterpret_cast<size_t>(&buck));
             if(!buck.used)
             {
-                std::cout << "Empty Bucket\n";
+                if (buck.next_collision_bucket)
+                {
+                    std::cout << " Empty Bucket WITH COLLISION BUCKET: " << std::to_string(reinterpret_cast<size_t>(buck.next_collision_bucket)) << '\n';
+                    continue;
+                }
+                std::cout << " Empty Bucket\n";
                 continue;
             }
             
@@ -421,6 +432,10 @@ public:
             else if constexpr (std::is_pointer<Key>())
             {
                 std::cout << std::to_string(reinterpret_cast<size_t>(*buck.key()));
+            }
+            else if constexpr (std::is_same<Key, ImmutableString>())
+            {
+                std::cout << buck.key()->to_string();
             }
             else
             {
@@ -442,6 +457,10 @@ public:
             else
             {
                 std::cout << std::to_string(*buck.value());
+            }
+            if (buck.next_collision_bucket)
+            {
+                std::cout << '\t' << std::to_string(reinterpret_cast<size_t>(buck.next_collision_bucket));
             }
             std::cout << "}\n"; // Dear god...
         }
@@ -489,6 +508,20 @@ public:
         //We're going to have to... awkwardly move all that around. :/
         block_copy(other);
     }
+    HashTable(HashTable&& other)
+    :bucket_block(other.bucket_block)
+    ,total_capacity(other.total_capacity)
+    ,main_capacity(other.main_capacity)
+    ,used_bucket_count(other.used_bucket_count)
+    ,collision_data(other.collision_data)
+    {
+        //FIXME: think over how to not even have to do this step on other to keep it in a valid-ish state
+        other.bucket_block = new Bucket[4];
+        other.total_capacity = 4;
+        other.main_capacity = 3;
+        other.used_bucket_count = 0;
+        other.collision_data = CollisionData(other.bucket_block, other.total_capacity);
+    }
     HashTable& operator=(const HashTable& other)
     {
         //So, there's a lot of Bucket* data in the current implementation.
@@ -505,6 +538,7 @@ public:
         block_copy(other);
         return *this;
     }
+    HashTable& operator=(HashTable&&) = delete;
     ~HashTable()
     {
         size_t buckets_left = used_bucket_count;
@@ -515,9 +549,10 @@ public:
             Bucket* buck_ptr = buck.next_collision_bucket;
             while(buck_ptr)
             {
+                Bucket* temp_ptr = buck_ptr->next_collision_bucket;
                 buck_ptr->clear();
                 --buckets_left;
-                buck_ptr = buck_ptr->next_collision_bucket;
+                buck_ptr = temp_ptr;
             }
             buck.clear();
             --buckets_left;
@@ -609,11 +644,14 @@ public:
         }
         if (fav_buck->used) [[unlikely]]
         {
-           throw "Warning, overriding previously-used bucket!";
+            std::cout << "Warning, overriding previously-used bucket!";
+            throw;
         }
         if (fav_buck->next_collision_bucket) [[unlikely]]
         {
-            throw "fav_buck started out with fraudulent bucket pointer!";
+            std::cout << "fav_buck started out with fraudulent bucket pointer!";
+        dump();
+            throw;
         }
 #endif
         ++used_bucket_count;
@@ -654,8 +692,11 @@ public:
                 return;
             }
         }
-        Bucket* next_buck = buck->next_collision_bucket;
-        while(next_buck)
+        
+#ifdef HASHTABLE_DEBUG
+        size_t i = 0;
+#endif
+        for(Bucket* next_buck = buck->next_collision_bucket; next_buck; buck = next_buck, next_buck = next_buck->next_collision_bucket)
         {
             if(!next_buck->used)
                 return;
@@ -667,8 +708,13 @@ public:
                 --used_bucket_count;
                 return;
             }
-            buck = next_buck;
-            next_buck = next_buck->next_collision_bucket;
+#ifdef HASHTABLE_DEBUG
+            if (++i > 10'000) [[unlikely]]
+            {
+                dump();
+                exit(69);
+            }
+#endif
         }
         return;
     }
