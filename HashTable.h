@@ -530,7 +530,7 @@ public:
         //We're going to have to... awkwardly move all that around. :/
         if (used_bucket_count)
         { // FIXME: Try to make a faster path for when we happen to have the same capacity as the new table, even though we're dirtied with elements.
-            delete[] bucket_block;
+            this->~HashTable();
         }
         bucket_block = new Bucket[other.total_capacity];
         total_capacity = other.total_capacity;
@@ -540,7 +540,26 @@ public:
         block_copy(other);
         return *this;
     }
-    HashTable& operator=(HashTable&&) = delete;
+    HashTable& operator=(HashTable&& other)
+    {
+        if (used_bucket_count)
+        { // FIXME: Try to make a faster path for when we happen to have the same capacity as the new table, even though we're dirtied with elements.
+            this->~HashTable();
+        }
+        bucket_block = other.bucket_block;
+        total_capacity = other.total_capacity;
+        main_capacity = other.main_capacity;
+        used_bucket_count = other.used_bucket_count;
+        collision_data = other.collision_data;
+
+        //FIXME: think over how to not even have to do this step on other to keep it in a valid-ish state
+        other.bucket_block = new Bucket[4];
+        other.total_capacity = 4;
+        other.main_capacity = 3;
+        other.used_bucket_count = 0;
+        other.collision_data = CollisionData(other.bucket_block, other.total_capacity);
+        return *this;
+    }
     ~HashTable()
     {
         size_t buckets_left = used_bucket_count;
