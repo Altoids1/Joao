@@ -53,8 +53,9 @@ test('strings', exe, args : ['./testprograms/tests/5_strings.jao'], workdir : me
 test('parser', exe, args : ['./testprograms/tests/6_parser.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 test('rvalues', exe, args : ['./testprograms/tests/7_rvalues.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 test('tablelib', exe, args : ['./testprograms/tests/8_tablelib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('jsoninterp', exe, args : ['./testprograms/tests/9_json_interp.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 
 # Benchmark tests
 benchmark('primegen', exe, args : ['./testprograms/bench/primegen.jao'], workdir : meson.source_root())
 benchmark('ackermann', exe, args : ['./testprograms/bench/ackermann.jao'], workdir : meson.source_root())
-benchmark('jsoninterp', exe, args : ['./testprograms/bench/json_interp.jao'], workdir : meson.source_root())
+benchmark('jsoninterp_b', exe, args : ['./testprograms/bench/json_interp.jao'], workdir : meson.source_root())
