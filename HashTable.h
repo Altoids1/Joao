@@ -374,12 +374,12 @@ class HashTable
     }
 public:
     //Basic helpers
-    [[nodiscard]] size_t capacity() const { return total_capacity;}
-    [[nodiscard]] size_t bucket_count() const { return total_capacity;}
-    [[nodiscard]] constexpr float max_load_factor() const { return 1.0;}
-    [[nodiscard]] size_t size() const { return used_bucket_count;}
-    [[nodiscard]] bool contains(const Key& key) const { return at_bucket(key) != nullptr;}
-    [[nodiscard]] size_t count(const Key& key) const { return contains(key);}
+    size_t capacity() const { return total_capacity;}
+    size_t bucket_count() const { return total_capacity;}
+    constexpr float max_load_factor() const { return 1.0;}
+    size_t size() const { return used_bucket_count;}
+    bool contains(const Key& key) const { return at_bucket(key) != nullptr;}
+    size_t count(const Key& key) const { return contains(key);}
 
     //Capacity & memory API
     inline void clear() { *this = HashTable();}
@@ -492,7 +492,7 @@ public:
     ,used_bucket_count(0)
     ,collision_data(false)
     {
-        rehash(list.size()); // FIXME: This is weird.
+        rehash(list.size() ? list.size() : 4u);
         for(auto& ptr : list)
         {
             insert(ptr);
