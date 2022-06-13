@@ -65,6 +65,7 @@ class HashTable
                 new (value()) Value(std::move(*dead_buck.value()));
                 next_collision_bucket = dead_buck.next_collision_bucket;
                 dead_buck.used = false;
+                dead_buck.next_collision_bucket = nullptr;
             }
         }
         Bucket& operator=(Bucket&& dead_buck)
@@ -76,6 +77,7 @@ class HashTable
                 new (value()) Value(std::move(*dead_buck.value()));
                 next_collision_bucket = dead_buck.next_collision_bucket;
                 dead_buck.used = false;
+                dead_buck.next_collision_bucket = nullptr;
             }
             return *this;
         }
