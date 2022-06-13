@@ -12,7 +12,7 @@ class Parser
 	const bool is_interactive;
 
 	//Used to store extraneous, native types
-	std::unordered_map<std::string, ObjectType*> uncooked_types;
+	HashTable<std::string, ObjectType*> uncooked_types;
 	
 	/*
 	Here's how this is gonna work:

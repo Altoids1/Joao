@@ -1088,16 +1088,16 @@ public:
 //Weird hack of a class to support key-value table initiatialization.
 class BaseTableConstruction : public ASTNode
 {
-	std::unordered_map<std::string, ASTNode*> nodes;
+	Hashtable<std::string, ASTNode*> nodes;
 public:
-	BaseTableConstruction(const std::unordered_map<std::string, ASTNode*>& n, int linenum = 0)
+	BaseTableConstruction(Hashtable<std::string, ASTNode*>&& n, int linenum = 0)
 		:nodes(n)
 	{
 		my_line = linenum;
 	}
 	virtual ~BaseTableConstruction()
 	{
-		for (auto& it : nodes)
+		for (auto it : nodes)
 		{
 			delete it.second;
 		}
@@ -1109,7 +1109,7 @@ public:
 		std::string ind = std::string(indent, ' ');
 		std::string str = std::string(indent, ' ') + "BaseTableConstruction\n";
 		str += ind + "(Args:\n";
-		for (auto &it : nodes)
+		for (auto it : nodes)
 		{
 			str += ind + it.first + "\t" + it.second->dump(0) + "\n";
 		}

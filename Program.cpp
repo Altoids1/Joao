@@ -4,7 +4,7 @@
 
 #define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
 
-std::unordered_map<std::string,ObjectType*> Program::construct_natives()
+HashTable<std::string,ObjectType*> Program::construct_natives()
 {
 	globals.table["__VERSION"] = Value(std::string(VERSION_STRING));
 	globals.table["__VERSION_MAJOR"] = Value(VERSION_MAJOR);
@@ -145,7 +145,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		return Value(7); // No I'm never removing this function fuck you
 	}));
 
-	std::unordered_map<std::string, ObjectType*> cooked_classes;
+	HashTable<std::string, ObjectType*> cooked_classes;
 
 	construct_math_library();
 	construct_string_library();

@@ -390,7 +390,7 @@ public:
     }
 
     //Iterators
-    Iterator begin()
+    Iterator begin() const
     {
         return Iterator(bucket_block,main_capacity);
     }
@@ -740,5 +740,10 @@ public:
             return; // Don't overwrite. This behaviour is a layover from std::unordered_map.
         }
         this->operator[](pair.first) = pair.second; // FIXME: Implement an insert variant that skips over the unnecessary default-construct that operator[] does.
+    }
+
+    void merge(const HashTable<Key,Value>& other)
+    {
+        return insert(other.begin(), other.end());
     }
 };

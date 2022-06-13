@@ -16,7 +16,6 @@
 #ifdef __GNUC__
 #include <cstring>
 #endif
-#include <unordered_map> // TODO: Abolish this header
 struct ImmutableString;
 #include "HashTable.h"
 template <typename K, typename V>

@@ -190,7 +190,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	ObjectTree joao; //Wow, it's the real Jo�o Gaming!
 	for (auto it = uncooked_types.begin(); it != uncooked_types.end(); ++it)
 	{
-		joao.append(it->second);
+		joao.append(it.value());
 	}
 
 
@@ -459,7 +459,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 						In the future, it would probably be best to have this just pass into the normal /table constructor,
 						with each key-value pair being a Value of type Tuple (a thing that does not exist yet in this language)
 						*/
-						std::unordered_map<std::string,ASTNode*> nodes;
+						HashTable<std::string,ASTNode*> nodes;
 						int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Brace, tokenheader + 2);
 						do
 						{
@@ -500,7 +500,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 							}
 							nodes[namestr] = valuenode;
 						} while (tokenheader < yonder);
-						lvalue = new BaseTableConstruction(nodes, tokens[tokenheader]->line);
+						lvalue = new BaseTableConstruction(std::move(nodes), tokens[tokenheader]->line);
 						tokenheader = yonder + 1;
 						break; // Out of case(PairSymbolToken::pairOp::Brace)
 					}

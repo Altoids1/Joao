@@ -8,7 +8,7 @@
 class Program // this is pretty much what Parser is supposed to output, and what Interpreter is supposed to take as input.
 {
 	//Basically stores global functions, perhaps also static methods if we're feeling fancy.
-	std::unordered_map<std::string, Function*> definedFunctions;
+	HashTable<std::string, Function*> definedFunctions;
 
 	//Methods. Separate from definedFunctions so that they are not in globalscope at runtime.
 	//Stored as an unordered SET because their base name is not uniquely identifying; there can be a /foo/bar() and /fuck/bar() in the same program.
@@ -19,7 +19,7 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	//THE
 	//
 	//THE ENTIRE OBJECT TREE (FLATTENED)
-	std::unordered_map<std::string, ObjectType*> definedObjTypes;
+	HashTable<std::string, ObjectType*> definedObjTypes;
 public:
 
 	bool is_malformed = false;
@@ -37,7 +37,7 @@ public:
 	~Program()
 	{
 		//Delete object types
-		for (auto& it : definedObjTypes)
+		for (auto it : definedObjTypes)
 		{
 			delete it.second;
 		}
@@ -46,7 +46,7 @@ public:
 		{
 			delete method;
 		}
-		for (auto& it : definedFunctions)
+		for (auto it : definedFunctions)
 		{
 			delete it.second;
 		}
@@ -59,10 +59,10 @@ public:
 	{
 		deadprog.definedFunctions = {};
 		deadprog.definedMethods = {};
-		deadprog.definedObjTypes = {};
+		deadprog.definedObjTypes.clear();
 	}
 
-	std::unordered_map<std::string, ObjectType*> construct_natives();
+	HashTable<std::string, ObjectType*> construct_natives();
 	void construct_math_library();
 	void construct_string_library();
 	ObjectType* construct_table_library();
@@ -73,7 +73,7 @@ public:
 	{
 		for (auto it = definedFunctions.begin(); it != definedFunctions.end(); ++it)
 		{
-			std::cout << it->second->dump(0);
+			std::cout << it.value()->dump(0);
 		}
 		for (auto it = definedMethods.begin(); it != definedMethods.end(); ++it)
 		{

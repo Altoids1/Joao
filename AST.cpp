@@ -835,7 +835,7 @@ Value BaseTableConstruction::resolve(Interpreter& interp)
 {
 	Hashtable<std::string, Value> resolved_entries;
 	resolved_entries.ensure_capacity(nodes.size());
-	for (auto& it : nodes)
+	for (auto it : nodes)
 	{
 		resolved_entries[it.first] = it.second->resolve(interp);
 #ifdef JOAO_SAFE
