@@ -35,7 +35,8 @@ struct ImmutableString
 				return; // return in constructor, lol
 			}
 		}
-		data = strncpy(new char[str.size() + 1], str.c_str(), str.size() + 1);
+		size_t len = str.size() + 1;
+		data = strncpy(new char[len], str.c_str(), len);
 		cstr_to_refcount[data] = 1u;
 	}
 	ImmutableString(const ImmutableString& other)
@@ -56,6 +57,7 @@ struct ImmutableString
 			if (cstr_to_refcount.at(data) == 0)
 			{
 				cstr_to_refcount.remove(data);
+				delete[] data;
 			}
 		}
 		precomputed_hash = other.precomputed_hash;
@@ -72,6 +74,7 @@ struct ImmutableString
 			if (cstr_to_refcount.at(data) == 0)
 			{
 				cstr_to_refcount.remove(data);
+				delete[] data;
 			}
 		}
 		precomputed_hash = other.precomputed_hash;
@@ -88,7 +91,7 @@ struct ImmutableString
 		,precomputed_hash(other.precomputed_hash)
 	{
 		other.data = nullptr;
-		heap = false;
+		other.heap = false;
 	}
 
 	~ImmutableString()
@@ -99,6 +102,7 @@ struct ImmutableString
 			if (cstr_to_refcount.at(data) == 0)
 			{
 				cstr_to_refcount.remove(data);
+				delete[] data;
 			}
 		}
 	}
