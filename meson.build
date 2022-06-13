@@ -57,3 +57,4 @@ test('tablelib', exe, args : ['./testprograms/tests/8_tablelib.jao'], workdir : 
 # Benchmark tests
 benchmark('primegen', exe, args : ['./testprograms/bench/primegen.jao'], workdir : meson.source_root())
 benchmark('ackermann', exe, args : ['./testprograms/bench/ackermann.jao'], workdir : meson.source_root())
+benchmark('jsoninterp', exe, args : ['./testprograms/bench/json_interp.jao'], workdir : meson.source_root())
