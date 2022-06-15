@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef JOAO_NO_INCLUDE_STD
+#ifndef JOAO_NO_INCLUDE_STD // If you say so!
 //Core Libraries
 #include <iostream>
 #include <fstream>
@@ -13,9 +13,22 @@
 #include <queue>
 #include <deque>
 #include <initializer_list>
-#ifdef __GNUC__
+#include <functional>
+#include <type_traits>
+#ifdef __GNUG__
 #include <cstring>
+#include <cmath>
 #endif
+#endif
+
+#if __cplusplus > 202000L
+#define LIKELY [[likely]]
+#define UNLIKELY [[unlikely]]
+#else
+#define LIKELY
+#define UNLIKELY
+#endif
+
 struct ImmutableString;
 #include "HashTable.h"
 template <typename K, typename V>
@@ -23,13 +36,6 @@ using Hashtable = HashTable<K,V>;
 
 #include "config.h"
 
-
-#ifdef __GNUG__
-	#include <cmath>
-#endif
-#endif
-
-//#define DEBUG
 #ifdef DEBUG
 #define _DEBUG
 #endif
