@@ -202,10 +202,10 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	}
 }
 
-std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
+std::pair<ImmutableString, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
 {
 	//step 1. get string
-	std::string suh = static_cast<Identifier*>(id)->get_str().to_string();
+	const ImmutableString& suh = static_cast<Identifier*>(id)->get_str();
 
 	//step 2. get value
 	Value ruh = rhs->const_resolve(parser, true);
@@ -217,7 +217,7 @@ std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser&
 		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
 
 	//step 3. profit!
-	return std::pair<std::string, Value>(suh,ruh);
+	return std::pair<ImmutableString, Value>(suh,ruh);
 }
 
 Value BinaryExpression::resolve(Interpreter& interp)
@@ -624,9 +624,9 @@ Value MemberAccess::resolve(Interpreter& interp)
 	if (back->class_name() == "Identifier") // This should pretty much always be the case.
 	{
 		Object*& ptr = fr.t_value.as_object_ptr;
-		Value* v = ptr->has_property(interp, static_cast<Identifier*>(back)->get_str().to_string());
+		Value* v = ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
 		if (v) return *v;
-		Function* f = ptr->has_method(interp, static_cast<Identifier*>(back)->get_str().to_string());
+		Function* f = ptr->has_method(interp, static_cast<Identifier*>(back)->get_str());
 		if (f) return Value(f);
 		if (ptr->is_table())
 		{
@@ -651,9 +651,9 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	}
 	if (back->class_name() == "Identifier")
 	{
-		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str().to_string());
+		Value* v = fr.t_value.as_object_ptr->has_property(interp, static_cast<Identifier*>(back)->get_str());
 		if (v) return *v;
-		Function* meth = fr.t_value.as_object_ptr->has_method(interp, static_cast<Identifier*>(back)->get_str().to_string());
+		Function* meth = fr.t_value.as_object_ptr->has_method(interp, static_cast<Identifier*>(back)->get_str());
 		if (!meth)
 		{
 			interp.RuntimeError(this, ErrorCode::BadMemberAccess, "MemberAccess failed because member does not exist!");
@@ -689,7 +689,7 @@ void ClassDefinition::append_properties(Parser& parse, ObjectType* objtype)
 	{
 		LocalAssignmentStatement* lassy = *it;
 
-		std::pair<std::string, Value> pear = lassy->resolve_property(parse);
+		std::pair<ImmutableString, Value> pear = lassy->resolve_property(parse);
 
 		objtype->set_typeproperty(parse, pear.first,pear.second);	
 	}

@@ -185,7 +185,7 @@ public:
 	virtual Value const_resolve(Parser&, bool) override;
 
 	//A special-snowflake resolver for LocalAssignmentStatement which returns the key-value pair of the property it describes.
-	std::pair<std::string, Value> resolve_property(Parser&);
+	std::pair<ImmutableString, Value> resolve_property(Parser&);
 
 	virtual std::string dump(int indent)
 	{

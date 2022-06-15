@@ -150,7 +150,7 @@ Value& Interpreter::get_var(const ImmutableString& varname, ASTNode *getter)
 	Object* objscope = objectscope.top();
 	if(objscope)
 	{
-		vptr = objscope->has_property(*this, varname.to_string());
+		vptr = objscope->has_property(*this, varname);
 		if (vptr)
 			return *vptr;
 	}
@@ -293,7 +293,7 @@ Value& Interpreter::grand_handle(unsigned int depth, const ImmutableString& str,
 Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTNode* maker)
 {
 
-	if (!(prog->definedObjTypes.count(str)))
+	if (!(prog->definedObjTypes.contains(str)))
 		RuntimeError(maker, "Constructor attempts to instantiate unknown type! (" + str + ")"); // FIXME: This should really be a Parsetime error
 	
 	std::vector<Value> eval_args;
@@ -307,7 +307,7 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 Value Interpreter::makeObject(std::string str, std::vector<Value>&& eval_args, ASTNode* maker)
 {
 
-	if (!(prog->definedObjTypes.count(str)))
+	if (!(prog->definedObjTypes.contains(str)))
 		RuntimeError(maker, "Constructor attempts to instantiate unknown type! (" + str + ")"); // FIXME: This should really be a Parsetime error
 	return Value(prog->definedObjTypes[str]->makeObject(*this, std::move(eval_args)));
 }

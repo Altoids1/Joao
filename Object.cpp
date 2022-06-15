@@ -155,7 +155,7 @@ Function* ObjectType::has_typemethod(Interpreter& interp, const ImmutableString&
 	return typefuncs.at(str);
 }
 
-void ObjectType::set_typeproperty(Parser& parse, std::string name, Value v)
+void ObjectType::set_typeproperty(Parser& parse, const ImmutableString& name, const Value& v)
 {
 	if (typeproperties.count(name))
 	{

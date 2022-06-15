@@ -220,7 +220,7 @@ public:
 
 
 	//Passed Parser-by-reference as the Interpreter should never be calling this; ObjectTypes are static at runtime (for now, anyways!)
-	void set_typeproperty(Parser&,std::string, Value);
+	void set_typeproperty(Parser&,const ImmutableString&, const Value&);
 	void set_typeproperty_raw(const ImmutableString&, Value);
 	void set_typemethod(Parser&, std::string, Function*);
 	void set_typemethod_raw(const ImmutableString&, Function*);
