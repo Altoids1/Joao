@@ -32,7 +32,7 @@ class HashTable
 #ifdef HASHTABLE_DEBUG
         ~Bucket()
         {
-            if (used) [[unlikely]]
+            if (used) UNLIKELY
             {
                 std::cout << "Bucket was deleted with un-deleted contents inside!\n";
             }
@@ -59,7 +59,7 @@ class HashTable
         Bucket(Bucket&& dead_buck)
             :used(dead_buck.used)
         {
-            if(used) [[likely]]
+            if(used) LIKELY
             {
                 new (key()) Key(std::move(*dead_buck.key()));
                 new (value()) Value(std::move(*dead_buck.value()));
@@ -71,7 +71,7 @@ class HashTable
         Bucket& operator=(Bucket&& dead_buck)
         {
             used = dead_buck.used;
-            if(used) [[likely]]
+            if(used) LIKELY
             {
                 new (key()) Key(std::move(*dead_buck.key()));
                 new (value()) Value(std::move(*dead_buck.value()));
@@ -146,7 +146,7 @@ class HashTable
         }
         const Key& key()
         {
-            if(!next_bucket) [[unlikely]]
+            if(!next_bucket) UNLIKELY
             {
                 throw std::out_of_range("Hashtable Iterator out of bounds!");
             }
@@ -154,7 +154,7 @@ class HashTable
         }
         Value& value()
         {
-            if(!next_bucket) [[unlikely]]
+            if(!next_bucket) UNLIKELY
             {
                 throw std::out_of_range("Hashtable Iterator out of bounds!");
             }
@@ -166,7 +166,7 @@ class HashTable
         //Perhaps slow; prefer using key() and value().
         std::pair<Key&,Value&> operator*(void)
         {
-            if(!next_bucket) [[unlikely]]
+            if(!next_bucket) UNLIKELY
             {
                 throw std::out_of_range("Hashtable Iterator out of bounds!");
             }
@@ -213,7 +213,7 @@ class HashTable
             {
                 Bucket* ptr = known_holes.front();
 #ifdef HASHTABLE_DEBUG
-                if(ptr < begin || ptr > begin + capacity) [[unlikely]]
+                if(ptr < begin || ptr > begin + capacity) UNLIKELY
                 {
                     throw;
                 }
@@ -225,7 +225,7 @@ class HashTable
             for(/*next*/; next < capacity; ++next)
             {
                 Bucket* ptr = begin + next;
-                if(!ptr->used) [[likely]]
+                if(!ptr->used) LIKELY
                 {
                     return ptr;
                 }
@@ -284,7 +284,7 @@ class HashTable
                 shits_dad = shits_dad->next_collision_bucket;
             }
             Bucket* shit = new_collision_data.allocate_collision_bucket();
-            if (!shit) [[unlikely]] // SHIT!!!
+            if (!shit) UNLIKELY // SHIT!!!
             {
 #ifdef HASHTABLE_DEBUG
                 std::cout << "Shit condition reached.\n";
@@ -318,7 +318,7 @@ class HashTable
         Bucket* collision_ptr = buck.next_collision_bucket;
         while(collision_ptr)
         {
-            if(!collision_ptr->used) [[unlikely]]
+            if(!collision_ptr->used) UNLIKELY
                 return nullptr;
             if(*collision_ptr->key() == key)
             {
@@ -670,7 +670,7 @@ public:
                     buck->next_collision_bucket = fav_buck;
                     break;
                 }
-                if(linked_buck->used) [[likely]]
+                if(linked_buck->used) LIKELY
                 {
                     if(*linked_buck->key() == key)
                     {
@@ -692,16 +692,16 @@ public:
             
         }
 #ifdef HASHTABLE_DEBUG
-        if(fav_buck < bucket_block || fav_buck >= bucket_block + total_capacity) [[unlikely]]
+        if(fav_buck < bucket_block || fav_buck >= bucket_block + total_capacity) UNLIKELY
         {
             throw std::out_of_range("Bucket found for assignment was out of scope!");
         }
-        if (fav_buck->used) [[unlikely]]
+        if (fav_buck->used) UNLIKELY
         {
             std::cout << "Warning, overriding previously-used bucket!";
             throw;
         }
-        if (fav_buck->next_collision_bucket) [[unlikely]]
+        if (fav_buck->next_collision_bucket) UNLIKELY
         {
             std::cout << "fav_buck started out with fraudulent bucket pointer!";
         dump();
@@ -726,7 +726,7 @@ public:
     {
         size_t index = generate_index(key);
         Bucket* buck = bucket_block + index;
-        if(!buck->used) [[unlikely]]
+        if(!buck->used) UNLIKELY
             return;
         if(*buck->key() == key) // Found it in the main array.
         {
@@ -770,7 +770,7 @@ public:
                 return;
             }
 #ifdef HASHTABLE_DEBUG
-            if (++i > 10'000) [[unlikely]]
+            if (++i > 10'000) UNLIKELY
             {
                 dump();
                 exit(69);
@@ -804,7 +804,7 @@ public:
         new (fav_buck->key()) Key(pair.first);
         new (fav_buck->value()) Value(pair.second);
     }
-    void insert(const Key& key, Value&& value)
+    void insert(const Key& key, const Value& value)
     {
         if (at_bucket(key)) // If this already has a bucket
         {
