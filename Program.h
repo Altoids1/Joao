@@ -58,10 +58,12 @@ public:
 		,definedMethods(deadprog.definedMethods)
 		,definedObjTypes(deadprog.definedObjTypes)
 	{
-		deadprog.definedFunctions = {};
+		deadprog.definedFunctions.clear();
 		deadprog.definedMethods = {};
 		deadprog.definedObjTypes.clear();
 	}
+	Program& operator=(const Program&) = delete;
+	Program& operator=(Program&&) = delete;
 
 	HashTable<std::string, ObjectType*> construct_natives();
 	void construct_math_library();

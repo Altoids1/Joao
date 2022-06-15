@@ -47,6 +47,13 @@ class ObjectTree
 		{
 
 		}
+		~Node()
+		{
+			for(Node* ptr : children)
+			{
+				delete ptr;
+			}
+		}
 	};
 
 	std::vector<Node*> basetypes; // The nodes whose root is root
@@ -94,7 +101,13 @@ class ObjectTree
 			propagate_upstream(derived, ancestor->root);
 	}
 public:
-
+	~ObjectTree()
+	{
+		for(Node* ptr : basetypes)
+		{
+			delete ptr;
+		}
+	}
 	//Has to pass-as-pointer instead of as-ref because otherwise it'd be (apparently) impossible to get the pointer to store for that reference.
 	void append(ObjectType* newtype)
 	{

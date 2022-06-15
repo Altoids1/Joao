@@ -116,6 +116,10 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 	}
 
 	generate_object_tree(classdef_list);
+	for(ClassDefinition* ptr : classdef_list)
+	{
+		delete ptr;
+	}
 
 	return std::move(t_program);
 }
@@ -200,7 +204,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	std::cout << "----\n";
 #endif
 	
-	t_program.definedObjTypes = uncooked_types; // They're cooked *at this point*, I will note
+	t_program.definedObjTypes = std::move(uncooked_types); // They're cooked *at this point*, I will note
 	
 
 	return;
