@@ -558,9 +558,9 @@ public:
     ,collision_data(other.collision_data)
     {
         //FIXME: think over how to not even have to do this step on other to keep it in a valid-ish state
-        other.bucket_block = new Bucket[4];
-        other.total_capacity = 4;
-        other.main_capacity = 3;
+        other.bucket_block = nullptr;
+        other.total_capacity = 0;
+        other.main_capacity = 0;
         other.used_bucket_count = 0;
         other.collision_data = CollisionData(other.bucket_block, other.total_capacity);
     }
@@ -588,9 +588,9 @@ public:
         collision_data = other.collision_data;
 
         //FIXME: think over how to not even have to do this step on other to keep it in a valid-ish state
-        other.bucket_block = new Bucket[4];
-        other.total_capacity = 4;
-        other.main_capacity = 3;
+        other.bucket_block = nullptr;
+        other.total_capacity = 0;
+        other.main_capacity = 0;
         other.used_bucket_count = 0;
         other.collision_data = CollisionData(other.bucket_block, other.total_capacity);
         return *this;
