@@ -50,7 +50,7 @@ public:
 		return stack.back().table.lazy_at(name);
 	}
 	
-	const ImmutableString& get_back_name() const
+	ImmutableString get_back_name() const
 	{
 		return top_scope_name;
 	}

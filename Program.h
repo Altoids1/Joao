@@ -4,6 +4,7 @@
 #include "Scope.h"
 #include "AST.h"
 #include "Directory.h"
+#include "Object.h"
 
 class Program // this is pretty much what Parser is supposed to output, and what Interpreter is supposed to take as input.
 {
