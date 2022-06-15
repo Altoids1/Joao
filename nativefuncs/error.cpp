@@ -4,7 +4,7 @@
 
 ObjectType* Program::construct_error_library()
 {
-	ObjectType* error = new ObjectType("/error");
+	ObjectType* error = new ObjectType("/error", new Metatable(), true);
 	error->set_typeproperty_raw("what", Value());
 	error->set_typeproperty_raw("code", Value());
 

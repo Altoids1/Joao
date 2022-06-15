@@ -10,8 +10,9 @@
 ObjectType* Program::construct_table_library()
 {
 	
-	ObjectType* table = new ObjectType("/table");
+	ObjectType* table = new ObjectType("/table", new Metatable(),true);
 	table->is_table_type = true;
+	
 	
 	NATIVEMETHOD(table, "#constructor", [](const std::vector<Value>& args, Object* obj) {
 
@@ -104,7 +105,7 @@ ObjectType* Program::construct_table_library()
 				{
 					auto& hash = table->t_hash;
 					//Before we do this, imagine that there's an index [9] present in the hashtable, and the array only goes from [0] to [8].
-					//Inserting naïvely in that case would clobber the 9th element, which is a bad.
+					//Inserting naï¿½vely in that case would clobber the 9th element, which is a bad.
 
 					//talloc() tries to prevent this, but it's still possible, so lets do some checks first.
 					while (hash.count(std::hash<Value::JoaoInt>()(arr.size()))) // If this is the case

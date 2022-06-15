@@ -13,8 +13,9 @@ class ASTNode // ASTNodes are abstract symbols which together form a "flow chart
 {
 protected:
 	ASTNode() = default;
+	ASTNode(const ASTNode&) = default; // Basically SHOULD NEVER HAPPEN
 public:
-	ASTNode(const ASTNode&) = delete;
+	
 	virtual ~ASTNode() = default;
 
 	int my_line = 0; // Hypothetically, the line that this ASTNode happens on. This is remembered for the sake of improving runtime legibility.
@@ -562,6 +563,7 @@ public:
 		my_line = 0;
 		t_name = n;
 	}
+	NativeMethod(const NativeMethod&) {} // this is the one AST node where this is OK, since we're not kept track of by the typical AST tree.
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "NativeMethod"; }

@@ -9,11 +9,6 @@ ObjectType* Program::construct_file_library()
 {
 	Metatable* __mt = new Metatable();
 
-	enum class PrivIndex : size_t
-	{
-		FSTREAM
-	};
-
 	APPENDMETHOD(__mt,"open",
 	[](std::vector<Value> args, Object* obj)
 	{
@@ -33,20 +28,17 @@ ObjectType* Program::construct_file_library()
 			const Value& second = args[1];
 			blank_it = static_cast<bool>(second);
 		}
-
-		Metatable* mt = obj->get_metatable();
-		std::fstream* our_file = static_cast<std::fstream*>(mt->get_private(static_cast<size_t>(PrivIndex::FSTREAM)));
+		PolyTable& privates = obj->get_privates();
+		std::fstream* our_file = privates.lazy_at<std::fstream>("FSTREAM");
 		if (our_file) // Silently close any file this file object currently has open when we open a new file
 		{
-			our_file->close();
-			delete our_file;
+			privates.data.remove("FSTREAM");
 		}
 
 		std::string filename = *first.t_value.as_string_ptr;
 
+		privates.insert<std::fstream>("FSTREAM");
 		
-
-		our_file = new std::fstream();
 		try
 		{
 			if(blank_it)
@@ -64,7 +56,7 @@ ObjectType* Program::construct_file_library()
 		{
 			return Value(Value::vType::Null, static_cast<int>(ErrorCode::BadCall));
 		}
-		mt->set_private(static_cast<size_t>(PrivIndex::FSTREAM), our_file);
+		
 		return Value(our_file->good());
 	});
 
@@ -74,8 +66,8 @@ ObjectType* Program::construct_file_library()
 	APPENDMETHOD(__mt, "lines",
 	[](std::vector<Value> args, Object* obj)
 	{
-		Metatable* mt = obj->get_metatable();
-		std::fstream* our_file = static_cast<std::fstream*>(mt->get_private(static_cast<size_t>(PrivIndex::FSTREAM)));
+		PolyTable& privates = obj->get_privates();
+		std::fstream* our_file = privates.lazy_at<std::fstream>("FSTREAM");
 		if (!our_file)
 			return Value();
 
@@ -98,8 +90,8 @@ ObjectType* Program::construct_file_library()
 	APPENDMETHOD(__mt, "write",
 	[](std::vector<Value> args, Object* obj)
 	{
-		Metatable* mt = obj->get_metatable();
-		std::fstream* our_file = static_cast<std::fstream*>(mt->get_private(static_cast<size_t>(PrivIndex::FSTREAM)));
+		PolyTable& privates = obj->get_privates();
+		std::fstream* our_file = privates.lazy_at<std::fstream>("FSTREAM");
 		if (!our_file)
 			return Value();
 
@@ -116,8 +108,8 @@ ObjectType* Program::construct_file_library()
 	APPENDMETHOD(__mt,"close",
 	[](std::vector<Value> args, Object* obj)
 	{
-		Metatable* mt = obj->get_metatable();
-		std::fstream* our_file = static_cast<std::fstream*>(mt->get_private(static_cast<size_t>(PrivIndex::FSTREAM)));
+		PolyTable& privates = obj->get_privates();
+		std::fstream* our_file = privates.lazy_at<std::fstream>("FSTREAM");
 		if (!our_file)
 			return Value();
 
@@ -125,12 +117,9 @@ ObjectType* Program::construct_file_library()
 			return Value();
 
 		our_file->close();
-
-		delete our_file;
-		mt->set_private(static_cast<size_t>(PrivIndex::FSTREAM), nullptr);
-
+		privates.data.erase("FSTREAM");
 		return Value(true);
 	});
 
-	return (new ObjectType("/file", __mt));
+	return (new ObjectType("/file", __mt, true));
 }

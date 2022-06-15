@@ -44,7 +44,7 @@ namespace error
 	// Abstract class that all errors that are (probably!) the result of something bad the user did.
 	class malicious : public std::runtime_error
 	{ 
-	protected:
+	public:
 		using _Mybase = std::runtime_error;
 
 		explicit malicious(const std::string& _Message) : _Mybase(_Message.c_str()) {}

@@ -69,6 +69,6 @@ Value NativeMethod<Lambda>::resolve(Interpreter& interp)
 #error "GCC 8 and below have bugs in their template type deduction that make compilation impossible. Please use a newer version or a different compiler."
 #else
 //The version of this define for the good boys and girls who actually fucking comply with standard
-#define NATIVEMETHOD(objtype,func,lambda) objtype->set_typemethod_raw(func, new NativeMethod(func,lambda));
-#define APPENDMETHOD(metatbl,func,lambda) metatbl->append_method(func, new NativeMethod(func,lambda));
+#define NATIVEMETHOD(objtype,func,lambda) objtype->append_native_method(func, NativeMethod(func,lambda));
+#define APPENDMETHOD(metatbl,func,lambda) metatbl->append_method(func,NativeMethod(func,lambda));
 #endif

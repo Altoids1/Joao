@@ -2,6 +2,110 @@
 
 #include "Forward.h"
 #include "AST.h"
+#include "Error.h"
+
+class PolyTable
+{
+	struct HollowKnight
+	{
+	protected:
+		HollowKnight(void* p, const std::type_info& i)
+		:ptr(p)
+		,info(i)
+		{
+
+		}
+	public:
+		void* ptr = nullptr;
+		const std::type_info& info;
+		virtual ~HollowKnight() = default;
+	};
+	template <typename Type>
+	struct Vessel : public HollowKnight
+	{
+		Vessel(const Type& val)
+		:HollowKnight(new Type(val), typeid(val))
+		{
+			static_assert(sizeof(*this) == sizeof(HollowKnight)); // Necessary for this to be stored in a std::vector properly.
+			static_assert(!std::is_same<void,Type>()); // Why did you do this
+		}
+		Vessel()
+		:HollowKnight(new Type(), typeid(Type))
+		{
+
+		}
+		virtual ~Vessel() // I am become death, the destructor of worlds
+		{
+			delete static_cast<Type*>(ptr);
+		}
+		Vessel(const Vessel&) = delete; // Cannot be copied
+		Vessel(Vessel&& other) // Can be moved, though, no biggie
+		:HollowKnight(other.ptr,other.info)
+		{
+			other.ptr = nullptr;
+		}
+	};
+public:
+	HashTable<ImmutableString,HollowKnight> data;
+
+	template <typename Type>
+	Type& at(const ImmutableString& key)
+	{
+		HollowKnight& hk = data.at(key);
+		if(hk.info != typeid(Type))
+		{
+			throw error::malicious("Data at key is of the incorrect type!"); // Haha, yes
+		}
+		return *static_cast<Type*>(hk.ptr);
+	}
+	template <typename Type>
+	Type* lazy_at(const ImmutableString& key)
+	{
+		HollowKnight* hk = data.lazy_at(key);
+		if(hk == nullptr)
+			return nullptr;
+		if(hk->info != typeid(Type))
+		{
+			throw error::malicious("Data at key is of the incorrect type!"); // Haha, yes
+		}
+		return static_cast<Type*>(hk->ptr);
+	}
+	template <typename Type>
+	void insert(const ImmutableString& key, const Type& value)
+	{
+		data.insert(key,Vessel<Type>(value));
+	}
+	template <typename Type>
+	void insert(const ImmutableString& key)
+	{
+		if constexpr(std::is_default_constructible<Type>())
+		{
+			data.insert(key,Vessel<Type>());
+		}
+		else
+		{
+			return;
+		}
+	}
+};
+
+/*
+This is a sort of metatype which provides overriding, perhaps natively-implemented behavior for certain operations and methods for ObjectTypes which have a pointer to it.
+*/
+class Metatable
+{
+public:
+	PolyTable metamethods; // by "void" I mean "NativeMethod
+
+	template<typename Lambda>
+	void append_method(ImmutableString str,const NativeMethod<Lambda>& newmethod)
+	{
+		metamethods.insert<NativeMethod<Lambda>>(str,newmethod);
+	}
+
+	friend class Object;
+	friend class ObjectType;
+};
 
 class Object 
 {
@@ -10,10 +114,11 @@ protected:
 	Hashtable<ImmutableString, Value>* base_properties; //A pointer to our ObjectType's property hashtable, to look up default values when needed
 	Hashtable<ImmutableString, Function*>* base_funcs; // Pointer to object's base functions.
 	Metatable* mt = nullptr;
+	PolyTable mt_privates; //These properties should be accessed by nobody but the metatable's metamethods themselves.
 public:
 	ImmutableString object_type; // A string denoting the directory position of this object.
 
-	Metatable* get_metatable() const { return mt; }
+	PolyTable& get_privates() { return mt_privates; }
 
 	Value* has_property(Interpreter&, const ImmutableString&);
 	Value get_property(Interpreter&, const ImmutableString&);
@@ -59,6 +164,7 @@ class ObjectType // Stores the default methods and properties of this type of Ob
 	Hashtable<ImmutableString, Function*> typefuncs;
 	Hashtable<ImmutableString, Value> typeproperties;
 	Metatable* mt = nullptr;
+	bool owns_metatable = false; // Marks whether we own the metatable pointer we have
 public:
 	
 	std::string get_name() const { return object_type.to_string(); };
@@ -68,9 +174,10 @@ public:
 	{
 
 	}
-	ObjectType(const ImmutableString& n, Metatable* m)
+	ObjectType(const ImmutableString& n, Metatable* m, bool o = false)
 		:object_type(n)
 		,mt(m)
+		,owns_metatable(o)
 	{
 
 	}
@@ -105,51 +212,19 @@ public:
 	void set_typemethod(Parser&, std::string, Function*);
 	void set_typemethod_raw(const ImmutableString&, Function*);
 
+
+	template<typename Lambda>
+	void append_native_method(ImmutableString str,const NativeMethod<Lambda>& newmethod)
+	{
+#ifdef _DEBUG
+		if(!mt) [[unlikely]]
+		{
+			throw std::runtime_error("Metatable not yet provided for this ObjectType which has NativeMethods!");
+		}
+#endif
+		mt->append_method(str,newmethod);
+	}
+
 	friend class ObjectTree;
 };
 
-/*
-This is a sort of metatype which provides overriding, perhaps natively-implemented behavior for certain operations and methods for ObjectTypes which have a pointer to it.
-*/
-class Metatable
-{
-	//These properties should be accessed by nobody but the metatable's metamethods themselves.
-	std::vector<void*> privates;
-
-	Hashtable<ImmutableString, void*> metamethods; // by "void" I mean "NativeMethod
-
-public:
-	~Metatable()
-	{
-		for (void* ptr : privates)
-		{
-			delete ptr;
-		}
-	}
-
-	template<typename Lambda>
-	void append_method(ImmutableString str, NativeMethod<Lambda>* newmethod)
-	{
-		metamethods[str] = newmethod;
-	}
-
-	void set_private(size_t index, void* ptr)
-	{
-		if (privates.size() <= index)
-		{
-			privates.resize(index+1, nullptr);
-		}
-
-		privates[index] = ptr;
-	}
-	void* get_private(size_t index)
-	{
-		if (index >= privates.size())
-			return nullptr;
-
-		return privates[index];
-	}
-
-	friend class Object;
-	friend class ObjectType;
-};
