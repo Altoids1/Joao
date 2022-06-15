@@ -524,6 +524,7 @@ public:
         other.used_bucket_count = 0;
         other.collision_data = CollisionData(other.bucket_block, other.total_capacity);
     }
+
     HashTable& operator=(const HashTable& other)
     {
         //So, there's a lot of Bucket* data in the current implementation.
@@ -682,11 +683,18 @@ public:
             throw;
         }
 #endif
-        ++used_bucket_count;
-        fav_buck->used = true;
-        new (fav_buck->key()) Key(key);
-        new (fav_buck->value()) Value();
-        return *fav_buck->value();
+        if constexpr (std::is_default_constructible<Value>())
+        {
+            ++used_bucket_count;
+            fav_buck->used = true;
+            new (fav_buck->key()) Key(key);
+            new (fav_buck->value()) Value();
+            return *fav_buck->value();
+        }
+        else
+        {
+            throw std::out_of_range("Attempted to lazy-index into a HashTable with a Value type that is not default-constructable!");
+        }
     }
 
     void remove(const Key& key)
@@ -765,7 +773,33 @@ public:
         {
             return; // Don't overwrite. This behaviour is a layover from std::unordered_map.
         }
-        this->operator[](pair.first) = pair.second; // FIXME: Implement an insert variant that skips over the unnecessary default-construct that operator[] does.
+        Bucket* fav_buck = collision_data.allocate_collision_bucket();
+        if(!fav_buck) // If we've run out of collision space
+        {
+            rehash(total_capacity * 2); // Just rehash
+            fav_buck = collision_data.allocate_collision_bucket();
+        }
+        ++used_bucket_count;
+        fav_buck->used = true;
+        new (fav_buck->key()) Key(pair.first);
+        new (fav_buck->value()) Value(pair.second);
+    }
+    void insert(const Key& key, Value&& value)
+    {
+        if (at_bucket(key)) // If this already has a bucket
+        {
+            return; // Don't overwrite. This behaviour is a layover from std::unordered_map.
+        }
+        Bucket* fav_buck = collision_data.allocate_collision_bucket();
+        if(!fav_buck) // If we've run out of collision space
+        {
+            rehash(total_capacity * 2); // Just rehash
+            fav_buck = collision_data.allocate_collision_bucket();
+        }
+        ++used_bucket_count;
+        fav_buck->used = true;
+        new (fav_buck->key()) Key(key);
+        new (fav_buck->value()) Value(value);
     }
 
     void merge(const HashTable<Key,Value>& other)
