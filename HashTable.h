@@ -448,42 +448,50 @@ public:
             }
             
             std::cout << "This is a bucket: {";
-            if constexpr (std::is_same<Key, std::string>() || std::is_same<Key,::Value>()) // FIXME: Really need a more general solution to this.
+            if constexpr (std::is_same<Key, std::string>::value || std::is_same<Key,::Value>::value) // FIXME: Really need a more general solution to this.
             {
                 std::cout << *buck.key();
             }
-            else if constexpr (std::is_enum<Key>())
+            else if constexpr (std::is_enum<Key>::value)
             {
                 std::cout << std::to_string(static_cast<size_t>(*buck.key()));
             }
-            else if constexpr (std::is_pointer<Key>())
+            else if constexpr(std::is_pointer<Key>::value)
             {
                 std::cout << std::to_string(reinterpret_cast<size_t>(*buck.key()));
             }
-            else if constexpr (std::is_same<Key, ImmutableString>())
+            else if constexpr(std::is_same<Key, ImmutableString>::value)
             {
                 std::cout << buck.key()->to_string();
             }
+            else if constexpr (std::is_arithmetic<Value>::value)
+            {
+                std::cout << std::to_string(*buck.value());
+            }
             else
             {
-                std::cout << std::to_string(*buck.key());
+                std::cout << "???";
             }
             std::cout << "\t";
-            if constexpr (std::is_same<Value, std::string>() || std::is_same<Value, ::Value>())
+            if constexpr (std::is_same<Value, std::string>::value || std::is_same<Value, ::Value>::value)
             {
                 std::cout << *buck.value();
             }
-            else if constexpr (std::is_enum<Value>())
+            else if constexpr (std::is_enum<Value>::value)
             {
                 std::cout << std::to_string(static_cast<size_t>(*buck.value()));
             }
-            else if constexpr (std::is_pointer<Value>())
+            else if constexpr (std::is_pointer<Value>::value)
             {
                 std::cout << std::to_string(reinterpret_cast<size_t>(*buck.value()));
             }
-            else
+            else if constexpr (std::is_integral<Value>::value)
             {
                 std::cout << std::to_string(*buck.value());
+            }
+            else
+            {
+                std::cout << "???";
             }
             if (buck.next_collision_bucket)
             {
