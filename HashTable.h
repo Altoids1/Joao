@@ -70,6 +70,12 @@ class HashTable
         }
         Bucket& operator=(Bucket&& dead_buck)
         {
+            if(used)
+            {
+                key()->~Key();
+                value()->~Value();
+                next_collision_bucket = nullptr;
+            }
             used = dead_buck.used;
             if(used) LIKELY
             {
@@ -288,8 +294,9 @@ class HashTable
             {
 #ifdef HASHTABLE_DEBUG
                 std::cout << "Shit condition reached.\n";
+                exit(1);
 #endif
-                delete[] new_block;
+                delete[] new_block; // FIXME: This doesn't exactly work correctly.
                 rehash(new_capacity * 2);
                 return;
             }
@@ -562,10 +569,7 @@ public:
     {
         //So, there's a lot of Bucket* data in the current implementation.
         //We're going to have to... awkwardly move all that around. :/
-        if (used_bucket_count)
-        { // FIXME: Try to make a faster path for when we happen to have the same capacity as the new table, even though we're dirtied with elements.
-            clear_bucket_block();
-        }
+        clear_bucket_block(); // FIXME: Try to make a faster path for when we happen to have the same capacity as the new table, even though we're dirtied with elements.
         bucket_block = new Bucket[other.total_capacity];
         total_capacity = other.total_capacity;
         main_capacity = other.main_capacity;
@@ -576,10 +580,7 @@ public:
     }
     HashTable& operator=(HashTable&& other)
     {
-        if (used_bucket_count)
-        { // FIXME: Try to make a faster path for when we happen to have the same capacity as the new table, even though we're dirtied with elements.
-            clear_bucket_block();
-        }
+        clear_bucket_block(); // FIXME: Try to make a faster path for when we happen to have the same capacity as the new table, even though we're dirtied with elements.
         bucket_block = other.bucket_block;
         total_capacity = other.total_capacity;
         main_capacity = other.main_capacity;
@@ -603,28 +604,31 @@ public:
         if(!bucket_block)
             return;
         size_t buckets_left = used_bucket_count;
-        for (size_t i = 0; i < main_capacity; ++i)
+        if(buckets_left)
         {
-            Bucket& buck = bucket_block[i];
-            if (!buck.used) continue;
-            Bucket* buck_ptr = buck.next_collision_bucket;
-            while(buck_ptr)
+            for (size_t i = 0; i < main_capacity; ++i)
             {
-                Bucket* temp_ptr = buck_ptr->next_collision_bucket;
-                buck_ptr->clear();
+                Bucket& buck = bucket_block[i];
+                if (!buck.used) continue;
+                Bucket* buck_ptr = buck.next_collision_bucket;
+                while(buck_ptr)
+                {
+                    Bucket* temp_ptr = buck_ptr->next_collision_bucket;
+                    buck_ptr->clear();
+                    --buckets_left;
+                    buck_ptr = temp_ptr;
+                }
+                buck.clear();
                 --buckets_left;
-                buck_ptr = temp_ptr;
+                if (!buckets_left) break;
             }
-            buck.clear();
-            --buckets_left;
-            if (!buckets_left) break;
-        }
 #ifdef HASHTABLE_DEBUG
-        if (buckets_left)
-        {
-            std::cout << "Hashtable failed to delete " << std::to_string(used_bucket_count) << " entries! Or something.\n";
-        }
+            if (buckets_left)
+            {
+                std::cout << "Hashtable failed to delete " << std::to_string(used_bucket_count) << " entries! Or something.\n";
+            }
 #endif
+        }
         delete[] bucket_block;
         bucket_block = nullptr; // Just to be safe :3
     }
