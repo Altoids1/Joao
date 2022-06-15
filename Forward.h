@@ -29,11 +29,6 @@
 #define UNLIKELY
 #endif
 
-struct ImmutableString;
-#include "HashTable.h"
-template <typename K, typename V>
-using Hashtable = HashTable<K,V>;
-
 #include "config.h"
 
 #ifdef DEBUG
@@ -71,4 +66,7 @@ class Table;
 class Value;
 class Interpreter;
 class Parser;
-
+struct ImmutableString;
+#include "HashTable.h"
+template <typename K, typename V>
+using Hashtable = HashTable<K,V>;
