@@ -13,9 +13,9 @@ class ASTNode // ASTNodes are abstract symbols which together form a "flow chart
 {
 protected:
 	ASTNode() = default;
-	ASTNode(const ASTNode&) = default; // Basically SHOULD NEVER HAPPEN
 public:
-	
+	ASTNode(const ASTNode&) = delete;
+
 	virtual ~ASTNode() = default;
 
 	int my_line = 0; // Hypothetically, the line that this ASTNode happens on. This is remembered for the sake of improving runtime legibility.
@@ -550,9 +550,11 @@ public:
 };
 
 //Similar to a NativeFunction except it requires a handle to an object its acting within.
-template <typename Lambda>
 class NativeMethod final : public Function
 {
+public:
+	using Lambda = std::function<Value(const std::vector<Value>& args, Object* obj)>;
+private:
 	Lambda lambda;
 public:
 	bool is_static = false; // True if it actually doesn't need an object to act on
@@ -563,7 +565,6 @@ public:
 		my_line = 0;
 		t_name = n;
 	}
-	NativeMethod(const NativeMethod&) {} // this is the one AST node where this is OK, since we're not kept track of by the typical AST tree.
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "NativeMethod"; }

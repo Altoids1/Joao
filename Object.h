@@ -28,6 +28,7 @@ class PolyTable
 		{
 			static_assert(sizeof(*this) == sizeof(HollowKnight)); // Necessary for this to be stored in a std::vector properly.
 			static_assert(!std::is_same<void,Type>()); // Why did you do this
+			static_assert(!std::is_reference<Type>()); // why
 		}
 		Vessel()
 		:HollowKnight(new Type(), typeid(Type))
@@ -71,7 +72,7 @@ public:
 		return static_cast<Type*>(hk->ptr);
 	}
 	template <typename Type>
-	void insert(const ImmutableString& key, const Type& value)
+	void insert(const ImmutableString& key, Type& value)
 	{
 		data.insert(key,Vessel<Type>(value));
 	}
@@ -95,12 +96,19 @@ This is a sort of metatype which provides overriding, perhaps natively-implement
 class Metatable
 {
 public:
-	PolyTable metamethods; // by "void" I mean "NativeMethod
+	Hashtable<ImmutableString,NativeMethod*> metamethods; // by "void" I mean "NativeMethod
 
-	template<typename Lambda>
-	void append_method(ImmutableString str,const NativeMethod<Lambda>& newmethod)
+	~Metatable()
 	{
-		metamethods.insert<NativeMethod<Lambda>>(str,newmethod);
+		for (auto it = metamethods.begin(); it != metamethods.end(); it++)
+		{
+			delete it.value();
+		}
+	}
+
+	void append_method(const ImmutableString& str, NativeMethod* newmethod)
+	{
+		metamethods.insert(str, newmethod);
 	}
 
 	friend class Object;
@@ -187,6 +195,11 @@ public:
 	{
 
 	}
+	~ObjectType()
+	{
+		if (owns_metatable)
+			delete mt;
+	}
 
 	//Note that this does not create a Value with Objectptr type; this is moreso an interface for the Interpreter during Object construction than anything else
 	//It is presumed that whoever is calling this function will take ownership of this novel heap pointer and ensure that it be properly GC'd in the future.
@@ -212,12 +225,10 @@ public:
 	void set_typemethod(Parser&, std::string, Function*);
 	void set_typemethod_raw(const ImmutableString&, Function*);
 
-
-	template<typename Lambda>
-	void append_native_method(ImmutableString str,const NativeMethod<Lambda>& newmethod)
+	void append_native_method(ImmutableString str, NativeMethod* newmethod)
 	{
 #ifdef _DEBUG
-		if(!mt) [[unlikely]]
+		if(!mt) UNLIKELY
 		{
 			throw std::runtime_error("Metatable not yet provided for this ObjectType which has NativeMethods!");
 		}

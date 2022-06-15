@@ -323,6 +323,31 @@ Value Function::resolve(Interpreter & interp)
 	return returnValue;
 }
 
+Value NativeMethod::resolve(Interpreter& interp)
+{
+	if (!obj && !is_static)
+		interp.RuntimeError(this, "Cannot call NativeMethod without an Object!");
+
+	Value result = lambda(t_args, obj);
+	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
+	{
+		switch (result.t_value.as_int)
+		{
+		case(static_cast<Value::JoaoInt>(ErrorCode::NoError)): // An expected null, function returned successfully.
+			break;
+		case(static_cast<Value::JoaoInt>(ErrorCode::BadArgType)):
+			interp.RuntimeError(this, ErrorCode::BadArgType, "Args of improper type given to NativeMethod!");
+			break;
+		case(static_cast<Value::JoaoInt>(ErrorCode::NotEnoughArgs)):
+			interp.RuntimeError(this, ErrorCode::NotEnoughArgs, "Not enough args provided to NativeMethod!");
+			break;
+		default:
+			interp.RuntimeError(this, "Unknown RuntimeError in NativeMethod!");
+		}
+	}
+	return result; // Woag.
+}
+
 Value CallExpression::resolve(Interpreter& interp)
 {
 #ifdef JOAO_SAFE

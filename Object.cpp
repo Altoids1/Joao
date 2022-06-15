@@ -71,9 +71,9 @@ Value Object::call_method(Interpreter& interp, const ImmutableString& name, std:
 	{
 		fuh = base_funcs->at(name);
 	}
-	else if (mt && mt->metamethods.data.contains(name))
+	else if (mt && mt->metamethods.contains(name))
 	{
-		fuh = static_cast<Function*>(mt->metamethods.data.at(name).ptr);
+		fuh = (mt->metamethods.at(name));
 	}
 	else
 	{
@@ -93,9 +93,9 @@ Function* Object::has_method(Interpreter& interp, const ImmutableString& name)
 	{
 		return base_funcs->at(name);
 	}
-	else if (mt && mt->metamethods.data.count(name))
+	else if (mt && mt->metamethods.contains(name))
 	{
-		return static_cast<Function*>(mt->metamethods.data.at(name).ptr); // TODO: Make a super smart typecheck on this
+		return mt->metamethods.at(name);
 	}
 	return nullptr;
 }
@@ -118,13 +118,13 @@ Object* ObjectType::makeObject(Interpreter& interp, std::vector<Value>&& args)
 	}
 	else if(mt)
 	{
-		auto* hk = mt->metamethods.data.lazy_at("#constructor");
-		if(hk)
+		NativeMethod** fuh = mt->metamethods.lazy_at("#constructor");
+		if(fuh)
 		{
-			Function* fuh = static_cast<Function*>(hk->ptr);
-			fuh->give_args(interp, args, o);
-			fuh->resolve(interp);
+			(*fuh)->give_args(interp, args, o);
+			(*fuh)->resolve(interp);
 		}
+		o->mt = mt;
 	}
 
 	return o;
@@ -144,8 +144,12 @@ Function* ObjectType::has_typemethod(Interpreter& interp, const ImmutableString&
 {
 	if (!typefuncs.count(str))
 	{
-		if (mt && mt->metamethods.data.contains(str))
-			return static_cast<Function*>(mt->metamethods.data.at(str).ptr);
+		if (mt)
+		{
+			NativeMethod** native = mt->metamethods.lazy_at(str);
+			if (native)
+				return *native;
+		}
 		return nullptr;
 	}
 	return typefuncs.at(str);
