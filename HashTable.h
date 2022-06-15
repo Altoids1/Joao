@@ -329,6 +329,31 @@ class HashTable
         return nullptr;
     }
 
+    //Already knowing that key is not in me,
+    //find a bucket for it anyways.
+    Bucket* make_bucket(const Key& key)
+    {
+        while(true)
+        {
+            //main array
+            size_t index = generate_index(key);
+            Bucket* buck = bucket_block + index;
+            if(!buck->used)
+                return buck;
+            //collision array time
+            while(buck->next_collision_bucket)
+                buck = buck->next_collision_bucket;
+            Bucket* new_buck = collision_data.allocate_collision_bucket();
+            if(!new_buck) //if we fail, loop back to trying main again after the rehash
+            {
+                rehash(total_capacity*2);
+                continue;
+            }
+            buck->next_collision_bucket = new_buck; // inform our hash neighbors that we exist
+            return new_buck;
+        }
+    }
+
     //Used the handle the pointer-induced awkwardness of copying from another HashTable.
     //This class making use of Bucket* over size_t indexes probably does improve speed by reducing pointer arithmetic,
     //but it does mean that copies are complex and slowed down by the process seen below.
@@ -773,12 +798,7 @@ public:
         {
             return; // Don't overwrite. This behaviour is a layover from std::unordered_map.
         }
-        Bucket* fav_buck = collision_data.allocate_collision_bucket();
-        if(!fav_buck) // If we've run out of collision space
-        {
-            rehash(total_capacity * 2); // Just rehash
-            fav_buck = collision_data.allocate_collision_bucket();
-        }
+        Bucket* fav_buck = make_bucket(pair.first);
         ++used_bucket_count;
         fav_buck->used = true;
         new (fav_buck->key()) Key(pair.first);
@@ -790,12 +810,7 @@ public:
         {
             return; // Don't overwrite. This behaviour is a layover from std::unordered_map.
         }
-        Bucket* fav_buck = collision_data.allocate_collision_bucket();
-        if(!fav_buck) // If we've run out of collision space
-        {
-            rehash(total_capacity * 2); // Just rehash
-            fav_buck = collision_data.allocate_collision_bucket();
-        }
+        Bucket* fav_buck = make_bucket(key);
         ++used_bucket_count;
         fav_buck->used = true;
         new (fav_buck->key()) Key(key);
