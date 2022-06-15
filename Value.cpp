@@ -3,7 +3,7 @@
 #include "Object.h"
 
 Hashtable<void*, uint32_t> Value::cached_ptrs;
-Hashtable<std::string, std::string*> Value::str_to_ptr;
+std::unordered_set<std::string> Value::cached_strings;
 Value Value::dev_null = Value();
 
 Value::Value(Object* o)

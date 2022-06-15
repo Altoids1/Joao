@@ -108,7 +108,7 @@ public:
 
 class Value : public UnmanagedValue { // A general pseudo-typeless Value used to store data within the programming language. Garbage collected.
 	static Hashtable<void*,uint32_t> cached_ptrs;
-	static Hashtable<std::string, std::string*> str_to_ptr;
+	static std::unordered_set<std::string> cached_strings;
 
 	inline void deref_as_str()
 	{
@@ -123,11 +123,11 @@ class Value : public UnmanagedValue { // A general pseudo-typeless Value used to
 		if (--cached_ptrs[t_value.as_string_ptr] == 0)
 		{
 			cached_ptrs.erase(t_value.as_string_ptr);
-			str_to_ptr.erase(*t_value.as_string_ptr);
 #ifdef LOUD_GC
 			std::cout << "Deleting " << (*t_value.as_string_ptr) << std::endl;
 #endif
-			delete t_value.as_string_ptr;
+			cached_strings.erase(*t_value.as_string_ptr);
+			//delete t_value.as_string_ptr; -- Implied by cached_Strings.erase innit
 		}
 #ifdef _DEBUG
 		else if(cached_ptrs[t_value.as_string_ptr] > 2'000'000)
@@ -186,17 +186,15 @@ public:
 	//Constructors where things get a bit apeshit for the sake of sensible memory usage
 	Value(const std::string& s)
 	{
-		std::string** ptr = str_to_ptr.lazy_at(s);
-		if (ptr == nullptr) // Novel string, it seems!
+		if (cached_strings.count(s) == 0) // Novel string, it seems!
 		{
-			std::string* sptr = new std::string(s);
-			t_value.as_string_ptr = sptr;
-			cached_ptrs.insert(sptr,1u);
-			str_to_ptr.insert(s,sptr);
+			auto it = cached_strings.insert(s).first;
+			t_value.as_string_ptr = const_cast<std::string*>(it.operator->());
+			cached_ptrs.insert(t_value.as_string_ptr,1u);
 		}
 		else
 		{
-			t_value.as_string_ptr = *ptr;
+			t_value.as_string_ptr = const_cast<std::string*>(cached_strings.insert(s).first.operator->());
 			cached_ptrs[t_value.as_string_ptr]++;
 		}
 		t_vType = vType::String;
