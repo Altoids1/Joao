@@ -28,6 +28,7 @@ public:
 	UnmanagedValue()
 	{
 		t_value.as_int = 0;
+		t_vType = vType::Null;
 	}
 protected:
 	UnmanagedValue(vType ty, DATA datum)
@@ -111,6 +112,14 @@ class Value : public UnmanagedValue { // A general pseudo-typeless Value used to
 
 	inline void deref_as_str()
 	{
+#ifdef _DEBUG
+		int cnt = cached_ptrs.count(t_value.as_string_ptr);
+		if (!cnt)
+		{
+			std::cout << "Found object " << to_string() << " unregistered to Value ptr cache!\n";
+			exit(1);
+		}
+#endif
 		if (--cached_ptrs[t_value.as_string_ptr] == 0)
 		{
 			cached_ptrs.erase(t_value.as_string_ptr);
@@ -120,6 +129,13 @@ class Value : public UnmanagedValue { // A general pseudo-typeless Value used to
 #endif
 			delete t_value.as_string_ptr;
 		}
+#ifdef _DEBUG
+		else if(cached_ptrs[t_value.as_string_ptr] > 2'000'000)
+		{
+			std::cout << "Reference counter for" << *t_value.as_string_ptr << "was negative??\n";
+			exit(1);
+		}
+#endif
 	}
 	void deref_as_obj();
 
@@ -170,16 +186,17 @@ public:
 	//Constructors where things get a bit apeshit for the sake of sensible memory usage
 	Value(const std::string& s)
 	{
-		if (str_to_ptr.count(s) == 0) // Novel string, it seems!
+		std::string** ptr = str_to_ptr.lazy_at(s);
+		if (ptr == nullptr) // Novel string, it seems!
 		{
 			std::string* sptr = new std::string(s);
 			t_value.as_string_ptr = sptr;
-			cached_ptrs[sptr] = 1u;
-			str_to_ptr[s] = sptr;
+			cached_ptrs.insert(sptr,1u);
+			str_to_ptr.insert(s,sptr);
 		}
 		else
 		{
-			t_value.as_string_ptr = str_to_ptr[s];
+			t_value.as_string_ptr = *ptr;
 			cached_ptrs[t_value.as_string_ptr]++;
 		}
 		t_vType = vType::String;
@@ -200,6 +217,8 @@ public:
 	
 	//And this is the assignment operator?? Kill me.
 	Value& operator=(const Value&);
+	Value& operator=(Value&&);
+
 	bool operator==(const Value&) const; // For the love of god DO NOT CALL THIS
 
 	//I am become death, the destroyer of malloc()
@@ -207,6 +226,15 @@ public:
 
 	std::string to_string() const;
 	std::string typestring();
+#ifdef _DEBUG
+	static void pointer_report()
+	{
+		for(auto it : str_to_ptr)
+		{
+			std::cout << it.first << '\n';
+		}
+	}
+#endif
 };
 
 
@@ -229,7 +257,7 @@ struct std::hash<Value>
 	}
 };
 
-#ifdef _DEBUG // FOR DEBUGGING ONLY. DO NOT SWALLOW OR SUBMERGE IN ACID
+#if defined(_DEBUG) || defined(HASHTABLE_DEBUG) // FOR DEBUGGING ONLY. DO NOT SWALLOW OR SUBMERGE IN ACID
 static std::ostream& operator<<(std::ostream& os, const Value& obj)
 {
 	os << obj.to_string();

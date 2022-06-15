@@ -9,9 +9,9 @@ Value Value::dev_null = Value();
 Value::Value(Object* o)
 	:UnmanagedValue(o)
 {
-	if (cached_ptrs.count(o) == 0) // Novel Object, I guess?
+	if(cached_ptrs.contains(o)) // Novel Object, I guess?
 	{
-		cached_ptrs[o] = 1u;
+		cached_ptrs.insert(o,1u);
 	}
 	else
 	{
@@ -188,9 +188,54 @@ Value& Value::operator=(const Value& rhs)
 	t_vType = rhs.t_vType;
 	return *this;
 }
+Value& Value::operator=(Value&& rhs)
+{
+	if (this == &Value::dev_null)
+		return *this;
 
+	//Logic to drop the ref to a string or object already held by lhs
+	switch (t_vType)
+	{
+	case(vType::String):
+		deref_as_str();
+		break;
+	case(vType::Object):
+		deref_as_obj();
+		break;
+	default:
+		break;
+	}
+	t_vType = rhs.t_vType;
+	switch(t_vType)
+	{
+	case(vType::String):
+		t_value.as_string_ptr = rhs.t_value.as_string_ptr;
+		break;
+	case(vType::Object):
+		t_value.as_object_ptr = rhs.t_value.as_object_ptr;
+		break;
+	case(vType::Bool):
+		t_value.as_bool = rhs.t_value.as_bool;
+		break;
+	case(vType::Double):
+		t_value.as_double = rhs.t_value.as_double;
+		break;
+	case(vType::Function):
+		t_value.as_function_ptr = rhs.t_value.as_function_ptr;
+		break;
+	case(vType::Integer):
+		t_value.as_int = rhs.t_value.as_int;
+		break;
+	case(vType::Null):
+	default: // ..What?
+		break;
+	}
+	rhs.t_vType = vType::Null;
+	rhs.t_value.as_int = 0;
+	return *this;
+}
 /*
-This exists pretty much exclusively for internal use, and is incomparable to the implementation of the == operator within João itself.
+This exists pretty much exclusively for internal use, and is incomparable to the implementation of the == operator within Joï¿½o itself.
 DO NOT SWALLOW OR SUBMERGE IN ACID
 */
 bool Value::operator==(const Value& rhs) const
