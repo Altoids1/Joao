@@ -1,23 +1,35 @@
 #pragma once
 
-#ifndef JOAO_NO_INCLUDE_STD
+#ifndef JOAO_NO_INCLUDE_STD // If you say so!
 //Core Libraries
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <forward_list>
 #include <list>
 #include <stack>
-#include "config.h"
-
-
+#include <queue>
+#include <deque>
+#include <initializer_list>
+#include <functional>
+#include <type_traits>
 #ifdef __GNUG__
-	#include <cmath>
+#include <cstring>
+#include <cmath>
 #endif
 #endif
+
+#if __cplusplus > 202000L
+#define LIKELY [[likely]]
+#define UNLIKELY [[unlikely]]
+#else
+#define LIKELY
+#define UNLIKELY
+#endif
+
+#include "config.h"
 
 #ifdef DEBUG
 #define _DEBUG
@@ -54,4 +66,7 @@ class Table;
 class Value;
 class Interpreter;
 class Parser;
-
+struct ImmutableString;
+#include "HashTable.h"
+template <typename K, typename V>
+using Hashtable = HashTable<K,V>;

@@ -4,14 +4,20 @@
 #include <assert.h> 
 
 #include "Forward.h"
+#include "ImmutableString.h"
 #include "SharedEnums.h"
 #include "Error.h"
 #include "Value.h"
 
 class ASTNode // ASTNodes are abstract symbols which together form a "flow chart" tree of symbols that the parser creates from the text that the interpreter then interprets.
 {
-
+protected:
+	ASTNode() = default;
 public:
+	ASTNode(const ASTNode&) = delete;
+
+	virtual ~ASTNode() = default;
+
 	int my_line = 0; // Hypothetically, the line that this ASTNode happens on. This is remembered for the sake of improving runtime legibility.
 
 	virtual const std::string class_name() const { return "ASTNode"; } // FIXME: Make better use of typeid() calls instead of this shit
@@ -66,14 +72,14 @@ public:
 
 class Identifier : public ASTNode
 {
-	std::string t_name;
+	ImmutableString t_name;
 public:
-	Identifier(std::string s)
+	Identifier(const ImmutableString& s)
 		:t_name(s)
 	{
 		//std::cout << "I've been created with name " + s + "!\n";
 	}
-	const std::string& get_str() const
+	const ImmutableString& get_str() const
 	{
 		return t_name;
 	}
@@ -82,7 +88,7 @@ public:
 	virtual Value& handle(Interpreter&) override;
 	
 	virtual const std::string class_name() const override { return "Identifier"; }
-	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name + "\n"; }
+	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name.to_string() + "\n"; }
 };
 
 class AssignmentStatement : public Expression
@@ -107,6 +113,11 @@ public:
 		my_line = linenum;
 		
 		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
+	}
+	virtual ~AssignmentStatement()
+	{
+		delete id;
+		delete rhs;
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual std::string dump(int indent)
@@ -174,7 +185,7 @@ public:
 	virtual Value const_resolve(Parser&, bool) override;
 
 	//A special-snowflake resolver for LocalAssignmentStatement which returns the key-value pair of the property it describes.
-	std::pair<std::string, Value> resolve_property(Parser&);
+	std::pair<ImmutableString, Value> resolve_property(Parser&);
 
 	virtual std::string dump(int indent)
 	{
@@ -205,6 +216,10 @@ class UnaryExpression : public Expression
 	{
 		my_line = linenum;
 
+	}
+	virtual ~UnaryExpression()
+	{
+		delete t_rhs;
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "UnaryExpression"; }
@@ -283,6 +298,11 @@ public:
 		my_line = linenum;
 		
 	}
+	virtual ~BinaryExpression()
+	{
+		delete t_lhs;
+		delete t_rhs;
+	}
 	virtual Value resolve(Interpreter&) override;
 	virtual std::string dump(int indent)
 	{
@@ -357,6 +377,10 @@ public:
 		my_line = linenum;
 		has_expr = true;
 	}
+	virtual ~ReturnStatement()
+	{
+		delete held_expr;
+	}
 	virtual Value resolve(Interpreter& interp) override
 	{
 		return held_expr->resolve(interp);
@@ -389,6 +413,14 @@ public:
 		my_line = linenum;
 
 	}
+	virtual ~CallExpression()
+	{
+		delete func_expr;
+		for (ASTNode* ptr : args)
+		{
+			delete ptr;
+		}
+	}
 	CallExpression* append_arg(ASTNode* expr)
 	{
 		args.push_back(expr);
@@ -418,7 +450,7 @@ protected:
 	Value returnValue = Value(); // My return value
 	std::vector<Expression*> statements; // The statements which're executed when I am run
 	std::vector<Value> t_args;
-	std::vector<std::string> t_argnames;
+	std::vector<ImmutableString> t_argnames;
 	//std::vector<Expression> args;
 	std::string t_name; // My name
 	Object* obj = nullptr; // I don't know.
@@ -430,7 +462,14 @@ protected:
 
 	}
 public:
-	
+	virtual ~Function()
+	{
+		//we don't actually own that $obj value so
+		for (Expression* exp : statements)
+		{
+			delete exp;
+		}
+	}
 	Value& to_value() { return my_value; }
 	const std::string& get_name() const { return t_name; }
 	Object* get_obj() const { return obj; }
@@ -446,7 +485,7 @@ public:
 		t_name = name;
 		statements = exprs;
 	}
-	Function(std::string name, std::vector<Expression*> &exprs, std::vector<std::string>& sargs, int linenum = 0)
+	Function(std::string name, std::vector<Expression*>&& exprs, std::vector<ImmutableString>&& sargs, int linenum = 0)
 		:my_value(Value(this))
 	{
 		t_name = name;
@@ -471,7 +510,7 @@ public:
 		str += "@Params:\n";
 		for (size_t i = 0; i < t_argnames.size(); ++i)
 		{
-			str += " " + t_argnames[i] + "\n";
+			str += " " + t_argnames[i].to_string() + "\n";
 		}
 
 		str += "=Statements:\n";
@@ -511,9 +550,11 @@ public:
 };
 
 //Similar to a NativeFunction except it requires a handle to an object its acting within.
-template <typename Lambda>
 class NativeMethod final : public Function
 {
+public:
+	using Lambda = std::function<Value(const std::vector<Value>& args, Object* obj)>;
+private:
 	Lambda lambda;
 public:
 	bool is_static = false; // True if it actually doesn't need an object to act on
@@ -547,6 +588,13 @@ protected:
 	{
 
 	}
+	virtual ~Block()
+	{
+		for (Expression* exp : statements)
+		{
+			delete exp;
+		}
+	}
 
 	//A more abstract function used for iterating over any arbitrary block of statements.
 	//It's strange, but necessary for a class that is this abstract.
@@ -570,6 +618,11 @@ public:
 {
 		my_line = linenum;
 		statements = st;
+	}
+	virtual ~IfBlock()
+	{
+		delete condition;
+		delete Elseif;
 	}
 
 	void append_else(IfBlock* elif)
@@ -629,6 +682,12 @@ public:
 		my_line = linenum;
 		statements = st;
 	}
+	virtual ~ForBlock()
+	{
+		delete initializer;
+		delete condition;
+		delete increment;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ForBlock"; }
@@ -652,17 +711,21 @@ public:
 
 class ForEachBlock final : public Block
 {
-	std::string key_name;
-	std::string value_name;
+	ImmutableString key_name;
+	ImmutableString value_name;
 	ASTNode* table_node;
 public:
-	ForEachBlock(const std::string& k , const std::string& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
+	ForEachBlock(const ImmutableString& k , const ImmutableString& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
 		:key_name(k),
 		value_name(v),
 		table_node(tn)
 	{
 		my_line = linenum;
 		statements = st;
+	}
+	virtual ~ForEachBlock()
+	{
+		delete table_node;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -672,7 +735,7 @@ public:
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ForEachBlock\n";
 
-		str += ind + "=Pair: " + key_name + "," + value_name + "\n";
+		str += ind + "=Pair: " + key_name.to_string() + "," + value_name.to_string() + "\n";
 		str += ind + "<in:\n" + table_node->dump(indent + 2);
 
 		for (size_t i = 0; i < statements.size(); ++i)
@@ -697,6 +760,10 @@ public:
 {
 		my_line = linenum;
 		statements = st;
+	}
+	virtual ~WhileBlock()
+	{
+		delete condition;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -752,6 +819,11 @@ public:
 		my_line = linenum;
 
 	}
+	virtual ~MemberAccess()
+	{
+		delete front;
+		delete back;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -776,7 +848,7 @@ class ClassDefinition final : public ASTNode
 {
 	std::vector<LocalAssignmentStatement*> statements;
 public:
-	std::string direct;
+	ImmutableString direct;
 	ClassDefinition(std::string& d, std::vector<LocalAssignmentStatement*> &s, int linenum = 0)
 		:statements(s)
 		,direct(d)
@@ -784,17 +856,24 @@ public:
 		my_line = linenum;
 
 	}
+	virtual ~ClassDefinition()
+	{
+		for (LocalAssignmentStatement* ptr : statements)
+		{
+			delete ptr;
+		}
+	}
 
 	//virtual Value resolve(Interpreter&) override;
 
-	std::unordered_map<std::string, Value> resolve_properties(Parser&);
+	Hashtable<ImmutableString, Value> resolve_properties(Parser&);
 	void append_properties(Parser&, ObjectType*);
 
 	virtual const std::string class_name() const override { return "ClassDefinition"; }
 	virtual std::string dump(int indent)
 	{
 		std::string ind = std::string(indent, ' ');
-		std::string str = ind + "ClassDefinition " + direct + ";\n";
+		std::string str = ind + "ClassDefinition " + direct.to_string() + ";\n";
 		for (size_t i = 0; i < statements.size(); ++i)
 		{
 			str += statements[i]->dump(indent + 1);
@@ -806,22 +885,29 @@ public:
 class Construction : public ASTNode
 {
 
-	std::string type;
+	ImmutableString type;
 	std::vector<ASTNode*> args;
 public:
-	Construction(std::string t, std::vector<ASTNode*> a, int linenum = 0)
+	Construction(const ImmutableString& t, std::vector<ASTNode*> a, int linenum = 0)
 		:type(t)
 		,args(a)
-{
+	{
 		my_line = linenum;
 
+	}
+	virtual ~Construction()
+	{
+		for (ASTNode* arg : args)
+		{
+			delete arg;
+		}
 	}
 
 	virtual const std::string class_name() const override { return "Construction"; }
 	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
-		std::string str = std::string(indent, ' ') + "Construction, type: " + type + "\n";
+		std::string str = std::string(indent, ' ') + "Construction, type: " + type.to_string() + "\n";
 		str += ind + "(Args:\n";
 		for (size_t i = 0; i < args.size(); ++i)
 		{
@@ -836,18 +922,18 @@ public:
 class ParentAccess : public ASTNode
 {
 public:
-	std::string prop;
+	ImmutableString prop;
 
-	ParentAccess(std::string p, int linenum = 0)
+	ParentAccess(const ImmutableString& p, int linenum = 0)
 		:prop(p)
-{
+	{
 		my_line = linenum;
 
 	}
 	virtual const std::string class_name() const override { return "ParentAccess"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "ParentAccess, property: " + prop + "\n";
+		return std::string(indent, ' ') + "ParentAccess, property: " + prop.to_string() + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -856,20 +942,20 @@ public:
 class GrandparentAccess : public ASTNode
 {
 	unsigned int depth;
-	std::string prop;
+	ImmutableString prop;
 
 public:
-	GrandparentAccess(unsigned int d,std::string p, int linenum = 0)
+	GrandparentAccess(unsigned int d,const ImmutableString& p, int linenum = 0)
 		:depth(d)
 		,prop(p)
-{
+	{
 		my_line = linenum;
 
 	}
 	virtual const std::string class_name() const override { return "GrandparentAccess"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "GrandparentAccess, property: " + prop + "; depth: " + std::to_string(depth) + "\n";
+		return std::string(indent, ' ') + "GrandparentAccess, property: " + prop.to_string() + "; depth: " + std::to_string(depth) + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -878,9 +964,9 @@ public:
 class GlobalAccess : public ASTNode
 {
 public:
-	std::string var;
+	ImmutableString var;
 
-	GlobalAccess(std::string v, int linenum = 0)
+	GlobalAccess(const ImmutableString& v, int linenum = 0)
 		:var(v)
 {
 		my_line = linenum;
@@ -889,7 +975,7 @@ public:
 	virtual const std::string class_name() const override { return "GlobalAccess"; }
 	virtual std::string dump(int indent) override
 	{
-		return std::string(indent, ' ') + "GlobalAccess, property: " + var + "\n";
+		return std::string(indent, ' ') + "GlobalAccess, property: " + var.to_string() + "\n";
 	}
 	virtual Value resolve(Interpreter&) override;
 	virtual Value& handle(Interpreter&) override;
@@ -908,6 +994,11 @@ public:
 {
 		my_line = linenum;
 
+	}
+	virtual ~IndexAccess()
+	{
+		delete container;
+		delete index;
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -935,17 +1026,23 @@ Runs the associated code within the Try and tosses it at Catch if an exception o
 */
 class TryBlock : public Block
 {
-	std::string err_name;
+	ImmutableString err_name;
 	std::vector<Expression*> catch_statements; // TODO: Allow for multiple catchers based on error type :)
 public:
-	TryBlock(const std::vector<Expression*>& t, const std::string& err, const std::vector<Expression*>& c)
+	TryBlock(const std::vector<Expression*>& t, const ImmutableString& err, const std::vector<Expression*>& c)
 		:Block(t)
 		,err_name(err)
 		,catch_statements(c)
 	{
 
 	}
-
+	virtual ~TryBlock()
+	{
+		for (Expression* exp : catch_statements)
+		{
+			delete exp;
+		}
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "TryBlock"; }
@@ -958,7 +1055,7 @@ public:
 		{
 			str += statements[i]->dump(indent + 1);
 		}
-		str += ind + "?Catch: " + err_name + "\n";
+		str += ind + "?Catch: " + err_name.to_string() + "\n";
 		for (size_t i = 0; i < catch_statements.size(); ++i)
 		{
 			str += catch_statements[i]->dump(indent + 1);
@@ -976,6 +1073,10 @@ public:
 	{
 
 	}
+	virtual ~ThrowStatement()
+	{
+		delete err_node;
+	}
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "Throw"; }
@@ -990,12 +1091,19 @@ public:
 //Weird hack of a class to support key-value table initiatialization.
 class BaseTableConstruction : public ASTNode
 {
-	std::unordered_map<std::string, ASTNode*> nodes;
+	Hashtable<std::string, ASTNode*> nodes;
 public:
-	BaseTableConstruction(const std::unordered_map<std::string, ASTNode*>& n, int linenum = 0)
+	BaseTableConstruction(Hashtable<std::string, ASTNode*>&& n, int linenum = 0)
 		:nodes(n)
 	{
 		my_line = linenum;
+	}
+	virtual ~BaseTableConstruction()
+	{
+		for (auto it : nodes)
+		{
+			delete it.second;
+		}
 	}
 
 	virtual const std::string class_name() const override { return "BaseTableConstruction"; }
@@ -1004,7 +1112,7 @@ public:
 		std::string ind = std::string(indent, ' ');
 		std::string str = std::string(indent, ' ') + "BaseTableConstruction\n";
 		str += ind + "(Args:\n";
-		for (auto &it : nodes)
+		for (auto it : nodes)
 		{
 			str += ind + it.first + "\t" + it.second->dump(0) + "\n";
 		}

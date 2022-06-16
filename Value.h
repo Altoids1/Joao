@@ -28,6 +28,7 @@ public:
 	UnmanagedValue()
 	{
 		t_value.as_int = 0;
+		t_vType = vType::Null;
 	}
 protected:
 	UnmanagedValue(vType ty, DATA datum)
@@ -106,20 +107,35 @@ public:
 };
 
 class Value : public UnmanagedValue { // A general pseudo-typeless Value used to store data within the programming language. Garbage collected.
-	static std::unordered_map<void*,uint32_t> cached_ptrs;
-	static std::unordered_map<std::string, std::string*> str_to_ptr;
+	static Hashtable<void*,uint32_t> cached_ptrs;
+	static std::unordered_set<std::string> cached_strings;
 
 	inline void deref_as_str()
 	{
+#ifdef _DEBUG
+		int cnt = cached_ptrs.count(t_value.as_string_ptr);
+		if (!cnt)
+		{
+			std::cout << "Found object " << to_string() << " unregistered to Value ptr cache!\n";
+			exit(1);
+		}
+#endif
 		if (--cached_ptrs[t_value.as_string_ptr] == 0)
 		{
 			cached_ptrs.erase(t_value.as_string_ptr);
-			str_to_ptr.erase(*t_value.as_string_ptr);
 #ifdef LOUD_GC
 			std::cout << "Deleting " << (*t_value.as_string_ptr) << std::endl;
 #endif
-			delete t_value.as_string_ptr;
+			cached_strings.erase(*t_value.as_string_ptr);
+			//delete t_value.as_string_ptr; -- Implied by cached_Strings.erase innit
 		}
+#ifdef _DEBUG
+		else if(cached_ptrs[t_value.as_string_ptr] > 2'000'000)
+		{
+			std::cout << "Reference counter for" << *t_value.as_string_ptr << "was negative??\n";
+			exit(1);
+		}
+#endif
 	}
 	void deref_as_obj();
 
@@ -170,16 +186,15 @@ public:
 	//Constructors where things get a bit apeshit for the sake of sensible memory usage
 	Value(const std::string& s)
 	{
-		if (str_to_ptr.count(s) == 0) // Novel string, it seems!
+		if (cached_strings.count(s) == 0) // Novel string, it seems!
 		{
-			std::string* sptr = new std::string(s);
-			t_value.as_string_ptr = sptr;
-			cached_ptrs[sptr] = 1u;
-			str_to_ptr[s] = sptr;
+			auto it = cached_strings.insert(s).first;
+			t_value.as_string_ptr = const_cast<std::string*>(it.operator->());
+			cached_ptrs.insert(t_value.as_string_ptr,1u);
 		}
 		else
 		{
-			t_value.as_string_ptr = str_to_ptr[s];
+			t_value.as_string_ptr = const_cast<std::string*>(cached_strings.insert(s).first.operator->());
 			cached_ptrs[t_value.as_string_ptr]++;
 		}
 		t_vType = vType::String;
@@ -200,6 +215,8 @@ public:
 	
 	//And this is the assignment operator?? Kill me.
 	Value& operator=(const Value&);
+	Value& operator=(Value&&);
+
 	bool operator==(const Value&) const; // For the love of god DO NOT CALL THIS
 
 	//I am become death, the destroyer of malloc()
@@ -207,6 +224,15 @@ public:
 
 	std::string to_string() const;
 	std::string typestring();
+#ifdef _DEBUG
+	static void pointer_report()
+	{
+		for(auto it : str_to_ptr)
+		{
+			std::cout << it.first << '\n';
+		}
+	}
+#endif
 };
 
 
@@ -228,3 +254,11 @@ struct std::hash<Value>
 		}
 	}
 };
+
+#if defined(_DEBUG) || defined(HASHTABLE_DEBUG) // FOR DEBUGGING ONLY. DO NOT SWALLOW OR SUBMERGE IN ACID
+static std::ostream& operator<<(std::ostream& os, const Value& obj)
+{
+	os << obj.to_string();
+	return os;
+}
+#endif

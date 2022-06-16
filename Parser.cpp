@@ -57,7 +57,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 		{
 			int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
 
-			std::vector<std::string> pirate_noise;
+			std::vector<ImmutableString> pirate_noise;
 			if (close != tokenheader + 1)
 			{
 				pirate_noise.push_back(readName(tokenheader+1)); // Updates tokenheader hopefully
@@ -80,7 +80,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			std::vector<Expression*> funcblock = readBlock(BlockType::Function,close+1, static_cast<int>(tokens.size()-1));
 			--tokenheader;
 
-			Function* func = new Function(dir_name, funcblock, pirate_noise, t->line);
+			Function* func = new Function(dir_name, std::move(funcblock), std::move(pirate_noise), t->line);
 
 			if (Directory::DotDot(dir_name) == "/") // If this is a classless function in the globalscope
 				t_program.set_func(dir_name, func);
@@ -116,8 +116,12 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 	}
 
 	generate_object_tree(classdef_list);
+	for(ClassDefinition* ptr : classdef_list)
+	{
+		delete ptr;
+	}
 
-	return t_program;
+	return std::move(t_program);
 }
 
 void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
@@ -145,9 +149,9 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	for (auto it = cdefs.begin(); it != cdefs.end(); ++it) // Ask all the classdefs
 	{
 		ClassDefinition* cdptr = *it;
-		std::string cdstr = cdptr->direct;
+		ImmutableString cdstr = cdptr->direct;
 
-		if (uncooked_types.count(cdstr))
+		if (uncooked_types.count(cdstr.to_string()))
 		{
 			ParserError(nullptr, "Duplicate class definition detected!"); // FIXME: Allow for this (with perhaps suppressable warnings regardless)
 			continue;
@@ -155,7 +159,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 
 		ObjectType* objtype = new ObjectType(cdstr, cdptr->resolve_properties(*this));
 
-		uncooked_types[cdstr] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
+		uncooked_types[cdstr.to_string()] = objtype; // Writing a null to here, I think, still works for creating the entry. Suck it, Lua!
 	}
 	for (auto it = t_program.definedMethods.begin(); it != t_program.definedMethods.end(); ++it) // Ask all the functions
 	{
@@ -190,7 +194,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	ObjectTree joao; //Wow, it's the real Jo�o Gaming!
 	for (auto it = uncooked_types.begin(); it != uncooked_types.end(); ++it)
 	{
-		joao.append(it->second);
+		joao.append(it.value());
 	}
 
 
@@ -200,7 +204,7 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	std::cout << "----\n";
 #endif
 	
-	t_program.definedObjTypes = uncooked_types; // They're cooked *at this point*, I will note
+	t_program.definedObjTypes = std::move(uncooked_types); // They're cooked *at this point*, I will note
 	
 
 	return;
@@ -459,7 +463,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 						In the future, it would probably be best to have this just pass into the normal /table constructor,
 						with each key-value pair being a Value of type Tuple (a thing that does not exist yet in this language)
 						*/
-						std::unordered_map<std::string,ASTNode*> nodes;
+						HashTable<std::string,ASTNode*> nodes;
 						int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Brace, tokenheader + 2);
 						do
 						{
@@ -467,7 +471,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 							std::string namestr;
 							if (nametoken->class_enum() == Token::cEnum::WordToken)
 							{
-								namestr = static_cast<WordToken*>(nametoken)->word;
+								namestr = static_cast<WordToken*>(nametoken)->word.to_string();
 							}
 							else if (nametoken->class_enum() == Token::cEnum::StringToken)
 							{
@@ -500,7 +504,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 							}
 							nodes[namestr] = valuenode;
 						} while (tokenheader < yonder);
-						lvalue = new BaseTableConstruction(nodes, tokens[tokenheader]->line);
+						lvalue = new BaseTableConstruction(std::move(nodes), tokens[tokenheader]->line);
 						tokenheader = yonder + 1;
 						break; // Out of case(PairSymbolToken::pairOp::Brace)
 					}
@@ -1016,7 +1020,7 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				}
 				++tokenheader;
 				consume_paren(true); // (
-				std::string err_name = readName(tokenheader);
+				ImmutableString err_name = readName(tokenheader);
 				consume_paren(false); // )
 				std::vector<Expression*> catch_block = readBlock(BlockType::Catch, tokenheader, there);
 

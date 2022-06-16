@@ -12,7 +12,7 @@ class Parser
 	const bool is_interactive;
 
 	//Used to store extraneous, native types
-	std::unordered_map<std::string, ObjectType*> uncooked_types;
+	HashTable<std::string, ObjectType*> uncooked_types;
 	
 	/*
 	Here's how this is gonna work:
@@ -22,7 +22,7 @@ class Parser
 
 	std::vector<Scanner::OperationPrecedence> lowest_ops;
 
-	const std::unordered_map<BinaryExpression::bOps, Scanner::OperationPrecedence> bOp_to_precedence =
+	const Hashtable<BinaryExpression::bOps, Scanner::OperationPrecedence> bOp_to_precedence =
 	{
 		{BinaryExpression::bOps::Add,Scanner::OperationPrecedence::Term},
 		{BinaryExpression::bOps::Subtract,Scanner::OperationPrecedence::Term},
@@ -459,29 +459,6 @@ ACCESS_END:
 
 		ASTNode* rvalue = readExp(tokenheader, there);
 
-		/*
-		The way we handle the assign-and-op operators is basically just perceiving them as being equivalent to "id = id op rvalue" or whatever.
-		*/
-		switch (aesop)
-		{
-		case(AssignmentStatement::aOps::Assign):
-			break;
-		case(AssignmentStatement::aOps::AssignAdd):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Add, id, rvalue);
-			break;
-		case(AssignmentStatement::aOps::AssignSubtract):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Subtract, id, rvalue);
-			break;
-		case(AssignmentStatement::aOps::AssignMultiply):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Multiply, id, rvalue);
-			break;
-		case(AssignmentStatement::aOps::AssignDivide):
-			rvalue = new BinaryExpression(BinaryExpression::bOps::Divide, id, rvalue);
-			break;
-		default:
-			break;
-		}
-
 		return new AssignmentStatement(id, rvalue, aesop);
 	}
 
@@ -503,7 +480,7 @@ ACCESS_END:
 			}
 				
 		}
-		return 0; // Safe because it is impossible for the first token of a valid João program to be a CommaToken
+		return 0; // Safe because it is impossible for the first token of a valid Joï¿½o program to be a CommaToken
 	}
 
 	//Here-there-update;
@@ -534,7 +511,7 @@ ACCESS_END:
 	}
 
 	//Updates tokenheader to be one token ahead of $here.
-	std::string readName(int here)
+	ImmutableString readName(int here)
 	{
 #ifdef LOUD_TOKENHEADER
 		std::cout << "readName starting at " << std::to_string(here) << std::endl;
@@ -687,9 +664,16 @@ protected:
 public: // Parser doesn't have much of an API but it does have something
 	Parser(Scanner&t)
 		:is_interactive(t.is_interactive)
-		,tokens(t.tokens)
-		,lowest_ops(t.lowest_ops)
+		,tokens(std::move(t.tokens)) // This steals all the tokens from Scanner. Now, we are the ones responsible for deleting all these token pointers later on.
+		,lowest_ops(std::move(t.lowest_ops))
 	{
+	}
+	~Parser()
+	{
+		for(Token* t_ptr : tokens)
+		{
+			delete t_ptr;
+		}
 	}
 	void ParserError()
 	{

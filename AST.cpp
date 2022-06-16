@@ -13,6 +13,7 @@
 int Expression::expr_count = 0;
 #endif
 
+Hashtable<const char*, size_t> ImmutableString::cstr_to_refcount;
 
 Value ASTNode::resolve(Interpreter& interp)
 {
@@ -59,7 +60,7 @@ Value& Identifier::handle(Interpreter& interp)
 {
 	//We actually have to evaluate here whether or not the identifier present is pointing to a function or not, at the current scope.
 
-	Function* funky = interp.get_func(t_name,this,false);
+	Function* funky = interp.get_func(t_name.to_string(),this,false);
 	if (funky)
 	{
 		return funky->to_value();
@@ -83,15 +84,33 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 	if (lhs_val.t_vType == Value::vType::Function)
 	{
+#if !defined(JOAO_SAFE) && defined(DEBUG)
 		std::cout << "WARNING: Overwriting a Value which stores a function pointer!\n";
+#else
+		return Value();
+#endif
 	}
 
-	//While we do know our own assignment, we don't actually use that information in the AST (as of 7th May 2021)
-	//That's assumed to be handled by the parser.
-
-	lhs_val = rhs_val;
-
-	return rhs_val; // If anything.
+	switch (t_op) // FIXME: Make this suck less
+	{
+	case(aOps::AssignAdd):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Add, interp);
+		break;
+	case(aOps::AssignSubtract):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Subtract, interp);
+		break;
+	case(aOps::AssignMultiply):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Multiply, interp);
+		break;
+	case(aOps::AssignDivide):
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Divide, interp);
+		break;
+	//TODO: Permit other sorts of ops to be mixed with assignment
+	case(aOps::Assign):
+		lhs_val = rhs_val;
+		break;
+	}
+	return lhs_val; // If anything.
 }
 
 Value LocalAssignmentStatement::resolve(Interpreter& interp)
@@ -183,10 +202,10 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	}
 }
 
-std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
+std::pair<ImmutableString, Value> LocalAssignmentStatement::resolve_property(Parser& parser)
 {
 	//step 1. get string
-	std::string suh = static_cast<Identifier*>(id)->get_str();
+	const ImmutableString& suh = static_cast<Identifier*>(id)->get_str();
 
 	//step 2. get value
 	Value ruh = rhs->const_resolve(parser, true);
@@ -198,7 +217,7 @@ std::pair<std::string, Value> LocalAssignmentStatement::resolve_property(Parser&
 		parser.ParserError(nullptr, "Const-resolved rvalue for ObjectType property failed typecheck!");
 
 	//step 3. profit!
-	return std::pair<std::string, Value>(suh,ruh);
+	return std::pair<ImmutableString, Value>(suh,ruh);
 }
 
 Value BinaryExpression::resolve(Interpreter& interp)
@@ -253,7 +272,7 @@ Value Function::resolve(Interpreter & interp)
 		Expression* ptr = *it;
 		if (ptr->class_name() == "ReturnStatement")
 		{
-			ReturnStatement rt = *(static_cast<ReturnStatement*>(ptr));
+			ReturnStatement& rt = *(static_cast<ReturnStatement*>(ptr));
 
 			if (rt.has_expr) // If this actually has something to return
 			{
@@ -304,6 +323,31 @@ Value Function::resolve(Interpreter & interp)
 	return returnValue;
 }
 
+Value NativeMethod::resolve(Interpreter& interp)
+{
+	if (!obj && !is_static)
+		interp.RuntimeError(this, "Cannot call NativeMethod without an Object!");
+
+	Value result = lambda(t_args, obj);
+	if (result.t_vType == Value::vType::Null && result.t_value.as_int)
+	{
+		switch (result.t_value.as_int)
+		{
+		case(static_cast<Value::JoaoInt>(ErrorCode::NoError)): // An expected null, function returned successfully.
+			break;
+		case(static_cast<Value::JoaoInt>(ErrorCode::BadArgType)):
+			interp.RuntimeError(this, ErrorCode::BadArgType, "Args of improper type given to NativeMethod!");
+			break;
+		case(static_cast<Value::JoaoInt>(ErrorCode::NotEnoughArgs)):
+			interp.RuntimeError(this, ErrorCode::NotEnoughArgs, "Not enough args provided to NativeMethod!");
+			break;
+		default:
+			interp.RuntimeError(this, "Unknown RuntimeError in NativeMethod!");
+		}
+	}
+	return result; // Woag.
+}
+
 Value CallExpression::resolve(Interpreter& interp)
 {
 #ifdef JOAO_SAFE
@@ -351,7 +395,7 @@ Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 		Expression* ptr = *it;
 		if (ptr->class_name() == "ReturnStatement")
 		{
-			ReturnStatement rt = *static_cast<ReturnStatement*>(ptr);
+			ReturnStatement& rt = *static_cast<ReturnStatement*>(ptr);
 
 			
 			if (rt.has_expr) // If this actually has something to return
@@ -505,12 +549,12 @@ Value ForEachBlock::resolve(Interpreter& interp)
 	//Normal hash keys
 	for (auto it = tbl->t_hash.begin(); it != tbl->t_hash.end(); ++it)
 	{
-		const Value& key = it->first;
+		const Value& key = it.key();
 		if (key.t_vType == Value::vType::Integer && key.t_value.as_int < array_it) // Skipping over "silly keys" that we've already iterated over
 			continue;
 
 		interp.override_var(key_name, key, this);
-		interp.override_var(value_name, it->second, this);
+		interp.override_var(value_name, it.value(), this);
 		Value blockret = iterate_statements(interp);
 		if (interp.BREAK_COUNTER)
 		{
@@ -586,7 +630,7 @@ Value MemberAccess::resolve(Interpreter& interp)
 		if (f) return Value(f);
 		if (ptr->is_table())
 		{
-			return static_cast<Table*>(ptr)->at(interp, static_cast<Identifier*>(back)->get_str());
+			return static_cast<Table*>(ptr)->at(interp, static_cast<Identifier*>(back)->get_str().to_string());
 		}
 		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "MemberAccess failed because member does not exist!");
 		return Value();
@@ -624,9 +668,9 @@ Value& MemberAccess::handle(Interpreter& interp) // Tons of similar code to Memb
 	return Value::dev_null;
 }
 
-std::unordered_map<std::string, Value> ClassDefinition::resolve_properties(Parser& parse)
+Hashtable<ImmutableString, Value> ClassDefinition::resolve_properties(Parser& parse)
 {
-	std::unordered_map<std::string, Value> svluh;
+	Hashtable<ImmutableString, Value> svluh;
 
 	for (auto it = statements.begin(); it != statements.end(); ++it)
 	{
@@ -645,7 +689,7 @@ void ClassDefinition::append_properties(Parser& parse, ObjectType* objtype)
 	{
 		LocalAssignmentStatement* lassy = *it;
 
-		std::pair<std::string, Value> pear = lassy->resolve_property(parse);
+		std::pair<ImmutableString, Value> pear = lassy->resolve_property(parse);
 
 		objtype->set_typeproperty(parse, pear.first,pear.second);	
 	}
@@ -653,7 +697,7 @@ void ClassDefinition::append_properties(Parser& parse, ObjectType* objtype)
 
 Value Construction::resolve(Interpreter& interp)
 {
-	return interp.makeObject(type,args,this);
+	return interp.makeObject(type.to_string(),args,this); // FIXME: Should not be to_string-ing here >:/
 }
 
 Value ParentAccess::resolve(Interpreter& interp)
@@ -801,7 +845,7 @@ Value ThrowStatement::resolve(Interpreter& interp)
 	}
 
 	Value val = err_node->resolve(interp);
-	if (!val || val.t_vType != Value::vType::Object || val.t_value.as_object_ptr->object_type != "/error")
+	if (!val || val.t_vType != Value::vType::Object || strcmp(val.t_value.as_object_ptr->object_type.data,"/error"))
 	{
 		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "Throw keyword invoked with non-error operand!");
 		return Value();
@@ -814,9 +858,9 @@ Value ThrowStatement::resolve(Interpreter& interp)
 
 Value BaseTableConstruction::resolve(Interpreter& interp)
 {
-	std::unordered_map<std::string, Value> resolved_entries;
-	resolved_entries.reserve(nodes.size());
-	for (auto& it : nodes)
+	Hashtable<std::string, Value> resolved_entries;
+	resolved_entries.ensure_capacity(nodes.size());
+	for (auto it : nodes)
 	{
 		resolved_entries[it.first] = it.second->resolve(interp);
 #ifdef JOAO_SAFE

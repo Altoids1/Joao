@@ -47,13 +47,20 @@ class ObjectTree
 		{
 
 		}
+		~Node()
+		{
+			for(Node* ptr : children)
+			{
+				delete ptr;
+			}
+		}
 	};
 
 	std::vector<Node*> basetypes; // The nodes whose root is root
 
 	//Allows for instant lookup of a given ObjectType's location in the node structure 
 	//Can't use ObjectType* as a key unfortunately since sometimes we may know of a type before we know its pointer (such as when /A/B/C is defined before /A or /A/B)
-	std::unordered_map<std::string, Node*> dir2node;
+	Hashtable<std::string, Node*> dir2node;
 
 	//Tell derived classes of a new base class we found for them
 	void propagate_downstream(ObjectType* base, Node* inheriter)
@@ -94,7 +101,13 @@ class ObjectTree
 			propagate_upstream(derived, ancestor->root);
 	}
 public:
-
+	~ObjectTree()
+	{
+		for(Node* ptr : basetypes)
+		{
+			delete ptr;
+		}
+	}
 	//Has to pass-as-pointer instead of as-ref because otherwise it'd be (apparently) impossible to get the pointer to store for that reference.
 	void append(ObjectType* newtype)
 	{
@@ -217,7 +230,7 @@ public:
 			return;
 		}
 
-		std::cout << ind << Directory::lastword(nude->me->object_type) << std::endl;
+		std::cout << ind << Directory::lastword(nude->me->object_type.to_string()) << std::endl;
 		for (Node* child : nude->children)
 		{
 			dump_node(child, indent + 1);

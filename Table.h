@@ -28,12 +28,13 @@ public:
 	void tfree(const Value&);
 
 	std::vector<Value> t_array;
-	std::unordered_map<Value, Value> t_hash;
-	Table(std::string objty, std::unordered_map<std::string, Value>* puh, std::unordered_map<std::string, Function*>* fuh)
+	Hashtable<Value, Value> t_hash;
+	Table(const ImmutableString& objty, Hashtable<ImmutableString, Value>* puh, Hashtable<ImmutableString, Function*>* fuh)
 		:Object(objty,puh,fuh,nullptr)
 	{
 
 	}
+	virtual ~Table() = default;
 
 	//Returns the value stored at this index, or NULL if it cannot be found.
 	Value at(Interpreter&, Value);

@@ -4,11 +4,12 @@
 #include "Scope.h"
 #include "AST.h"
 #include "Directory.h"
+#include "Object.h"
 
 class Program // this is pretty much what Parser is supposed to output, and what Interpreter is supposed to take as input.
 {
 	//Basically stores global functions, perhaps also static methods if we're feeling fancy.
-	std::unordered_map<std::string, Function*> definedFunctions;
+	HashTable<std::string, Function*> definedFunctions;
 
 	//Methods. Separate from definedFunctions so that they are not in globalscope at runtime.
 	//Stored as an unordered SET because their base name is not uniquely identifying; there can be a /foo/bar() and /fuck/bar() in the same program.
@@ -19,7 +20,7 @@ class Program // this is pretty much what Parser is supposed to output, and what
 	//THE
 	//
 	//THE ENTIRE OBJECT TREE (FLATTENED)
-	std::unordered_map<std::string, ObjectType*> definedObjTypes;
+	HashTable<std::string, ObjectType*> definedObjTypes;
 public:
 
 	bool is_malformed = false;
@@ -34,7 +35,37 @@ public:
 		definedFunctions["/main"] = f;
 		construct_natives();
 	}
-	std::unordered_map<std::string, ObjectType*> construct_natives();
+	~Program()
+	{
+		//Delete object types
+		for (auto it : definedObjTypes)
+		{
+			delete it.second;
+		}
+		//Delete AST
+		for (Function* method : definedMethods)
+		{
+			delete method;
+		}
+		for (auto it : definedFunctions)
+		{
+			delete it.second;
+		}
+	}
+	Program(const Program&) = delete;
+	Program(Program&& deadprog)
+		:definedFunctions(deadprog.definedFunctions)
+		,definedMethods(deadprog.definedMethods)
+		,definedObjTypes(deadprog.definedObjTypes)
+	{
+		deadprog.definedFunctions.clear();
+		deadprog.definedMethods = {};
+		deadprog.definedObjTypes.clear();
+	}
+	Program& operator=(const Program&) = delete;
+	Program& operator=(Program&&) = delete;
+
+	HashTable<std::string, ObjectType*> construct_natives();
 	void construct_math_library();
 	void construct_string_library();
 	ObjectType* construct_table_library();
@@ -45,9 +76,7 @@ public:
 	{
 		for (auto it = definedFunctions.begin(); it != definedFunctions.end(); ++it)
 		{
-			Function* fuh = it->second;
-
-			std::cout << fuh->dump(0);
+			std::cout << it.value()->dump(0);
 		}
 		for (auto it = definedMethods.begin(); it != definedMethods.end(); ++it)
 		{

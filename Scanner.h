@@ -4,6 +4,7 @@
 
 #include "SharedEnums.h"
 #include "Directory.h"
+#include "ImmutableString.h"
 #include "Error.h"
 
 #define NAME_CONST_METHODS(the_thing) virtual cEnum class_enum() const override { return cEnum :: the_thing; } \
@@ -49,6 +50,7 @@ public:
 	{
 
 	}
+	virtual ~Token() = default;
 
 	virtual std::string dump() {
 		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + " " +  class_name();
@@ -148,17 +150,17 @@ public:
 class WordToken final : public Token
 {
 public:
-	std::string word;
-	WordToken(uint32_t& l, uint32_t sl, std::string w)
+	ImmutableString word;
+	WordToken(uint32_t l, uint32_t sl, const ImmutableString& w)
+		:word(w)
 	{
 		line = l;
 		syntactic_line = sl;
-		word = w;
 	}
 
 	virtual std::string dump() override
 	{
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" WORD: ") + word;
+		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" WORD: ") + word.to_string();
 	}
 	NAME_CONST_METHODS(WordToken);
 };
@@ -399,7 +401,7 @@ class Scanner
 		Logical //  && || ~~
 	};
 
-	const std::unordered_map<std::string, OperationPrecedence> str_to_precedence = {
+	const Hashtable<std::string, OperationPrecedence> str_to_precedence = {
 		{"!",OperationPrecedence::Unary},
 		{"~",OperationPrecedence::Unary},
 		{"#",OperationPrecedence::Unary},
@@ -459,7 +461,7 @@ class Scanner
 
 	OperationPrecedence lowop = OperationPrecedence::NONE;
 
-	const std::unordered_map<std::string, KeywordToken::Key> keywordhash = {
+	const Hashtable<std::string, KeywordToken::Key> keywordhash = {
 		{"if",KeywordToken::Key::If},
 		{"elseif",KeywordToken::Key::Elseif},
 		{"else",KeywordToken::Key::Else},
@@ -472,13 +474,13 @@ class Scanner
 		{"catch",KeywordToken::Key::Catch},
 		{"throw",KeywordToken::Key::Throw}
 	};
-	const std::unordered_map<std::string, LiteralToken::Literal> literalhash = {
+	const Hashtable<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},
 		{"false",LiteralToken::Literal::False},
 		{"true",LiteralToken::Literal::True}
 	};
 
-	const std::unordered_map<std::string, LocalType> typehash = {
+	const Hashtable<std::string, LocalType> typehash = {
 		{"Value",LocalType::Value},
 		{"Number",LocalType::Number},
 		{"Object",LocalType::Object},
@@ -555,8 +557,7 @@ class Scanner
 	}
 	void makeEndline() // This is its own function to allow for the read___() functions to quickly call it when they accidentally tread onto a semicolon while deciphering a token.
 	{
-		Token* t = new EndLineToken(linenum,syntactic_linenum);
-		append(t);
+		append(new EndLineToken(linenum,syntactic_linenum));
 		
 		//Order-of-operation optimization stuffs
 		lowest_ops.push_back(lowop);
@@ -698,6 +699,13 @@ public:
 	{
 
 	}
+	~Scanner()
+	{
+		for(Token* t_ptr : tokens)
+		{
+			delete t_ptr;
+		}
+	}
 
 	
 	//A wrapper for scan(std::ifstream) that """"casts"""" the fstream into an ifstream. Made for interactive mode.
@@ -713,7 +721,7 @@ public:
 		fist.open(filename, static_cast<std::ios_base::openmode>(static_cast<int>(drapes))); //VS2019 doesn't make me do this static-casting nonsense but g++ does. :weary:
 	}
 
-	//Reads in an istream (most likely an ifstream) line-by-line as an ASCII text file which is supposed to contain João code.
+	//Reads in an istream (most likely an ifstream) line-by-line as an ASCII text file which is supposed to contain Joï¿½o code.
 	void scan(std::istream&);
 
 	//These functions mostly exist to get convenient access to sub-Scanners invoked by the 'include' keyword and its functionality

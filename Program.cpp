@@ -4,12 +4,12 @@
 
 #define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
 
-std::unordered_map<std::string,ObjectType*> Program::construct_natives()
+HashTable<std::string,ObjectType*> Program::construct_natives()
 {
-	globals.table["__VERSION"] = new Value(std::string(VERSION_STRING));
-	globals.table["__VERSION_MAJOR"] = new Value(VERSION_MAJOR);
-	globals.table["__VERSION_MINOR"] = new Value(VERSION_MINOR);
-	globals.table["__VERSION_PATCH"] = new Value(VERSION_PATCH);
+	globals.table["__VERSION"] = Value(std::string(VERSION_STRING));
+	globals.table["__VERSION_MAJOR"] = Value(VERSION_MAJOR);
+	globals.table["__VERSION_MINOR"] = Value(VERSION_MINOR);
+	globals.table["__VERSION_PATCH"] = Value(VERSION_PATCH);
 
 	//TEXT MANIPULATION
 	NATIVE_FUNC("print") // Lua-style print() function
@@ -137,7 +137,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		if(arg.t_vType != Value::vType::Object)
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 
-		return Value(arg.t_value.as_object_ptr->object_type);
+		return Value(arg.t_value.as_object_ptr->object_type.to_string());
 	}));
 	
 	NATIVE_FUNC("void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud")
@@ -145,7 +145,7 @@ std::unordered_map<std::string,ObjectType*> Program::construct_natives()
 		return Value(7); // No I'm never removing this function fuck you
 	}));
 
-	std::unordered_map<std::string, ObjectType*> cooked_classes;
+	HashTable<std::string, ObjectType*> cooked_classes;
 
 	construct_math_library();
 	construct_string_library();

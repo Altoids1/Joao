@@ -1,0 +1,82 @@
+/json
+{
+	Object elements;
+}
+/error/json/New()
+{
+	what = "JSON error detected!";
+	code = 69;
+}
+/json/New(str)
+{
+	elements = {};
+	
+	##Consume an open brace
+	if(str[0] != "{")
+	{
+		throw /error/json/New(); 
+	}
+	for(Number index = 0; index < #str;index += 1) ## lol
+	{
+		String key = "";
+		Number seeker;
+		for(seeker = index; seeker < #str; seeker+=1) ## First find the colon
+		{
+			String char = str[seeker];
+			if(char == ":")
+			{
+				break;
+			}
+			key = key .. char;
+		}
+		String value = "";
+		for(seeker += 1; seeker < #str; seeker+=1) ## Then the comma
+		{
+			String char = str[seeker];
+			if(char == ",")
+			{
+				break;
+			}
+			elseif(char == "}")
+			{
+				elements[#elements] = /element/New(key,value);
+				return;
+			}
+			value = value .. char;
+		}
+		elements[#elements] = /element/New(key,value);
+		index = seeker;
+		##print(index);
+	}
+	throw /error/json/New();
+}
+
+/element
+{
+	Value key;
+	Value children;
+}
+/element/New(k,c)
+{
+	key = k;
+	children = c;
+}
+
+/main()
+{
+	Number n = 128; ## Only difference between this and the bench version should be this value.
+	Object words = {"foo","bar","baz","apple","orange"};
+	String str = "{";
+	for(Number i = 0; i < n; i+=1)
+	{
+		str = str .. words.pick() .. ":" .. words.pick() .. ",";
+		##print(i);
+	}
+	str = str .. "\"did\": \"done\"}";
+	
+	Object Jason = /json/New(str);
+	if(#Jason.elements != n + 1)
+	{
+		throw /error/New(1,"Benchmark failed!" .. #Jason.elements);
+	}
+}

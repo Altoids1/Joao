@@ -337,30 +337,30 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 
 	//BOOL & BOOL
 	case(BIN_ENUMS(bOps::Add, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool + rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) + static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Subtract, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool - rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) - static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Multiply, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool * rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) * static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Bool, Value::vType::Bool)): // Intentionally cascades to FloorDivide
 	//
 	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Bool, Value::vType::Bool)): // :)
-		return Value(lhs.t_value.as_bool / rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) / static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Bool, Value::vType::Bool)):
-		return Value(static_cast<Value::JoaoInt>(pow(lhs.t_value.as_bool, rhs.t_value.as_bool)));
+		return Value(static_cast<Value::JoaoInt>(pow(static_cast<Value::JoaoInt>(lhs.t_value.as_bool), static_cast<Value::JoaoInt>(rhs.t_value.as_bool))));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool % rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) % static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool & rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) & static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::BitwiseXor, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool ^ rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) ^ static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::BitwiseOr, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool | rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) | static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool >> rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) >> static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Bool, Value::vType::Bool)):
-		return Value(lhs.t_value.as_bool << rhs.t_value.as_bool);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) << static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Bool, Value::vType::Bool)):
 		return Value(std::to_string(lhs.t_value.as_bool) + std::to_string(rhs.t_value.as_bool));
@@ -388,39 +388,39 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 
 	//BOOL & DOUBLE
 	case(BIN_ENUMS(bOps::Add, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool + rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) + rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::Subtract, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool - rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) - rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::Multiply, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool * rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) * rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool / rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) / rhs.t_value.as_double);
 	//
 	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Bool, Value::vType::Double)):
-		return Value(floor(lhs.t_value.as_bool / rhs.t_value.as_double));
+		return Value(floor(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) / rhs.t_value.as_double));
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Bool, Value::vType::Double)):
-		return Value(pow(lhs.t_value.as_bool, rhs.t_value.as_double));
+		return Value(pow(static_cast<Value::JoaoInt>(lhs.t_value.as_bool), rhs.t_value.as_double));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Bool, Value::vType::Double)):
 	{
 		double dummy;
-		return Value(modf(lhs.t_value.as_bool / rhs.t_value.as_double, &dummy));
+		return Value(modf(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) / rhs.t_value.as_double, &dummy));
 	}
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Bool, Value::vType::Double)):
 		return Value(std::to_string(lhs.t_value.as_bool) + std::to_string(rhs.t_value.as_double));
 	//
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool < rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) < rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool <= rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) <= rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::Greater, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool > rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) > rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool >= rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) >= rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::Equals, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool == rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) == rhs.t_value.as_double);
 	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Bool, Value::vType::Double)):
-		return Value(lhs.t_value.as_bool != rhs.t_value.as_double);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) != rhs.t_value.as_double);
 	//
 	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Double)):
 		return Value(lhs.t_value.as_bool && rhs.t_value.as_double);
@@ -431,18 +431,18 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 
 	//DOUBLE & BOOL
 	case(BIN_ENUMS(bOps::Add, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double + rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double + static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Subtract, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double - rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double - static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Multiply, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double * rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double * static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double / rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double / static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Double, Value::vType::Bool)):
-		return Value(floor(lhs.t_value.as_double / rhs.t_value.as_bool));
+		return Value(floor(lhs.t_value.as_double / static_cast<Value::JoaoInt>(rhs.t_value.as_bool)));
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Double, Value::vType::Bool)):
-		return Value(pow(lhs.t_value.as_double, rhs.t_value.as_bool));
+		return Value(pow(lhs.t_value.as_double, static_cast<Value::JoaoInt>(rhs.t_value.as_bool)));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Double, Value::vType::Bool)):
 	{
 		double nowhere;
@@ -483,36 +483,36 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	{
 		double trouble = lhs.t_value.as_double;
 		unsigned char* alpha = reinterpret_cast<unsigned char*>(&trouble);
-		alpha[0] = alpha[0] | rhs.t_value.as_bool;
+		alpha[0] = alpha[0] | static_cast<unsigned char>(rhs.t_value.as_bool);
 		return Value(trouble);
 	}
 	//
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Double, Value::vType::Bool)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(static_cast<int64_t>(chaos >> rhs.t_value.as_bool));
+		return Value(static_cast<int64_t>(chaos >> static_cast<Value::JoaoInt>(rhs.t_value.as_bool)));
 	}
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Double, Value::vType::Bool)):
 	{
 		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
-		return Value(static_cast<int64_t>(chaos << rhs.t_value.as_bool));
+		return Value(static_cast<int64_t>(chaos << static_cast<Value::JoaoInt>(rhs.t_value.as_bool)));
 	}
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Double, Value::vType::Bool)):
 		return Value(std::to_string(lhs.t_value.as_double) + std::to_string(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double < rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double < static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double <= rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double <= static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Greater, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double > rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double > static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double >= rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double >= static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Equals, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double == rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double == static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Double, Value::vType::Bool)):
-		return Value(lhs.t_value.as_double != rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_double != static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Double, Value::vType::Bool)):
 		return Value(lhs.t_value.as_double && rhs.t_value.as_bool);
@@ -532,11 +532,11 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Bool, Value::vType::Integer)): // Intentionally cascades to FloorDivide
 	//
 	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Bool, Value::vType::Integer)): // :)
-		return Value(lhs.t_value.as_bool / rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) / rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Bool, Value::vType::Integer)):
 		return Value(static_cast<Value::JoaoInt>(pow(lhs.t_value.as_bool, rhs.t_value.as_int)));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Bool, Value::vType::Integer)):
-		return Value(lhs.t_value.as_bool % rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) % rhs.t_value.as_int);
 		//
 	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Bool, Value::vType::Integer)):
 		return Value(lhs.t_value.as_bool & rhs.t_value.as_int);
@@ -553,17 +553,17 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 		return Value(std::to_string(lhs.t_value.as_bool) + std::to_string(rhs.t_value.as_int));
 	//
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::Bool, Value::vType::Integer)):
-		return Value(lhs.t_value.as_bool < rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) < rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Bool, Value::vType::Integer)):
-		return Value(lhs.t_value.as_bool <= rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) <= rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Greater, Value::vType::Bool, Value::vType::Integer)):
-		return Value(lhs.t_value.as_bool > rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) > rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Bool, Value::vType::Integer)):
-		return Value(lhs.t_value.as_bool >= rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) >= rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Equals, Value::vType::Bool, Value::vType::Integer)):
-		return Value(lhs.t_value.as_bool == rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) == rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Bool, Value::vType::Integer)):
-		return Value(lhs.t_value.as_bool != rhs.t_value.as_int);
+		return Value(static_cast<Value::JoaoInt>(lhs.t_value.as_bool) != rhs.t_value.as_int);
 	//
 	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Bool, Value::vType::Integer)):
 		return Value(lhs.t_value.as_bool && rhs.t_value.as_int);
@@ -582,38 +582,38 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Integer, Value::vType::Bool)): // Intentionally cascades to FloorDivide
 	//
 	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Integer, Value::vType::Bool)): // :)
-		return Value(lhs.t_value.as_int / rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int / static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Integer, Value::vType::Bool)):
 		return Value(static_cast<Value::JoaoInt>(pow(lhs.t_value.as_int, rhs.t_value.as_bool)));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int % rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int % static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int & rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int & static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::BitwiseXor, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int ^ rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int ^ static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::BitwiseOr, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int | rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int | static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int >> rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int >> static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int << rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int << static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::Concatenate, Value::vType::Integer, Value::vType::Bool)):
 		return Value(std::to_string(lhs.t_value.as_int) + std::to_string(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::LessThan, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int < rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int < static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::LessEquals, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int <= rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int <= static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Greater, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int > rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int > static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::GreaterEquals, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int >= rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int >= static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::Equals, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int == rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int == static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	case(BIN_ENUMS(bOps::NotEquals, Value::vType::Integer, Value::vType::Bool)):
-		return Value(lhs.t_value.as_int != rhs.t_value.as_bool);
+		return Value(lhs.t_value.as_int != static_cast<Value::JoaoInt>(rhs.t_value.as_bool));
 	//
 	case(BIN_ENUMS(bOps::LogicalAnd, Value::vType::Integer, Value::vType::Bool)):
 		return Value(lhs.t_value.as_int && rhs.t_value.as_bool);

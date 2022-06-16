@@ -17,7 +17,7 @@ class Interpreter
 	std::stack<Object*> objectscope;
 
 	//The scopes of each block of each function in the function stack.
-	std::stack<Scope<Value>*> blockscope;
+	std::stack<Scope<Value>> blockscope;
 
 	const bool is_interactive;
 public:
@@ -45,20 +45,20 @@ public:
 	///Blockscope/omniscope
 
 	//Initializes variable at the lowest blockscope available.
-	void init_var(std::string, Value, ASTNode*);
+	void init_var(const ImmutableString&, const Value&, ASTNode*);
 	//Override the value of an already-existing variable at the lowest scope available.
-	void override_var(std::string, Value, ASTNode*);
+	void override_var(const ImmutableString&, Value, ASTNode*);
 	//Get variable at the lowest scope available.
-	Value& get_var(const std::string&, ASTNode*);
+	Value& get_var(const ImmutableString&, ASTNode*);
 	bool has_var(std::string, ASTNode*);
 
 
 	Object* get_objectscope() const { return objectscope.top(); }
 	///Objectscope
-	Value get_property(std::string, ASTNode*);
-	void set_property(std::string, Value, ASTNode*);
-	Value grand_property(unsigned int, std::string, ASTNode*);
-	Value& grand_handle(unsigned int, std::string, ASTNode*);
+	Value get_property(const ImmutableString&, ASTNode*);
+	void set_property(const ImmutableString&, Value, ASTNode*);
+	Value grand_property(unsigned int, const ImmutableString&, ASTNode*);
+	Value& grand_handle(unsigned int, const ImmutableString&, ASTNode*);
 
 	//Construct an object and return it as a Value.
 	Value makeObject(std::string,std::vector<ASTNode*>&,ASTNode*);
@@ -67,7 +67,7 @@ public:
 	//Constructs an empty base table.
 	Value makeBaseTable();
 	//Constructs an anonymous table with no derived classes and returns it.
-	Value makeBaseTable( std::vector<Value>, std::unordered_map<std::string,Value>, ASTNode*);
+	Value makeBaseTable( std::vector<Value>, Hashtable<std::string,Value>, ASTNode*);
 
 	void RuntimeError()
 	{
@@ -96,56 +96,54 @@ public:
 			throw error::maximum_recursion(std::string("Program reached the limit of ") + std::to_string(MAX_RECURSION) + std::string("recursive calls!"));
 		}
 #endif
-		blockscope.push(new Scope<Value>(name));
+		blockscope.push(Scope<Value>(name));
 		objectscope.push(obj);
 	}
 
 	//Pops both the blockstack and objstack layer
 	void pop_stack()
 	{
-		Scope<Value>* scuh = blockscope.top();
 		blockscope.pop();
-		delete scuh;
 
 		objectscope.pop();
 	}
 
 	//Like get_global but returns the pointer instead, and quietly allocates a new global when you ask for one it hasn't seen before.
-	Value* has_global(std::string name, ASTNode* getter)
+	Value* has_global(const ImmutableString& name, ASTNode* getter)
 	{
 		if (!globalscope.table.count(name))
 		{
-			globalscope.table[name] = new Value();
+			return &(globalscope.table[name]);
+		}
+
+		return globalscope.at(name);
+	}
+
+	Value& get_global(const ImmutableString& name, ASTNode* getter)
+	{
+		if (!globalscope.table.count(name))
+		{
+			RuntimeError(getter, ErrorCode::BadAccess, "Unable to access global value: " + name.to_string()); // Works, just returns null and yells.
 			return globalscope.table[name];
 		}
-
+			
 		return globalscope.table.at(name);
 	}
-
-	Value& get_global(std::string name, ASTNode* getter)
+	void set_global(const ImmutableString& name, Value& val, ASTNode* setter)
 	{
-		if (!globalscope.table.count(name))
-		{
-			RuntimeError(getter, ErrorCode::BadAccess, "Unable to access global value: " + name); // Works, just returns null and yells.
-			globalscope.table[name] = new Value();
-			return *globalscope.table[name];
-		}
-			
-		return *globalscope.table.at(name);
-	}
-	void set_global(std::string name, Value& val, ASTNode* setter)
-	{
-		globalscope.table[name] = new Value(val);
+		globalscope.table[name] = Value(val);
 	}
 
-	void push_block(std::string name = "")
+	void push_block(const char* dummy)
 	{
-		Scope<Value>* scuh = blockscope.top();
-		scuh->push(name);
+		blockscope.top().push();
+	}
+	void push_block()
+	{
+		blockscope.top().push();
 	}
 	void pop_block()
 	{
-		Scope<Value>* scuh = blockscope.top();
-		scuh->pop();
+		blockscope.top().pop();
 	}
 };

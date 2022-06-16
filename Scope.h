@@ -1,10 +1,13 @@
 #pragma once
 #include "Forward.h"
+#include "HashTable.h"
+#include "ImmutableString.h"
 
 template <typename _Tysc>
 struct Scopelet
 {
-	std::unordered_map < std::string, _Tysc*> table;
+	HashTable< ImmutableString, _Tysc> table;
+	_Tysc* at(const ImmutableString& key) { return &(table.at(key));}
 };
 
 template <typename _Ty>
@@ -15,82 +18,58 @@ class Scope {
 	2. This can be (and is) used by the Interpreter to keep track of scoped variables (so, Values), allowing for their access and dismissal as it enters and exits various Scopes.
 	*/
 
-	std::forward_list<Scopelet<_Ty>*> stack;
-
-	Scopelet<_Ty>* top_scope = nullptr; //The backmost scoplet of the stack.
+	std::deque<Scopelet<_Ty>> stack;
 	std::string top_scope_name; // Usually the name of the function which owns this scope.
-
 public:
-	static void blank_table(Scopelet<_Ty>* sc)
-	{
-		for (auto it = sc->table.begin(); it != sc->table.end(); ++it)
-		{
-			delete it->second; // Hopefully this works, heh.
-		}
-		sc->table.clear();
-	}
 
 	Scope(const std::string& sc)
 		:top_scope_name(sc)
-		,top_scope(new Scopelet<_Ty>())
 	{
-		stack.push_front(top_scope);
+		stack.push_front(Scopelet<_Ty>());
 	}
 
-	_Ty* get(const std::string& name)
+	_Ty* get(const ImmutableString& name)
 	{
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
-		for (auto it = stack.begin(); it != stack.end(); ++it)
+		for (auto it = stack.begin(); it != stack.end(); it++)
 		{
-			Scopelet<_Ty>& sc = **it;
-			//std::cout << "Looking at scope " << sc.scopename << "...\n";
-
-			if (sc.table.count(name))
-				return sc.table.at(name);
+			_Ty* maybe = (*it).table.lazy_at(name);
+			if (maybe)
+				return maybe;
 		}
 		return nullptr; // Give up.
 	}
 
-	_Ty* get_front(const std::string& name)
+	_Ty* get_front(const ImmutableString& name)
 	{
-		if (stack.front()->table.count(name))
-			return stack.front()->table.at(name);
-		return nullptr;
+		return stack.front().table.lazy_at(name);
 	}
 
-	_Ty* get_back(const std::string& name)
+	_Ty* get_back(const ImmutableString& name)
 	{
-		if (top_scope->table.count(name))
-			return top_scope->table.at(name);
-
-		return nullptr;
+		return stack.back().table.lazy_at(name);
 	}
 	
-	const std::string& get_back_name() const
+	ImmutableString get_back_name() const
 	{
 		return top_scope_name;
 	}
 
-	void set(const std::string& name, _Ty& t)
+	void set(const ImmutableString& name, const _Ty& t)
 	{
-		_Ty* tuh = new _Ty(t);
-
-		(stack.front()->table[name]) = tuh;
+		(stack.front().table[name]) = t;
 	}
 
-	bool Override(const std::string& name, _Ty& t)
+	bool Override(const ImmutableString& name, _Ty& t)
 	{
-		for (auto it = stack.begin(); it != stack.end(); ++it)
+		for (auto it = stack.begin(); it != stack.end(); it++)
 		{
-			Scopelet<_Ty>* sc = *it;
+			Scopelet<_Ty>& sc = *it;
 			//std::cout << "Looking at scope " << sc.scopename << "...\n";
 
-			if (sc->table.count(name))
+			if (sc.table.contains(name))
 			{
-				//FIXME: This might be a memory leak.
-				_Ty* tuh = new _Ty(t);
-				sc->table.erase(name);
-				sc->table[name] = tuh;
+				sc.table[name] = t;
 				return true;
 			}
 		}
@@ -100,24 +79,18 @@ public:
 	void push(const std::string& name = "") // Add a new stack layer
 	{
 		//std::cout << "Creating new scope layer called " << name << "...\n";
-		stack.push_front(new Scopelet<_Ty>());
+		stack.push_front(Scopelet<_Ty>());
 		//std::cout << "The front of the stack is now " << stack.front()->scopename << "!\n";
 	}
 
 	void pop() // Delete the newest stack layer
 	{
 		//std::cout << "Stack layer " << stack.front()->scopename << " popped!\n";
-		if (top_scope == stack.front()) // Attempting to delete the base stack
+		if (stack.empty()) // Attempting to delete the base stack
 		{
 			std::cout << "WEIRD_ERROR: Attempted to delete backmost stack of a Scope!";
 			return; // fails.
 		}
-
-		Scopelet<_Ty>* popped = stack.front();
-
-		blank_table(popped);
-		delete popped;
-
 		stack.pop_front();
 	}
 };

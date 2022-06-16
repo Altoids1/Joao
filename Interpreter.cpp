@@ -44,7 +44,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 	std::string whatfunk;
 	if(objectscope.top()) // If we runtimed within a method
 	{
-		whatfunk = "method of object of type " + objectscope.top()->object_type;
+		whatfunk = "method of object of type " + objectscope.top()->object_type.to_string();
 	}
 	else
 	{
@@ -61,7 +61,7 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 		std::cout << "Unknown!"; // Eventually things should be configured to never do this
 	}
 	
-	std::cout << "\nRuntime in " << blockscope.top()->get_back_name() << ", a " << whatfunk << std::endl;
+	std::cout << "\nRuntime in " << blockscope.top().get_back_name().to_string() << ", a " << whatfunk << std::endl;
 	if(!is_interactive)
 		exit(1);
 }
@@ -92,7 +92,7 @@ void Interpreter::UncaughtRuntime(const Value& err)
 #endif
 }
 
-void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
+void Interpreter::init_var(const ImmutableString& varname, const Value& val, ASTNode* setter)
 {
 #ifdef JOAO_SAFE
 	++value_init_count;
@@ -101,18 +101,17 @@ void Interpreter::init_var(std::string varname, Value val, ASTNode* setter)
 		throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
 	}
 #endif
-	Scope<Value>* varscope = blockscope.top();
-	varscope->set(varname, val);
+	blockscope.top().set(varname, val);
 }
 
-void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
+void Interpreter::override_var(const ImmutableString& varname, Value val, ASTNode* setter)
 {
 	//First try blockscope
-	Scope<Value>* varscope = blockscope.top();
-	Value* vptr = varscope->get(varname);
+	Scope<Value>& varscope = blockscope.top();
+	Value* vptr = varscope.get(varname);
 	if (vptr)
 	{
-		varscope->Override(varname, val);
+		varscope.Override(varname, val);
 		return;
 	}
 
@@ -131,21 +130,19 @@ void Interpreter::override_var(std::string varname, Value val, ASTNode* setter)
 	//Then try globalscope
 	if (globalscope.table.count(varname))
 	{
-		delete globalscope.table[varname];
-		Value* vuh = new Value(val);
-		globalscope.table[varname] = vuh;
+		globalscope.table[varname] = val;
 		return;
 	}
 
 	//Give up. How the hell did we even fail to set it in globalscope?
-	RuntimeError(setter, "Unable to override value of variable named " + varname + "!");
+	RuntimeError(setter, "Unable to override value of variable named " + varname.to_string() + "!");
 }
 
-Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
+Value& Interpreter::get_var(const ImmutableString& varname, ASTNode *getter)
 {
 	//First try blockscope
-	Scope<Value>* varscope = blockscope.top();
-	Value* vptr = varscope->get(varname);
+	Scope<Value>& varscope = blockscope.top();
+	Value* vptr = varscope.get(varname);
 	if (vptr)
 		return *vptr;
 
@@ -159,19 +156,19 @@ Value& Interpreter::get_var(const std::string& varname, ASTNode *getter)
 	}
 
 	//Then try globalscope
-	if (globalscope.table.count(varname))
-	{
-		return *globalscope.table.at(varname);
-	}
+	Value* globptr = globalscope.table.lazy_at(varname);
+	if (globptr)
+		return *globptr;
 
 	//Give up :(
-	RuntimeError(getter, ErrorCode::BadAccess, std::string("Unable to access variable named ") + varname + std::string("!"));
+	RuntimeError(getter, ErrorCode::BadAccess, std::string("Unable to access variable named ") + varname.to_string() + std::string("!"));
 	return Value::dev_null;
 }
 
 Function* Interpreter::get_func(const std::string& funkname, ASTNode *caller, bool loud)
 {
 	//Try to find an objectscope function with this name
+
 	Object* obj = objectscope.top();
 	if (obj)
 	{
@@ -191,7 +188,7 @@ Function* Interpreter::get_func(const std::string& funkname, ASTNode *caller, bo
 	return nullptr;
 }
 
-Value Interpreter::get_property(std::string str, ASTNode* getter)
+Value Interpreter::get_property(const ImmutableString& str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();
 	if (obj)
@@ -202,7 +199,7 @@ Value Interpreter::get_property(std::string str, ASTNode* getter)
 	return Value();
 }
 
-void Interpreter::set_property(std::string str, Value val, ASTNode* getter)
+void Interpreter::set_property(const ImmutableString& str, Value val, ASTNode* getter)
 {
 
 	Object* obj = objectscope.top();
@@ -215,7 +212,7 @@ void Interpreter::set_property(std::string str, Value val, ASTNode* getter)
 	return;
 }
 
-Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* getter)
+Value Interpreter::grand_property(unsigned int depth, const ImmutableString& str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();
 	if (!obj)
@@ -224,7 +221,7 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 		return Value();
 	}
 
-	std::string dir = obj->object_type;
+	std::string dir = obj->object_type.to_string();
 
 	for (unsigned int i = 0; i < depth; ++i)
 	{
@@ -246,7 +243,7 @@ Value Interpreter::grand_property(unsigned int depth, std::string str, ASTNode* 
 	return objt->get_typeproperty(*this, str, getter);
 }
 
-Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* getter)
+Value& Interpreter::grand_handle(unsigned int depth, const ImmutableString& str, ASTNode* getter)
 {
 	Object* obj = objectscope.top();
 	if (!obj)
@@ -255,11 +252,11 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 		return Value::dev_null;
 	}
 
-	std::string dir = obj->object_type;
+	std::string dir = obj->object_type.to_string();
 
 	for (unsigned int i = 0; i < depth; ++i)
 	{
-		std::string dir = Directory::DotDot(dir);
+		dir = Directory::DotDot(dir);
 	}
 	if (dir == "/")
 	{
@@ -296,7 +293,7 @@ Value& Interpreter::grand_handle(unsigned int depth, std::string str, ASTNode* g
 Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTNode* maker)
 {
 
-	if (!(prog->definedObjTypes.count(str)))
+	if (!(prog->definedObjTypes.contains(str)))
 		RuntimeError(maker, "Constructor attempts to instantiate unknown type! (" + str + ")"); // FIXME: This should really be a Parsetime error
 	
 	std::vector<Value> eval_args;
@@ -310,7 +307,7 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 Value Interpreter::makeObject(std::string str, std::vector<Value>&& eval_args, ASTNode* maker)
 {
 
-	if (!(prog->definedObjTypes.count(str)))
+	if (!(prog->definedObjTypes.contains(str)))
 		RuntimeError(maker, "Constructor attempts to instantiate unknown type! (" + str + ")"); // FIXME: This should really be a Parsetime error
 	return Value(prog->definedObjTypes[str]->makeObject(*this, std::move(eval_args)));
 }
@@ -320,7 +317,7 @@ Value Interpreter::makeBaseTable()
 	return Value(prog->definedObjTypes["/table"]->makeObject(*this, {}));
 }
 
-Value Interpreter::makeBaseTable( std::vector<Value> elements, std::unordered_map<std::string,Value> entries, ASTNode* maker = nullptr)
+Value Interpreter::makeBaseTable( std::vector<Value> elements, Hashtable<std::string,Value> entries, ASTNode* maker = nullptr)
 {
 	Object* objdesk = prog->definedObjTypes["/table"]->makeObject(*this,{});
 	
@@ -332,7 +329,7 @@ Value Interpreter::makeBaseTable( std::vector<Value> elements, std::unordered_ma
 	
 	for(auto it = entries.begin(); it != entries.end(); ++it)
 	{
-		desk->at_set(*this,Value(it->first), it->second);
+		desk->at_set(*this,Value(it.key()), it.value());
 	}
 	
 	return Value(objdesk);

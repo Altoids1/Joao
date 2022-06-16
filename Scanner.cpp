@@ -351,6 +351,7 @@ int Scanner::readComment(int it,std::istream& ifst)
 		}
 	} while (!ifst.eof());
 	ScannerError(0, ScanError::UnterminatedLongComment);
+	return INT32_MAX; // Should be unreachable but uhhh.. whatever
 }
 
 
