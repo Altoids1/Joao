@@ -424,7 +424,10 @@ public:
     //Iterators
     Iterator begin() const
     {
-        return Iterator(bucket_block,main_capacity);
+        if(bucket_block) LIKELY
+            return Iterator(bucket_block,main_capacity);
+        else
+            return end();
     }
     const Iterator end() const
     {
@@ -433,6 +436,11 @@ public:
 #ifdef HASHTABLE_DEBUG
     void dump() const
     {
+        if(!bucket_block)
+        {
+            std::cout << "This HashTable is empty.";
+            return;
+        }
         bool unprinted_collision_ptr = true;
         for(size_t i = 0; i < total_capacity; ++i)
         {
