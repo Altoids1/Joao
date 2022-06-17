@@ -224,15 +224,6 @@ public:
 
 	std::string to_string() const;
 	std::string typestring();
-#ifdef _DEBUG
-	static void pointer_report()
-	{
-		for(auto it : str_to_ptr)
-		{
-			std::cout << it.first << '\n';
-		}
-	}
-#endif
 };
 
 
