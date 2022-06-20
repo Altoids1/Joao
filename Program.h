@@ -63,7 +63,17 @@ public:
 		deadprog.definedObjTypes.clear();
 	}
 	Program& operator=(const Program&) = delete;
-	Program& operator=(Program&&) = delete;
+	Program& operator=(Program&& deadprog)
+	{
+		if(definedFunctions.size())
+		{
+			throw std::runtime_error("Cannot overwrite a program with another program!");
+		}
+		definedFunctions = std::move(deadprog.definedFunctions);
+		definedMethods = std::move(deadprog.definedMethods);
+		definedObjTypes = std::move(deadprog.definedObjTypes);
+		return *this;
+	}
 
 	HashTable<std::string, ObjectType*> construct_natives();
 	void construct_math_library();

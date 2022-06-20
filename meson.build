@@ -2,21 +2,23 @@ project('joao', 'cpp',
 		default_options : ['cpp_std=c++17', 'warning_level=0'],
 		license : 'MIT')
 
-VERSION = '2.1.0'
+VERSION = '2.1.1'
 
 src = [
-	'Args.cpp',
 	'AST.cpp',
 	'BinaryOperations.cpp',
 	'Directory.cpp',
 	'Interpreter.cpp',
-	'main.cpp',
 	'Object.cpp',
 	'Parser.cpp',
 	'Program.cpp',
 	'Scanner.cpp',
 	'Table.cpp',
 	'Value.cpp',
+]
+exe_src = [
+	'Args.cpp',
+	'main.cpp'
 ]
 
 nativefuncs = [
@@ -26,11 +28,6 @@ nativefuncs = [
 	'nativefuncs/string.cpp',
 	'nativefuncs/tablelib.cpp',
 ]
-
-if build_machine.system() == 'windows'
-	windows = import('windows')
-	src += windows.compile_resources('./Joao.rc')
-endif
 
 version_parts = VERSION.split('.')
 configure_file(input : 'config.h.in', output : 'config.h',
@@ -42,7 +39,13 @@ configure_file(input : 'config.h.in', output : 'config.h',
   }
 )
 
-exe = executable('joao', nativefuncs + src)
+if build_machine.system() == 'windows'
+	windows = import('windows')
+	dll = shared_library('joaolib', nativefuncs + src + 'dllmain.cpp', build_by_default : false, version : VERSION)
+	src += windows.compile_resources('./Joao.rc')
+endif
+
+exe = executable('joao', nativefuncs + src + exe_src)
 
 # Diagnostic tests
 test('hello world', exe, args : ['./testprograms/tests/1_helloworld.jao'], workdir : meson.source_root(), suite: 'diagnostic')

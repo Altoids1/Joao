@@ -1,7 +1,7 @@
 /*
 GOAL:
 
-Create an interpreter which can run "João," a simple OOP language made to use a directory-oriented object tree
+Create an interpreter which can run "Joï¿½o," a simple OOP language made to use a directory-oriented object tree
 
 Somewhat dynamically typed but lets not get too angsty about it
 
@@ -31,6 +31,7 @@ bool has(const std::vector<Ty_>& v, const Ty_& value)
 	return false;
 }
 
+//The version of main used when compiling as a standalone binary executable.
 int main(int argc, char** argv)
 {
 	

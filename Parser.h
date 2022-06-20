@@ -662,7 +662,7 @@ protected:
 	//Does the nitty-gritty of filling out the function and objecttype tables.
 	void generate_object_tree(std::vector<ClassDefinition*>&);
 public: // Parser doesn't have much of an API but it does have something
-	Parser(Scanner&t)
+	Parser(Scanner&t) noexcept
 		:is_interactive(t.is_interactive)
 		,tokens(std::move(t.tokens)) // This steals all the tokens from Scanner. Now, we are the ones responsible for deleting all these token pointers later on.
 		,lowest_ops(std::move(t.lowest_ops))
