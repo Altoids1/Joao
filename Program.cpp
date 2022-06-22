@@ -25,6 +25,7 @@ HashTable<std::string,ObjectType*> Program::construct_natives()
 		std::cout << "\n";
 		return Value();
 	}));
+#ifndef JOAO_SAFE
 	NATIVE_FUNC("input") // Analogous to Lua's io.read() function.
 	{
 		if (args.size())
@@ -44,6 +45,7 @@ HashTable<std::string,ObjectType*> Program::construct_natives()
 			return Value();
 		return Value(imp);
 	}));
+#endif
 	NATIVE_FUNC("tostring")
 	{
 		return Value(args[0].to_string());
