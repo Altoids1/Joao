@@ -18,6 +18,10 @@
 #ifdef __GNUG__
 #include <cstring>
 #include <cmath>
+#include <cstdint>
+#endif
+#ifdef __has_include(<bit>)
+#include <bit>
 #endif
 #endif
 

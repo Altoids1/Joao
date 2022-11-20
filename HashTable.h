@@ -1,4 +1,5 @@
 #pragma once
+#include "Directory.h"
 
 //#define HASHTABLE_DEBUG
 
@@ -13,9 +14,9 @@ even for very large HashTables.
 template <typename Key, typename Value>
 class HashTable
 {
-    //What percent of the allocated memory to reserve for collision buckets.
-    static constexpr size_t collision_block_percent = 25;
-    
+    //The ratio between the main block and the collision block. "4" would mean a 4:1 in favour of main.
+    static constexpr size_t collision_block_ratio = 4;
+
     struct Bucket
     {
         bool used = false; // Used AT ALL. There are no deleted buckets; the pointer this stores is moot when the bucket is unused.
@@ -59,8 +60,13 @@ class HashTable
         Bucket(Bucket&& dead_buck)
             :used(dead_buck.used)
         {
-            if(used) LIKELY
+            if (used) LIKELY
             {
+                if (*reinterpret_cast<char*>(&used) > 1)
+                {
+                    std::cout << "Corrupt bucket detected.\n";
+                    return;
+                }
                 new (key()) Key(std::move(*dead_buck.key()));
                 new (value()) Value(std::move(*dead_buck.value()));
                 next_collision_bucket = dead_buck.next_collision_bucket;
@@ -68,7 +74,7 @@ class HashTable
                 dead_buck.next_collision_bucket = nullptr;
             }
         }
-        Bucket& operator=(Bucket&& dead_buck)
+        Bucket& operator=(Bucket&& dead_buck) noexcept
         {
             if(used)
             {
@@ -196,13 +202,9 @@ class HashTable
         Bucket* begin; // Where the collision-reserved memory begins.
         size_t next; // The next slot in collision memory available for link use.
         std::queue<Bucket*> known_holes; // Known holes behind $next that should be filled before $next's hole.
-        CollisionData(Bucket* b, size_t total)
-#ifdef __GNUC__
-            :capacity((total * collision_block_percent / 100) ?: 1) // ELVIS OPERATOR WARNING
-#else
-            :capacity((total* collision_block_percent / 100) ? (total * collision_block_percent / 100) : 1) // :(
-#endif
-            ,begin(b + (total - capacity))
+        CollisionData(Bucket* b, size_t c, size_t total)
+            :capacity(c)
+            ,begin(b + (total - c))
             ,next(0)
         {
 
@@ -243,32 +245,34 @@ class HashTable
 
     inline size_t generate_index(const Key& key, size_t m_capacity) const
     {
-        /*
-        if constexpr (std::is_same<Key, std::string>())
-        {
-            if (m_capacity < 122)
-            {
-                return static_cast<size_t>(key.size() && key.at(0)) % m_capacity;
-            }
-            else
-            {
-                return hasher(key) % m_capacity;
-            }
-        }
-        else
-        {
-        */
-           return hasher(key) % m_capacity;
-        //}
+        //if (math::popcount(m_capacity) != 1)
+            //throw std::runtime_error("god damnit");
+        return hasher(key) & (m_capacity - 1);
     }
     inline size_t generate_index(const Key& key) const { return generate_index(key, main_capacity); }
+
+    //Takes in all args as out refs.
+    //Calculates the ideal arena setup to ensure a given capacity, or greater.
+    void compute_real_capacities(size_t& new_capacity, size_t& main_capacity, size_t& collision_capacity)
+    {
+        //FIXME: This is a slow way to calculate this.
+        main_capacity = collision_block_ratio;
+        collision_capacity = 1;
+        while (main_capacity + collision_capacity < new_capacity)
+        {
+            main_capacity <<= 1;
+            collision_capacity <<= 1;
+        }
+        new_capacity = main_capacity + collision_capacity;
+    }
 
     //FIXME: It's somewhat problematic that we iterate over *all* old buckets during a rehash.
     void rehash(size_t new_capacity)
     {
+        size_t new_collision_capacity, new_main_capacity;
+        compute_real_capacities(new_capacity, new_collision_capacity, new_main_capacity);
         Bucket* new_block = new Bucket[new_capacity];
-        CollisionData new_collision_data = CollisionData(new_block,new_capacity);
-        size_t new_main_capacity = new_capacity - new_collision_data.capacity;
+        CollisionData new_collision_data = CollisionData(new_block, new_collision_capacity, new_capacity);
 
         for(size_t i = 0; i < total_capacity; ++i)
         {
@@ -525,11 +529,11 @@ public:
 #endif
     
     HashTable()
-    :bucket_block(new Bucket[4])
-    ,total_capacity(4)
-    ,main_capacity(3)
+    :bucket_block(new Bucket[collision_block_ratio + 1])
+    ,total_capacity(collision_block_ratio + 1)
+    ,main_capacity(collision_block_ratio)
     ,used_bucket_count(0)
-    ,collision_data(bucket_block,total_capacity)
+    ,collision_data(bucket_block,1,collision_block_ratio+1)
     {
 
     }
@@ -540,7 +544,7 @@ public:
     ,used_bucket_count(0)
     ,collision_data(false)
     {
-        rehash(list.size() ? list.size() : 4u);
+        rehash(list.size() ? list.size() : (collision_block_ratio+1));
         for(auto& ptr : list)
         {
             insert(ptr);
@@ -570,7 +574,7 @@ public:
         other.total_capacity = 0;
         other.main_capacity = 0;
         other.used_bucket_count = 0;
-        other.collision_data = CollisionData(other.bucket_block, other.total_capacity);
+        other.collision_data = CollisionData(other.bucket_block,0,0);
     }
 
     HashTable& operator=(const HashTable& other)
@@ -600,7 +604,7 @@ public:
         other.total_capacity = 0;
         other.main_capacity = 0;
         other.used_bucket_count = 0;
-        other.collision_data = CollisionData(other.bucket_block, other.total_capacity);
+        other.collision_data = CollisionData(other.bucket_block,0,0);
         return *this;
     }
     ~HashTable()
