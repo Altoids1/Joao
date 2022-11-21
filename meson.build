@@ -56,6 +56,8 @@ test('tablelib', exe, args : ['./testprograms/tests/8_tablelib.jao'], workdir : 
 test('jsoninterp', exe, args : ['./testprograms/tests/9_json_interp.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 test('arithmetic', exe, args : ['./testprograms/tests/10_arithmetic.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 test('comparison', exe, args : ['./testprograms/tests/11_comparison.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('mathlib', exe, args : ['./testprograms/tests/12_mathlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('stdlib', exe, args : ['./testprograms/tests/13_stdlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 
 # Benchmark tests
 benchmark('primegen', exe, args : ['./testprograms/bench/primegen.jao'], workdir : meson.source_root())

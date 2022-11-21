@@ -10,6 +10,13 @@
         throw /error/comparison/New();
     }
 }
+/asserteq(a,b)
+{
+    if(a != b)
+    {
+        throw /error/New(7, a .. " != " .. b);
+    }
+}
 
 /main()
 {
@@ -23,4 +30,16 @@
     assert(str1 >= str3);
     assert(str3 <= str2);
     assert(str1 == str3);
+
+    ## Weird Object stuff
+    Value didThrow = false;
+    try
+    {
+        asserteq(/error/New(),/error/New());
+    }
+    catch(expr)
+    {
+        didThrow = true;
+    }
+    assert(didThrow);
 }

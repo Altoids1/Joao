@@ -53,6 +53,11 @@
 	{
 		throw /error/New(TEST_NUMBER,"Reference handling failed!");
 	}
+
+	if(!(true && t))
+	{
+		throw /error/New(TEST_NUMBER,"Object bool coercion failed!");
+	}
 	
 	print("Test #" .. TEST_NUMBER .. " passed");
 }

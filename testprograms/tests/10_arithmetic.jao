@@ -10,11 +10,27 @@
         throw /error/arithmetic/New();
     }
 }
+/asserteq(a,b)
+{
+    if(a != b)
+    {
+        throw /error/New(7, a .. " != " .. b);
+    }
+}
 
 /main()
 {
+    ## Doubles n stuff
+    asserteq(2.0 * 2.0,4.0);
+    asserteq(4.5 % 2.0,0.5);
+    asserteq(4.5 // 2.0,2);
+
+    assert(1.1 | -1.1);
+
     ## Ints and doubles intermingling
     assert(1.5 == (1 + 0.5)); ## Even floats can't mess this one up!
+    assert(1.5 // 1 == 1);
+    assert(2 // 1.0 == 2);
     ## Weird boolean casts
     assert((1 + true) == 2);
     assert(false * 2 == 0);

@@ -1,0 +1,44 @@
+/error/math/New()
+{
+	what = "Math error detected!";
+	code = 12;
+}
+/assert(stmt)
+{
+    if(!stmt)
+    {
+        throw /error/math/New();
+    }
+}
+/asserteq(a,b)
+{
+    if(a != b)
+    {
+        throw /error/New(7, a .. " != " .. b);
+    }
+}
+/main()
+{
+    asserteq(abs(-2),2);
+    asserteq(ceil(7),7);
+    asserteq(ceil(5.5),6);
+    asserteq(ceil(true),true);
+    asserteq(
+        cos(3.14),
+        -0.9999987317275395
+    );
+    asserteq(
+        max(1, 1_000_000, 0, -50.0),
+        1_000_000
+    );
+    asserteq(
+        min(-1000, false, 350, -7.5),
+        -1000
+    );
+
+    Value rnd = random(1,10);
+    assert(rnd >= 1 && rnd <= 10);
+
+    asserteq(sqrt(4),2);
+    sqrt(-4); ## Hopefully this goes OK.
+}

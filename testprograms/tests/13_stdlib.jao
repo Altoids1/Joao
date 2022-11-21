@@ -1,0 +1,21 @@
+/error/stdlib/New()
+{
+	what = "Standard Library error detected!";
+	code = 13;
+}
+/assert(stmt)
+{
+    if(!stmt)
+    {
+        throw /error/stdlib/New();
+    }
+}
+/main()
+{
+    Object tbl = {1,2,3,4};
+    assert(istable(tbl));
+    Value x;
+    assert(isnull(x));
+    assert(void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud() == 7);
+    assert(typeof(2.5) == "Double");
+}
