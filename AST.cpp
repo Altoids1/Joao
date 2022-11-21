@@ -366,6 +366,8 @@ Value CallExpression::resolve(Interpreter& interp)
 	{
 		ASTNode* e = *it;
 		vargs.push_back(e->resolve(interp));
+		if(interp.error) // If there's a novel error from building the arguments, we should just get out.
+			return Value();
 	}
 
 	Object* obj = fptr->get_obj();
