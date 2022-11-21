@@ -11,6 +11,8 @@ struct ImmutableString
 	static Hashtable<const char*, size_t> cstr_to_refcount;
 	const char* data = nullptr; // This is a C string, probably on the heap.
 	size_t precomputed_hash;
+	//This is the length NOT INCLUDING THE NULL CHARACTER
+	size_t precomputed_length;
 	bool heap;
 
 	// ASSUMES THE C-STRING GIVEN ISN'T FROM THE HEAP
@@ -18,6 +20,7 @@ struct ImmutableString
 		:data(c_str)
 		,heap(false)
 		,precomputed_hash(std::hash<std::string>()(c_str))
+		,precomputed_length(strlen(c_str))
 	{
 
 	}
@@ -25,6 +28,7 @@ struct ImmutableString
 	ImmutableString(const std::string& str)
 		:heap(true)
 		,precomputed_hash(std::hash<std::string>()(str))
+		,precomputed_length(str.size())
 	{
 		for (auto it : cstr_to_refcount) // walking through a hashtable, ugh :weary:
 		{
@@ -41,6 +45,7 @@ struct ImmutableString
 	}
 	ImmutableString(const ImmutableString& other)
 		:precomputed_hash(other.precomputed_hash)
+		,precomputed_length(other.precomputed_length)
 		,heap(other.heap)
 	{
 		data = other.data;
@@ -61,6 +66,7 @@ struct ImmutableString
 			}
 		}
 		precomputed_hash = other.precomputed_hash;
+		precomputed_length = other.precomputed_length;
 		heap = other.heap;
 		data = other.data;
 		cstr_to_refcount.at(data)++;
@@ -78,6 +84,7 @@ struct ImmutableString
 			}
 		}
 		precomputed_hash = other.precomputed_hash;
+		precomputed_length = other.precomputed_length;
 		heap = other.heap;
 		data = other.data;
 		other.data = nullptr;
@@ -89,6 +96,7 @@ struct ImmutableString
 		:data(other.data)
 		,heap(other.heap)
 		,precomputed_hash(other.precomputed_hash)
+		,precomputed_length(other.precomputed_length)
 	{
 		other.data = nullptr;
 		other.heap = false;
@@ -111,11 +119,22 @@ struct ImmutableString
 	{
 		if (data == other.data)
 			return true;
+		if(precomputed_length != other.precomputed_length)
+			return false;
 		return strcmp(data, other.data) == 0;
 	}
 	std::string to_string() const
 	{
 		return std::string(data);
+	}
+
+	//This is a bit silly but whatever
+	bool begins_with(const char* c_str)
+	{
+		int other_len = strlen(c_str);
+		if(precomputed_length < other_len)
+			return false;
+		return strncmp(data,c_str,other_len) == 0;
 	}
 };
 

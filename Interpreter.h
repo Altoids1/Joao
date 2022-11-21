@@ -21,7 +21,7 @@ class Interpreter
 
 	const bool is_interactive;
 public:
-	//Stores the current, most recent runtime error.
+	//Stores the current, most recent runtime error. Expected to be set to null during most operation.
 	Value error = Value();
 
 	//Something used to handle rvalues in expressions. TODO: Should be blanked sometimes.
