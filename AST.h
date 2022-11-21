@@ -356,7 +356,7 @@ public:
 
 		return str;
 	}
-	static Value BinaryOperation(Value&, Value&, bOps, Interpreter&);
+	static Value BinaryOperation(const Value&,const Value&, bOps, Interpreter&);
 };
 
 class ReturnStatement : public Expression {

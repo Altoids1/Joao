@@ -192,133 +192,35 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 	}));
-	NATIVE_FUNC("max")//FIXME: Use BinaryOperation(bOp::Greater) instead of C++'s greater-than operator, for overloading and not-writing-things-in-many-places.
+	NATIVE_FUNC("max")
 	{
 		if (args.size() == 0)
 			return Value();
 
 		Value biggest = args[0];
-		union
-		{
-			double d;
-			Value::JoaoInt i;
-		}bigval;
-		bool is_double;
-		switch (biggest.t_vType)
-		{
-		case(Value::vType::Double):
-			bigval.d = biggest.t_value.as_double;
-			is_double = true;
-		case(Value::vType::Integer):
-			bigval.i = biggest.t_value.as_int;
-			is_double = false;
-		default:
-			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-		}
 		
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			const Value& v = args[i];
-			switch (MAXMIN_ENUM(v.t_vType,is_double))
-			{
-			case(MAXMIN_ENUM(Value::vType::Double, true)):
-				if (v.t_value.as_double > bigval.d)
-				{
-					biggest = v;
-					bigval.d = v.t_value.as_double;
-				}
-				break;
-			case(MAXMIN_ENUM(Value::vType::Double, false)):
-				if (v.t_value.as_double > bigval.i)
-				{
-					biggest = v;
-					bigval.d = v.t_value.as_double;
-					is_double = true;
-				}
-				break;
-			case(MAXMIN_ENUM(Value::vType::Integer, false)):
-				if (v.t_value.as_int > bigval.i)
-				{
-					biggest = v;
-					bigval.i = v.t_value.as_int;
-				}
-				break;
-			case(MAXMIN_ENUM(Value::vType::Integer, true)):
-				if (v.t_value.as_int > bigval.d)
-				{
-					biggest = v;
-					bigval.i = v.t_value.as_int;
-					is_double = false;
-				}
-				break;
-			default: // Bools aren't allowed here, piss off
-				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-			}
+			Value result = BinaryExpression::BinaryOperation(biggest, v, BinaryExpression::bOps::LessThan, interp);
+			if(result) // if(biggest < v)
+				biggest = v;
 		}
 		return biggest;
 	}));
-	NATIVE_FUNC("min")//FIXME: Use BinaryOperation(bOp::LessThan) instead of C++'s less-than operator, for overloading and not-writing-things-in-many-places.
+	NATIVE_FUNC("min")
 	{
 		if (args.size() == 0)
 			return Value();
 
 		Value smallest = args[0];
-		union
-		{
-			double d;
-			Value::JoaoInt i;
-		}smallval;
-		bool is_double;
-		switch (smallest.t_vType)
-		{
-		case(Value::vType::Double):
-			smallval.d = smallest.t_value.as_double;
-			is_double = true;
-		case(Value::vType::Integer):
-			smallval.i = smallest.t_value.as_int;
-			is_double = false;
-		default:
-			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-		}
-
+		
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			const Value& v = args[i];
-			switch (MAXMIN_ENUM(v.t_vType,is_double))
-			{
-			case(MAXMIN_ENUM(Value::vType::Double, true)):
-				if (v.t_value.as_double < smallval.d)
-				{
-					smallest = v;
-					smallval.d = v.t_value.as_double;
-				}
-				break;
-			case(MAXMIN_ENUM(Value::vType::Double, false)):
-				if (v.t_value.as_double < smallval.i)
-				{
-					smallest = v;
-					smallval.d = v.t_value.as_double;
-					is_double = true;
-				}
-				break;
-			case(MAXMIN_ENUM(Value::vType::Integer, false)):
-				if (v.t_value.as_int < smallval.i)
-				{
-					smallest = v;
-					smallval.i = v.t_value.as_int;
-				}
-				break;
-			case(MAXMIN_ENUM(Value::vType::Integer, true)):
-				if (v.t_value.as_int < smallval.d)
-				{
-					smallest = v;
-					smallval.i = v.t_value.as_int;
-					is_double = false;
-				}
-				break;
-			default: // Bools aren't allowed here, piss off
-				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-			}
+			Value result = BinaryExpression::BinaryOperation(smallest, v, BinaryExpression::bOps::Greater, interp);
+			if(result) // if(smaller > v)
+				smallest = v;
 		}
 		return smallest;
 	}));

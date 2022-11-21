@@ -110,7 +110,7 @@ std::string Value::to_string() const
 	}
 }
 
-std::string Value::typestring()
+std::string Value::typestring() const
 {
 	switch (t_vType)
 	{

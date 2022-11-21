@@ -88,7 +88,7 @@
 #endif
 
 
-Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression::bOps t_op, Interpreter& interp)
+Value BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, BinaryExpression::bOps t_op, Interpreter& interp)
 {
 	Value::vType lhs_type = lhs.t_vType;
 	Value::vType rhs_type = rhs.t_vType;
@@ -133,12 +133,12 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	//
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Double, Value::vType::Double)):
 	{
-		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
+		uint64_t chaos = *reinterpret_cast<const double*>(&lhs.t_value.as_double);
 		return Value(static_cast<int64_t>(chaos >> Value::JoaoInt(rhs.t_value.as_double)));
 	}
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Double, Value::vType::Double)):
 	{
-		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
+		uint64_t chaos = *reinterpret_cast<const double*>(&lhs.t_value.as_double);
 		return Value(static_cast<int64_t>(chaos << Value::JoaoInt(rhs.t_value.as_double)));
 	}
 	//
@@ -195,12 +195,12 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	//
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Double, Value::vType::Integer)):
 	{
-		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
+		uint64_t chaos = *reinterpret_cast<const double*>(&lhs.t_value.as_double);
 		return Value(static_cast<int64_t>(chaos >> rhs.t_value.as_int));
 	}
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Double, Value::vType::Integer)):
 	{
-		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
+		uint64_t chaos = *reinterpret_cast<const double*>(&lhs.t_value.as_double);
 		return Value(static_cast<int64_t>(chaos << rhs.t_value.as_int));
 	}
 	//
@@ -457,7 +457,7 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Double, Value::vType::Bool)): // WARNING: Chaotically-aligned programming
 		if (rhs.t_value.as_bool)
 		{
-			if (reinterpret_cast<unsigned char*>(&lhs.t_value.as_double)[0] & 0b1)
+			if (reinterpret_cast<const unsigned char*>(&lhs.t_value.as_double)[0] & 0b1)
 			{
 				return(Value(5.0e-324));
 			}
@@ -489,12 +489,12 @@ Value BinaryExpression::BinaryOperation(Value& lhs, Value& rhs, BinaryExpression
 	//
 	case(BIN_ENUMS(bOps::ShiftRight, Value::vType::Double, Value::vType::Bool)):
 	{
-		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
+		uint64_t chaos = *reinterpret_cast<const double*>(&lhs.t_value.as_double);
 		return Value(static_cast<int64_t>(chaos >> static_cast<Value::JoaoInt>(rhs.t_value.as_bool)));
 	}
 	case(BIN_ENUMS(bOps::ShiftLeft, Value::vType::Double, Value::vType::Bool)):
 	{
-		uint64_t chaos = *reinterpret_cast<double*>(&lhs.t_value.as_double);
+		uint64_t chaos = *reinterpret_cast<const double*>(&lhs.t_value.as_double);
 		return Value(static_cast<int64_t>(chaos << static_cast<Value::JoaoInt>(rhs.t_value.as_bool)));
 	}
 	//

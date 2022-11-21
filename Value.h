@@ -223,7 +223,7 @@ public:
 	~Value();
 
 	std::string to_string() const;
-	std::string typestring();
+	std::string typestring() const;
 };
 
 
