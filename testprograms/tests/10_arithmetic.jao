@@ -1,0 +1,32 @@
+/error/arithmetic/New()
+{
+	what = "Arithmetic error detected!";
+	code = 7;
+}
+/assert(stmt)
+{
+    if(!stmt)
+    {
+        throw /error/arithmetic/New();
+    }
+}
+
+/main()
+{
+    ## Ints and doubles intermingling
+    assert(1.5 == (1 + 0.5)); ## Even floats can't mess this one up!
+    ## Weird boolean casts
+    assert((1 + true) == 2);
+    assert(false * 2 == 0);
+    assert(2 * false == 0);
+    Value didFail = false;
+    try
+    {
+        assert("string" + 7);
+    }
+    catch(expr)
+    {
+        didFail = true;
+    }
+    assert(didFail);
+}

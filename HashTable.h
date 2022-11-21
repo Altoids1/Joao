@@ -62,11 +62,6 @@ class HashTable
         {
             if (used) LIKELY
             {
-                if (*reinterpret_cast<char*>(&used) > 1)
-                {
-                    std::cout << "Corrupt bucket detected.\n";
-                    return;
-                }
                 new (key()) Key(std::move(*dead_buck.key()));
                 new (value()) Value(std::move(*dead_buck.value()));
                 next_collision_bucket = dead_buck.next_collision_bucket;

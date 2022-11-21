@@ -1,0 +1,26 @@
+/error/comparison/New()
+{
+	what = "Comparison error detected!";
+	code = 404;
+}
+/assert(stmt)
+{
+    if(!stmt)
+    {
+        throw /error/comparison/New();
+    }
+}
+
+/main()
+{
+    ##Strings
+    String str1 = "Apple";
+    String str2 = "Banana";
+    String str3 = str1;
+    assert(str1 == str1);
+    assert(str1 != str2);
+    assert(str1 < str2);
+    assert(str1 >= str3);
+    assert(str3 <= str2);
+    assert(str1 == str3);
+}
