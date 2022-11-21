@@ -22,14 +22,14 @@
 #define DND(op) \
 { \
 	const unsigned char bigness = sizeof(lhs.t_value.as_double); \
-	unsigned char* alpha = reinterpret_cast<unsigned char*>(&lhs.t_value.as_double); \
-	unsigned char* beta = reinterpret_cast<unsigned char*>(&rhs.t_value.as_double); \
+	const unsigned char* alpha = reinterpret_cast<const unsigned char*>(&lhs.t_value.as_double); \
+	const unsigned char* beta = reinterpret_cast<const unsigned char*>(&rhs.t_value.as_double); \
 	unsigned char charlie[bigness]; \
 	for (char i = 0; i < bigness; ++i) \
 	{ \
 		charlie[i] = alpha[i] op beta[i]; \
 	} \
-	return Value(*reinterpret_cast<double*>(charlie)); \
+	return Value(*reinterpret_cast<const double*>(charlie)); \
 } \
 
 // For doing bitwise on double-with-int.
@@ -37,8 +37,8 @@
 #define DNI(op) \
 { \
 	const unsigned char bigness = sizeof(lhs.t_value.as_double); \
-	unsigned char* alpha = reinterpret_cast<unsigned char*>(&lhs.t_value.as_double); \
-	unsigned char* beta = reinterpret_cast<unsigned char*>(&rhs.t_value.as_int); \
+	const unsigned char* alpha = reinterpret_cast<const unsigned char*>(&lhs.t_value.as_double); \
+	const unsigned char* beta = reinterpret_cast<const unsigned char*>(&rhs.t_value.as_int); \
 	unsigned char charlie[bigness]; \
 	if(std::is_same<Value::JoaoInt,int32_t>::value) \
 	{ \
@@ -58,7 +58,7 @@
 			charlie[i] = alpha[i] op beta[i]; \
 		} \
 	}\
-	return Value(*reinterpret_cast<double*>(charlie)); \
+	return Value(*reinterpret_cast<const double*>(charlie)); \
 } \
 
 // For doing bitwise on int-with-double.
@@ -66,8 +66,8 @@
 #define IND(op) \
 { \
 	const unsigned char bigness = sizeof(rhs.t_value.as_double); \
-	unsigned char* alpha = reinterpret_cast<unsigned char*>(&lhs.t_value.as_int); \
-	unsigned char* beta = reinterpret_cast<unsigned char*>(&rhs.t_value.as_double); \
+	const unsigned char* alpha = reinterpret_cast<const unsigned char*>(&lhs.t_value.as_int); \
+	const unsigned char* beta = reinterpret_cast<const unsigned char*>(&rhs.t_value.as_double); \
 	unsigned char charlie[bigness]; \
 	if(std::is_same<Value::JoaoInt,int32_t>::value) \
 	{ \
@@ -83,7 +83,7 @@
 			charlie[i] = alpha[i] op beta[i]; \
 		} \
 	}\
-	return Value(*reinterpret_cast<double*>(charlie)); \
+	return Value(*reinterpret_cast<const double*>(charlie)); \
 }
 #endif
 

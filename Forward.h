@@ -20,7 +20,7 @@
 #include <cmath>
 #include <cstdint>
 #endif
-#ifdef __has_include(<bit>)
+#ifdef __cpp_lib_bitops
 #include <bit>
 #endif
 #endif
