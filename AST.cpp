@@ -308,7 +308,8 @@ Value Function::resolve(Interpreter & interp)
 			{
 				interp.pop_stack();
 				obj = nullptr; // Reset object
-				interp.UncaughtRuntime(interp.error);
+				//TODO: Allow for die-as-null functions in contexts where we are not in a try-catch'd call stack.
+				//interp.UncaughtRuntime(interp.error);
 				return vuh;
 			}
 		}

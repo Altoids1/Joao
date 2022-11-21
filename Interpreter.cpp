@@ -32,7 +32,10 @@ Value Interpreter::execute(Program& program, Value& jarg)
 
 	std::vector<Value> jargs = {jarg};
 	main->give_args(*this,jargs,nullptr);
-	return main->resolve(*this);
+	Value ret = main->resolve(*this);
+	if(error)
+		UncaughtRuntime(error);
+	return ret;
 }
 
 void Interpreter::RuntimeError(ASTNode* a, std::string what)
