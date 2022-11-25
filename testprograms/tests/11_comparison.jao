@@ -42,4 +42,9 @@
         didThrow = true;
     }
     assert(didThrow);
+
+    ## Null stuff
+    assert(null || true);
+    assert(!(null && null));
+    assert(!(null ~~ null));
 }

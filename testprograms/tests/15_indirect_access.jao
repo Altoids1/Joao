@@ -1,0 +1,50 @@
+/error/access/New(txt)
+{
+    code = 15;
+    what = txt;
+}
+/assert(stmt)
+{
+    if(!stmt)
+    {
+        throw /error/stringlib/New("Indirect access is busted!");
+    }
+}
+## Why don't we make sure that the README works?
+/apple
+{
+	Value stinky = false;
+	String color = "red";
+}
+
+/apple/rotten
+{
+	Value stinky = true;
+	Value color = "green";
+}
+
+/apple/get_color()
+{
+	return ./color;
+}
+
+/apple/rotten/get_base_color()
+{
+    return ../color;
+}
+
+/apple/rotten/get_glob_color()
+{
+    return /color;
+}
+
+/main()
+{
+    /color = "blue";
+	Object pomme = /apple/New();
+    assert(pomme.get_color() == "red");
+    pomme = /apple/rotten/New();
+    assert(pomme.get_color() == "green");
+    assert(pomme.get_base_color() == "red");
+    assert(pomme.get_glob_color() == "blue");
+}

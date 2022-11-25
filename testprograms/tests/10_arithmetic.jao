@@ -20,6 +20,9 @@
 
 /main()
 {
+    ## Ints and order of operations
+    asserteq(2 ^ 3 ^ 3, 134217728);
+
     ## Doubles n stuff
     asserteq(2.0 * 2.0,4.0);
     asserteq(4.5 % 2.0,0.5);
@@ -35,6 +38,7 @@
     assert((1 + true) == 2);
     assert(false * 2 == 0);
     assert(2 * false == 0);
+    assert(false | 1 == 1);
     Value didFail = false;
     try
     {

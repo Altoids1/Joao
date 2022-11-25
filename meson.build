@@ -58,6 +58,12 @@ test('arithmetic', exe, args : ['./testprograms/tests/10_arithmetic.jao'], workd
 test('comparison', exe, args : ['./testprograms/tests/11_comparison.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 test('mathlib', exe, args : ['./testprograms/tests/12_mathlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
 test('stdlib', exe, args : ['./testprograms/tests/13_stdlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('stringlib', exe, args : ['./testprograms/tests/14_stringlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('access', exe, args : ['./testprograms/tests/15_indirect_access.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+test('try_catch', exe, args : ['./testprograms/tests/16_try_catch.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+
+## Tests that should fail
+
 
 # Benchmark tests
 benchmark('primegen', exe, args : ['./testprograms/bench/primegen.jao'], workdir : meson.source_root())

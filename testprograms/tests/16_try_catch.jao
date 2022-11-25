@@ -1,0 +1,34 @@
+/do()
+{
+    return re();
+}
+/re()
+{
+    return mi();
+}
+/mi()
+{
+    return fa();
+}
+/fa()
+{
+    if(true)
+    {
+        throw /error/New(69,"You caught me!");
+    }
+}
+
+/main()
+{
+    try
+    {
+        do();
+    }
+    catch(err)
+    {
+        if(err.code != 69 || err.what != "You caught me!")
+        {
+            throw /error/New(16,"Throwing doesn't work!"); ## Hopefully THIS gets through though :^)
+        }
+    }
+}

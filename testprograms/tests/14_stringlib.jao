@@ -1,0 +1,27 @@
+/error/stringlib/New(txt)
+{
+    code = 14;
+    what = txt;
+}
+/assert(stmt)
+{
+    if(!stmt)
+    {
+        throw /error/stringlib/New("String library is busted!");
+    }
+}
+/main()
+{
+	assert(replace("apples and oranges","oranges","apples")
+        == "apples and apples");
+    assert(rep("mine",4) == "minemineminemine");
+    assert(reverse("racecar") == "racecar");
+    assert(substr("apples and oranges",0,5) == "apples");
+    Object boom = explode("coffee,cheetos,chicken",",");
+    assert(#boom == 3);
+    assert(boom[0] == "coffee");
+    Value result = find("aaaaaaaaab","b");
+	assert(!isnull(result));
+    assert(result != 0);
+	print("Test #" .. 14 .. " passed");
+}
