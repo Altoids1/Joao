@@ -54,10 +54,26 @@
 		throw /error/New(TEST_NUMBER,"Reference handling failed!");
 	}
 
-	if(!(true && t))
+	Object t2 = {1,2,3,4,5};
+	Number check = 1;
+	for(_,i in t2)
+	{
+		if(i != check)
+		{
+			throw /error/New(TEST_NUMBER,"Foreach doesn't work!");
+		}
+		check += 1;
+	}
+
+	if(!(true && t) ||
+		!(/table/New() && /file/New()) ||
+		!(/table/New() || /file/New())
+	)
 	{
 		throw /error/New(TEST_NUMBER,"Object bool coercion failed!");
 	}
+
+
 	
 	print("Test #" .. TEST_NUMBER .. " passed");
 }

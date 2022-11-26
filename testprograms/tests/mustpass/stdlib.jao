@@ -18,4 +18,8 @@
     assert(isnull(x));
     assert(void_stellakafuhparenthessisluaunderscorestatewithacapitalscommaluaunderscoreallocfvoidstarud() == 7);
     assert(typeof(2.5) == "Double");
+    assert(tointeger(5.5) == 5);
+    assert(tointeger(5) == 5);
+    assert(tostring(7) == "7");
+    assert(classof(/table/New()) == "/table");
 }
