@@ -42,8 +42,12 @@ void Interpreter::RuntimeError(ASTNode* a, std::string what)
 {
 	std::cout << "- - - - - - - - - - - - - - - -\n";
 	std::cout << "FATAL RUNTIME ERROR: " << what << "\n";
-	
+
 	//Stack dump
+	if(objectscope.empty() || blockscope.empty()) // Can't stack dump if we never entered the program (a lack of a /main() function does this)
+	{
+		return;
+	}
 	std::string whatfunk;
 	if(objectscope.top()) // If we runtimed within a method
 	{
