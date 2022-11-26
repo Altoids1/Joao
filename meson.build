@@ -45,24 +45,40 @@ configure_file(input : 'config.h.in', output : 'config.h',
 exe = executable('joao', nativefuncs + src)
 
 # Diagnostic tests
-test('hello world', exe, args : ['./testprograms/tests/1_helloworld.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('blocks', exe, args : ['./testprograms/tests/2_blocks.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('functions', exe, args : ['./testprograms/tests/3_functions.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('objects', exe, args : ['./testprograms/tests/4_objects.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('strings', exe, args : ['./testprograms/tests/5_strings.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('parser', exe, args : ['./testprograms/tests/6_parser.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('rvalues', exe, args : ['./testprograms/tests/7_rvalues.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('tablelib', exe, args : ['./testprograms/tests/8_tablelib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('jsoninterp', exe, args : ['./testprograms/tests/9_json_interp.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('arithmetic', exe, args : ['./testprograms/tests/10_arithmetic.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('comparison', exe, args : ['./testprograms/tests/11_comparison.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('mathlib', exe, args : ['./testprograms/tests/12_mathlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('stdlib', exe, args : ['./testprograms/tests/13_stdlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('stringlib', exe, args : ['./testprograms/tests/14_stringlib.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('access', exe, args : ['./testprograms/tests/15_indirect_access.jao'], workdir : meson.source_root(), suite: 'diagnostic')
-test('try_catch', exe, args : ['./testprograms/tests/16_try_catch.jao'], workdir : meson.source_root(), suite: 'diagnostic')
+diagnostics = [ #Meson has a philosophical disagreement with procedurally generating the list of files in a directory, so...
+	'helloworld',
+	'blocks',
+	'functions',
+	'objects',
+	'strings',
+	'parser',
+	'rvalues',
+	'tablelib',
+	'json_interp',
+	'arithmetic',
+	'comparison',
+	'mathlib',
+	'stdlib',
+	'stringlib',
+	'indirect_access',
+	'try_catch',
+]
+foreach diag : diagnostics
+	str = './testprograms/tests/mustpass/@0@.jao'.format(diag)
+	test(diag, exe, args: [str], workdir : meson.source_root(), suite: 'diagnostic')
+endforeach
 
 ## Tests that should fail
+shouldfail = [
+	'nomain',
+	'file_doesnt_exist', #Phantom test :^)
+]
+foreach diag : shouldfail
+	str = './testprograms/tests/shouldfail/@0@.jao'.format(diag)
+	test(diag, exe, args: [str], workdir : meson.source_root(), suite: 'diagnostic', should_fail : true)
+endforeach
+
+
 
 
 # Benchmark tests
