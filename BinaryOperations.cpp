@@ -88,7 +88,7 @@
 #endif
 
 
-Value BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, BinaryExpression::bOps t_op, Interpreter& interp)
+FailureOr<Value> BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, BinaryExpression::bOps t_op)
 {
 	Value::vType lhs_type = lhs.t_vType;
 	Value::vType rhs_type = rhs.t_vType;
@@ -450,8 +450,7 @@ Value BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, Bina
 		{
 			return Value(modf(lhs.t_value.as_double,&nowhere));
 		}
-		interp.RuntimeError(nullptr, ErrorCode::FailedOperation, "Division by zero!");
-		return Value();
+		return FailureOr<Value>(ErrorCode::FailedOperation,ImmutableString("Division by zero!"));
 	}
 	//
 	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Double, Value::vType::Bool)): // WARNING: Chaotically-aligned programming
@@ -915,8 +914,12 @@ Value BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, Bina
 				return Value(lhs && true);
 			}
 		default:
-			interp.RuntimeError(nullptr, ErrorCode::FailedOperation, "Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")");
-			return Value();
+			return FailureOr<Value>(
+				ErrorCode::FailedOperation,
+				ImmutableString(
+				"Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")"
+				)
+			);
 		}
 		
 	}

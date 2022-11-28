@@ -9,6 +9,7 @@ src = [
 	'AST.cpp',
 	'BinaryOperations.cpp',
 	'Directory.cpp',
+	'FailureOr.cpp',
 	'Interpreter.cpp',
 	'main.cpp',
 	'Object.cpp',

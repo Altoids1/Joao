@@ -2,6 +2,7 @@
 #include "Directory.h"
 #include "Object.h"
 #include "ObjectTree.h"
+#include "FailureOr.h"
 
 #define SYMBOL_ENUMS(a,b) ((a << 9) | b)
 
@@ -652,8 +653,24 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 				}
 
 				ASTNode* right = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), where+1, there);
-				
-				lhs = new BinaryExpression(boopitybeep, lhs, right, t2->line);
+
+				if(lhs->class_name() == "Literal" && right->class_name() == "Literal") // Really primitive const-rolling
+				{
+					auto literalLHS = static_cast<Literal*>(lhs);
+					auto literalRHS = static_cast<Literal*>(right);
+					FailureOr<Value> ret = BinaryExpression::BinaryOperation(literalLHS->const_resolve(*this,true),literalRHS->const_resolve(*this,true),boopitybeep);
+					if(ret.didError)
+					{
+						ParserError(t2,ret.data.what.to_string());
+						lhs = new Literal(Value());
+					}
+					else
+					{
+						lhs = new Literal(ret.data.value);
+					}
+				} 
+				else
+					lhs = new BinaryExpression(boopitybeep, lhs, right, t2->line);
 				
 				continue;
 			}

@@ -4,6 +4,7 @@
 #include "Table.h"
 #include "Interpreter.h"
 #include "Parser.h"
+#include "FailureOr.h"
 
 
 #define UN_ENUMS(a,b) ((uint32_t(a) << 8)  | uint32_t(b) )
@@ -94,16 +95,16 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 	switch (t_op) // FIXME: Make this suck less
 	{
 	case(aOps::AssignAdd):
-		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Add, interp);
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Add).get_or_throw(interp);
 		break;
 	case(aOps::AssignSubtract):
-		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Subtract, interp);
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Subtract).get_or_throw(interp);
 		break;
 	case(aOps::AssignMultiply):
-		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Multiply, interp);
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Multiply).get_or_throw(interp);
 		break;
 	case(aOps::AssignDivide):
-		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Divide, interp);
+		lhs_val = BinaryExpression::BinaryOperation(lhs_val, rhs_val, BinaryExpression::bOps::Divide).get_or_throw(interp);
 		break;
 	//TODO: Permit other sorts of ops to be mixed with assignment
 	case(aOps::Assign):
@@ -236,7 +237,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	{
 		return Value();
 	}
-	return BinaryOperation(lhs, rhs, t_op, interp);
+	return BinaryOperation(lhs, rhs, t_op).get_or_throw(interp);
 }
 
 

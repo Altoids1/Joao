@@ -5,6 +5,7 @@
 
 #include "Forward.h"
 #include "ImmutableString.h"
+#include "FailureOr.h"
 #include "SharedEnums.h"
 #include "Error.h"
 #include "Value.h"
@@ -48,6 +49,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual Value const_resolve(Parser&, bool) override;
+	virtual const std::string class_name() const { return "Literal"; } 
 	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Literal: " + heldval.to_string() + "\n"; }
 };
 
@@ -357,7 +359,7 @@ public:
 
 		return str;
 	}
-	static Value BinaryOperation(const Value&,const Value&, bOps, Interpreter&);
+	static FailureOr<Value> BinaryOperation(const Value&,const Value&, bOps);
 };
 
 class ReturnStatement : public Expression {

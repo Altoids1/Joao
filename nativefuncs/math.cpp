@@ -1,4 +1,5 @@
 #include "../Program.h"
+#include "../FailureOr.h"
 #include "../AST.hpp"
 
 #include <limits>
@@ -202,7 +203,7 @@ void Program::construct_math_library()
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			const Value& v = args[i];
-			Value result = BinaryExpression::BinaryOperation(biggest, v, BinaryExpression::bOps::LessThan, interp);
+			Value result = BinaryExpression::BinaryOperation(biggest, v, BinaryExpression::bOps::LessThan).get_or_throw(interp);
 			if(result) // if(biggest < v)
 				biggest = v;
 		}
@@ -218,7 +219,7 @@ void Program::construct_math_library()
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			const Value& v = args[i];
-			Value result = BinaryExpression::BinaryOperation(smallest, v, BinaryExpression::bOps::Greater, interp);
+			Value result = BinaryExpression::BinaryOperation(smallest, v, BinaryExpression::bOps::Greater).get_or_throw(interp);
 			if(result) // if(smaller > v)
 				smallest = v;
 		}

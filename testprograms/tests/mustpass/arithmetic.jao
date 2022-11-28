@@ -42,7 +42,8 @@
     Value didFail = false;
     try
     {
-        assert("string" + 7);
+        Value evading_const_folding = 7;
+        assert("string" + evading_const_folding);
     }
     catch(expr)
     {
