@@ -54,9 +54,10 @@ public:
 // Expressions are ASTNodes that make sense to be done on their lonesome as a statement w/o other context.
 class Expression : public ASTNode
 {
+#ifdef JOAO_SAFE
+private:
 	static int expr_count;
 protected:
-#ifdef JOAO_SAFE
 	void increment()
 	{
 		++expr_count;
