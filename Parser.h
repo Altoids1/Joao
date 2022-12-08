@@ -442,8 +442,11 @@ class Parser
 				goto ACCESS_END;
 			}
 		}
-ACCESS_END:
-		tokenheader = where + 1;
+	ACCESS_END:
+		if (where > there) // FIXME: Stop this from happening
+			tokenheader = there + 1;
+		else
+			tokenheader = where + 1;
 		return scoped_access;
 	}
 
@@ -639,15 +642,13 @@ ACCESS_END:
 			if (pst->is_start) // We'll also now need to find the closer for this one
 			{
 				++count;
+				continue;
 			}
-			else
+			--count;
+			if (!count)
 			{
-				--count;
-				if (!count)
-				{
-					//std::cout << "I return " << std::to_string(where);
-					return static_cast<int>(where);
-				}
+				//std::cout << "I return " << std::to_string(where);
+				return static_cast<int>(where);
 			}
 		}
 		ParserError(tokens[static_cast<size_t>(here)-1], "Unable to find closing pairlet for this open pairlet!");
