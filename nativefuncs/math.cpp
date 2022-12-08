@@ -193,6 +193,42 @@ void Program::construct_math_library()
 			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
 		}
 	}));
+	NATIVE_FUNC("log")
+	{
+		if (args.size() == 0)
+			return Value();
+
+		const Value& arg = args[0];
+		switch (arg.t_vType)
+		{
+		case(Value::vType::Double):
+			return Value(log(arg.t_value.as_double));
+		case(Value::vType::Integer):
+			return Value(log(arg.t_value.as_int));
+		case(Value::vType::Bool):
+			return Value(log(arg.t_value.as_bool));
+		default:
+			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+		}
+	}));
+	NATIVE_FUNC("log10")
+	{
+		if (args.size() == 0)
+			return Value();
+
+		const Value& arg = args[0];
+		switch (arg.t_vType)
+		{
+		case(Value::vType::Double):
+			return Value(log10(arg.t_value.as_double));
+		case(Value::vType::Integer):
+			return Value(log10(arg.t_value.as_int));
+		case(Value::vType::Bool):
+			return Value(log10(arg.t_value.as_bool));
+		default:
+			return Value(Value::vType::Null, int(ErrorCode::BadArgType));
+		}
+	}));
 	NATIVE_FUNC("max")
 	{
 		if (args.size() == 0)
