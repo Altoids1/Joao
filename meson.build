@@ -67,7 +67,7 @@ diagnostics = [ #Meson has a philosophical disagreement with procedurally genera
 ]
 foreach diag : diagnostics
 	str = './testprograms/tests/mustpass/@0@.jao'.format(diag)
-	test(diag, exe, args: [str], workdir : meson.source_root(), suite: 'diagnostic')
+	test(diag, exe, args: [str], workdir : meson.source_root(), suite: 'diagnostic', timeout : 2)
 endforeach
 
 ## Tests that should fail
@@ -77,7 +77,7 @@ shouldfail = [
 ]
 foreach diag : shouldfail
 	str = './testprograms/tests/shouldfail/@0@.jao'.format(diag)
-	test(diag, exe, args: [str], workdir : meson.source_root(), suite: 'diagnostic', should_fail : true)
+	test(diag, exe, args: [str], workdir : meson.source_root(), suite: 'diagnostic', should_fail : true, timeout : 2)
 endforeach
 
 
