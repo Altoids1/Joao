@@ -2,49 +2,36 @@
 #include "Forward.h"
 #include "ImmutableString.h"
 #include "SharedEnums.h"
+#include "Value.h"
 
 //Used in some contexts to store a runtime when the interpreter maybe not be available
 //(or might not exist, as is the case during const-folding)
-template <typename Type>
 struct FailureOr
 {
-    union Data
+    struct Failure
     {
-        Type value;
-        struct {
-            ImmutableString what;
-            ErrorCode code;
-        };
-        Data() {}
-        ~Data() {} // FailureOr handles it :)
-    } data;
+        ErrorCode code;
+        ImmutableString what;
+    };
+    std::variant<Value, Failure> data;
     bool didError;
 
-    FailureOr(Type&& ret)
+    FailureOr(Value&& ret)
         :didError(false)
+        ,data(ret)
     {
-        data.value = std::move(ret);
     }
     FailureOr(const ImmutableString& _what)
         :didError(true)
+        ,data(Failure{ .code = ErrorCode::Unknown,.what = _what })
     {
-        data.what = _what;
-        data.code = 1;
     }
     FailureOr(ErrorCode _code, const ImmutableString& _what)
         :didError(true)
     {
-        data.what = _what;
-        data.code = _code;
+        Failure fail = { .code = _code, .what = _what };
+        data = std::variant<Value, Failure>(fail);
     }
 
-    ~FailureOr()
-    {
-        if(didError)
-            data.what.~ImmutableString();
-        else
-            data.value.~Type();
-    }
-
-    Type get_or_throw(Interpreter&);
+    Value get_or_throw(Interpreter&);
 };

@@ -1,0 +1,22 @@
+/main()
+{
+    Number i = 0;
+    while(true)
+    {
+        i += 1;
+        while(true)
+        {
+            i += 1;
+            while(true)
+            {
+                break 3;
+            }
+            i += 1;
+        }
+        i += 1;
+    }
+    if(i != 2)
+    {
+        throw /error/New(i,"Breaking is busted!");
+    }
+}

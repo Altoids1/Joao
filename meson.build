@@ -63,6 +63,7 @@ diagnostics = [ #Meson has a philosophical disagreement with procedurally genera
 	'stringlib',
 	'indirect_access',
 	'try_catch',
+	'break',
 ]
 foreach diag : diagnostics
 	str = './testprograms/tests/mustpass/@0@.jao'.format(diag)

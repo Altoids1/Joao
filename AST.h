@@ -359,7 +359,7 @@ public:
 
 		return str;
 	}
-	static FailureOr<Value> BinaryOperation(const Value&,const Value&, bOps);
+	static FailureOr BinaryOperation(const Value&,const Value&, bOps);
 };
 
 class ReturnStatement : public Expression {
@@ -370,31 +370,30 @@ public:
 	virtual const std::string class_name() const override { return "ReturnStatement"; }
 
 	ReturnStatement()
-		:held_expr(new Literal(Value()))
+		:held_expr(nullptr) // Very tiny memory optimization; we don't store anything and just return null if this is a nullptr.
 	{
 
 	}
 	ReturnStatement(ASTNode* node, int linenum = 0)
 		:held_expr(node)
+		,has_expr(true)
 	{
 		my_line = linenum;
-		has_expr = true;
 	}
 	virtual ~ReturnStatement()
 	{
-		delete held_expr;
+		delete held_expr; // Deleting nullptr is ok!
 	}
-	virtual Value resolve(Interpreter& interp) override
-	{
-		return held_expr->resolve(interp);
-	}
+	virtual Value resolve(Interpreter& interp) override;
 	virtual std::string dump(int indent)
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ReturnStatement:\n";
 
-		str += held_expr->dump(indent + 1);
-
+		if(has_expr)
+			str += held_expr->dump(indent + 1);
+		else
+			str += Literal(Value()).dump(indent + 1); // rvalues my beloved
 		return str;
 	}
 };

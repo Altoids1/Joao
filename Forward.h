@@ -16,6 +16,7 @@
 #include <functional>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #ifdef __GNUG__
 #include <cstring>
 #include <cmath>

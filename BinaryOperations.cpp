@@ -11,9 +11,9 @@
 
 #ifdef __has_builtin
 #if __has_builtin (__builtin_bit_cast) // Making use of the fact that this compiler probably has C++20 spec internally
-#define DND(op) return __builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double)
-#define DNI(op) return __builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,static_cast<int64_t>(rhs.t_value.as_int))
-#define IND(op) return __builtin_bit_cast(uint64_t,static_cast<int64_t>(lhs.t_value.as_int)) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double)
+#define DND(op) return Value(__builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double))
+#define DNI(op) return Value(__builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,static_cast<int64_t>(rhs.t_value.as_int)))
+#define IND(op) return Value(__builtin_bit_cast(uint64_t,static_cast<int64_t>(lhs.t_value.as_int)) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double))
 #endif
 #endif
 #ifndef DND // Horrifying fallback implementation
@@ -88,7 +88,7 @@
 #endif
 
 
-FailureOr<Value> BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, BinaryExpression::bOps t_op)
+FailureOr BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, BinaryExpression::bOps t_op)
 {
 	Value::vType lhs_type = lhs.t_vType;
 	Value::vType rhs_type = rhs.t_vType;
@@ -450,7 +450,7 @@ FailureOr<Value> BinaryExpression::BinaryOperation(const Value& lhs, const Value
 		{
 			return Value(modf(lhs.t_value.as_double,&nowhere));
 		}
-		return FailureOr<Value>(ErrorCode::FailedOperation,ImmutableString("Division by zero!"));
+		return FailureOr(ErrorCode::FailedOperation,ImmutableString("Division by zero!"));
 	}
 	//
 	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Double, Value::vType::Bool)): // WARNING: Chaotically-aligned programming
@@ -914,7 +914,7 @@ FailureOr<Value> BinaryExpression::BinaryOperation(const Value& lhs, const Value
 				return Value(lhs && true);
 			}
 		default:
-			return FailureOr<Value>(
+			return FailureOr(
 				ErrorCode::FailedOperation,
 				ImmutableString(
 				"Failed to do a binary operation! (" + lhs.to_string() + ", " + rhs.to_string() + ")\nTypes: (" + lhs.typestring() + ", " + rhs.typestring() + ")"

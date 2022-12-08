@@ -658,15 +658,15 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 				{
 					auto literalLHS = static_cast<Literal*>(lhs);
 					auto literalRHS = static_cast<Literal*>(right);
-					FailureOr<Value> ret = BinaryExpression::BinaryOperation(literalLHS->const_resolve(*this,true),literalRHS->const_resolve(*this,true),boopitybeep);
+					FailureOr ret = BinaryExpression::BinaryOperation(literalLHS->const_resolve(*this,true),literalRHS->const_resolve(*this,true),boopitybeep);
 					if(ret.didError)
 					{
-						ParserError(t2,ret.data.what.to_string());
+						ParserError(t2,std::get<FailureOr::Failure>(ret.data).what.to_string());
 						lhs = new Literal(Value());
 					}
 					else
 					{
-						lhs = new Literal(ret.data.value);
+						lhs = new Literal(std::get<Value>(ret.data));
 					}
 				} 
 				else

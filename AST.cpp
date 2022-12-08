@@ -350,6 +350,17 @@ Value NativeMethod::resolve(Interpreter& interp)
 	return result; // Woag.
 }
 
+Value ReturnStatement::resolve(Interpreter& interp)
+{
+	//First get the value
+	Value ret;
+	if (has_expr)
+		ret = held_expr->resolve(interp);
+	//THEN!! flag the return
+	interp.FORCE_RETURN = true;
+	return ret;
+}
+
 Value CallExpression::resolve(Interpreter& interp)
 {
 #ifdef JOAO_SAFE

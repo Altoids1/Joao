@@ -4,13 +4,17 @@
 
 //Tries to get the value stored in this. Returns null and marks a runtime on the interpreter if it fails.
 //Currently only defined for the Value specialization.
-template<>
-Value FailureOr<Value>::get_or_throw(Interpreter& interp)
+Value FailureOr::get_or_throw(Interpreter& interp)
 {
     if(didError)
     {
-        interp.RuntimeError(nullptr,data.code, data.what.to_string());
+        if (this->data.index() != 1) {
+            interp.RuntimeError(nullptr, ErrorCode::Unknown, "FailureOr failed to store the actual error message!");
+            return Value();
+        }
+        Failure& fail = std::get<Failure>(data);
+        interp.RuntimeError(nullptr, fail.code, fail.what.to_string());
         return Value();
     }
-    return data.value;
+    return std::get<Value>(data);
 }
