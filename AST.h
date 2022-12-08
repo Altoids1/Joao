@@ -580,11 +580,6 @@ class Block : public Expression
 {
 protected:
 	std::vector<Expression*> statements;
-
-	Block()
-	{
-
-	}
 	Block(const std::vector<Expression*>& s)
 		:statements(s)
 	{
@@ -612,12 +607,13 @@ class IfBlock final : public Block
 	IfBlock* Elseif = nullptr;
 public:
 	IfBlock(std::vector<Expression*>& st)
+		:Block(st)
 	{
-		statements = st;
 	}
 	IfBlock(ASTNode* cond, std::vector<Expression*>& st, int linenum = 0)
-		:condition(cond)
-{
+		:Block(st)
+		,condition(cond)
+	{
 		my_line = linenum;
 		statements = st;
 	}
@@ -672,17 +668,13 @@ class ForBlock final : public Block
 	ASTNode* increment = nullptr;
 	
 public:
-	ForBlock(std::vector<Expression*>& st)
-	{
-		statements = st;
-	}
 	ForBlock(ASTNode* init, ASTNode* cond, ASTNode* inc, std::vector<Expression*>& st, int linenum = 0)
-		:initializer(init),
+		:Block(st),
+		initializer(init),
 		condition(cond),
 		increment(inc)
 	{
 		my_line = linenum;
-		statements = st;
 	}
 	virtual ~ForBlock()
 	{
@@ -718,12 +710,12 @@ class ForEachBlock final : public Block
 	ASTNode* table_node;
 public:
 	ForEachBlock(const ImmutableString& k , const ImmutableString& v, ASTNode* tn, const std::vector<Expression*>& st, int linenum = 0)
-		:key_name(k),
+		:Block(st),
+		key_name(k),
 		value_name(v),
 		table_node(tn)
 	{
 		my_line = linenum;
-		statements = st;
 	}
 	virtual ~ForEachBlock()
 	{
@@ -753,15 +745,11 @@ class WhileBlock final : public Block
 {
 	ASTNode* condition = nullptr;
 public:
-	WhileBlock(std::vector<Expression*>& st)
-	{
-		statements = st;
-	}
 	WhileBlock(ASTNode* cond, std::vector<Expression*>& st, int linenum = 0)
-		:condition(cond)
-{
+		:Block(st)
+		,condition(cond)
+	{
 		my_line = linenum;
-		statements = st;
 	}
 	virtual ~WhileBlock()
 	{
@@ -793,7 +781,7 @@ class BreakStatement final : public Expression
 public:
 	BreakStatement(int br = 1, int linenum = 0)
 		:breaknum(br)
-{
+	{
 		my_line = linenum;
 	}
 
@@ -804,6 +792,24 @@ public:
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "Break " + std::to_string(breaknum) + ";\n";
 
+		return str;
+	}
+};
+
+class ContinueStatement final : public Expression
+{
+public:
+	ContinueStatement(int linenum = 0)
+	{
+		my_line = linenum;
+	}
+
+	virtual Value resolve(Interpreter&) override;
+	virtual const std::string class_name() const override { return "ContinueStatement"; }
+	virtual std::string dump(int indent)
+	{
+		std::string ind = std::string(indent, ' ');
+		std::string str = ind + "Continue;\n";
 		return str;
 	}
 };

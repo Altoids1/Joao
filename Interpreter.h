@@ -29,6 +29,7 @@ public:
 
 	int BREAK_COUNTER = 0; // An integer flag used to break (perhaps several levels) out of one or several blocks (which are not Function blocks)
 	bool FORCE_RETURN = false; // A flag used to allow blocks to force their parent functions to return when they hit a ReturnStatement.
+	bool CONTINUE_FLAG = false; // Flag used to mark when a "continue;" has been hit.
 #ifdef JOAO_SAFE
 	int value_init_count = 0;
 #endif

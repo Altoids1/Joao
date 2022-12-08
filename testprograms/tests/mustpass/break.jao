@@ -19,4 +19,17 @@
     {
         throw /error/New(i,"Breaking is busted!");
     }
+    while(true)
+    {
+        i -= 1;
+        if(i != 0)
+        {
+            continue;
+        }
+        break;
+    }
+    if(i != 0)
+    {
+        throw /error/New(i,"Continue is busted!");
+    }
 }

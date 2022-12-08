@@ -257,6 +257,7 @@ public:
 		In, // Used for foreaches; "for(key,val in arr)"
 		Return,
 		Break,
+		Continue,
 		Try,
 		Catch,
 		Throw
@@ -472,7 +473,8 @@ class Scanner
 		{"break",KeywordToken::Key::Break},
 		{"try",KeywordToken::Key::Try},
 		{"catch",KeywordToken::Key::Catch},
-		{"throw",KeywordToken::Key::Throw}
+		{"throw",KeywordToken::Key::Throw},
+		{"continue",KeywordToken::Key::Continue},
 	};
 	const Hashtable<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},

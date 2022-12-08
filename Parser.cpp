@@ -1009,6 +1009,15 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 				//ParserError(t, "Break statements are not implemented!");
 				continue;
 			}
+			case(KeywordToken::Key::Continue):
+			{
+				if (bt == BlockType::Function)
+					ParserError(t, "Unexpected continue statement in Function block!");
+				++where; tokenheader = where; // Consume continue token
+				consume_semicolon();
+				ASTs.push_back(new ContinueStatement());
+				continue; // lol
+			}
 			case(KeywordToken::Key::While):
 			{				
 				++where; tokenheader = where;

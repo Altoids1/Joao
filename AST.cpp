@@ -271,56 +271,46 @@ Value Function::resolve(Interpreter & interp)
 	{
 		//it is a pointer to a pointer to an Expression.
 		Expression* ptr = *it;
-		if (ptr->class_name() == "ReturnStatement")
+		Value vuh = ptr->resolve(interp); // I dunno.
+		if (interp.FORCE_RETURN)
 		{
-			ReturnStatement& rt = *(static_cast<ReturnStatement*>(ptr));
-
-			if (rt.has_expr) // If this actually has something to return
+			interp.FORCE_RETURN = false;
+			interp.pop_stack();
+			obj = nullptr; // Reset object
+			if (interp.BREAK_COUNTER) UNLIKELY
 			{
-				Value ret = rt.resolve(interp); // Resolve it first
-				interp.pop_stack(); // THEN pop the stack
-				obj = nullptr; // Reset object
-				if (interp.BREAK_COUNTER)
-				{
-					interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
-					interp.BREAK_COUNTER = 0;
-				}
-
-				return ret; // THEN return it
+				interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
+				interp.BREAK_COUNTER = 0;
 			}
-			break;// otherwise use the default returnValue
+			if(interp.CONTINUE_FLAG) UNLIKELY // TODO: Detect this at compiletime
+			{
+				interp.RuntimeError(this, ErrorCode::BadBreak, "Unexpected continue in function block!");
+				interp.CONTINUE_FLAG = false; // consume it anyways
+			}
+			return vuh;
 		}
-		else
+		if(interp.error) // Oh no, an uncaught runtime!
 		{
-			Value vuh = ptr->resolve(interp); // I dunno.
-			if (interp.FORCE_RETURN)
-			{
-				interp.FORCE_RETURN = false;
-				interp.pop_stack();
-				obj = nullptr; // Reset object
-				if (interp.BREAK_COUNTER)
-				{
-					interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
-					interp.BREAK_COUNTER = 0;
-				}
-				return vuh;
-			}
-			if(interp.error) // Oh no, an uncaught runtime!
-			{
-				interp.pop_stack();
-				obj = nullptr; // Reset object
-				//TODO: Allow for die-as-null functions in contexts where we are not in a try-catch'd call stack.
-				//interp.UncaughtRuntime(interp.error);
-				return vuh;
-			}
+			interp.pop_stack();
+			interp.BREAK_COUNTER = 0;
+			interp.CONTINUE_FLAG = false;
+			obj = nullptr; // Reset object
+			//TODO: Allow for die-as-null functions in contexts where we are not in a try-catch'd call stack.
+			//interp.UncaughtRuntime(interp.error);
+			return vuh;
 		}
 	}
 	interp.pop_stack();
 	obj = nullptr; // Reset object
-	if (interp.BREAK_COUNTER)
+	if(interp.BREAK_COUNTER) UNLIKELY
 	{
 		interp.RuntimeError(this, ErrorCode::BadBreak, "Break statement integer too large!");
 		interp.BREAK_COUNTER = 0;
+	}
+	if(interp.CONTINUE_FLAG) UNLIKELY
+	{
+		interp.RuntimeError(this, ErrorCode::BadBreak, "Unexpected continue in function block!");
+		interp.CONTINUE_FLAG = false; // consume it anyways
 	}
 	return returnValue;
 }
@@ -404,40 +394,12 @@ Value& CallExpression::handle(Interpreter& interp)
 
 Value Block::iterate(const std::vector<Expression*>& state, Interpreter& interp)
 {
-	for (auto it = state.begin(); it != state.end(); ++it)
+	for(Expression* ptr : state)
 	{
-		//it is a pointer to a pointer to an Expression.
-		Expression* ptr = *it;
-		if (ptr->class_name() == "ReturnStatement")
+		Value vuh = ptr->resolve(interp); // I dunno.
+		if (interp.FORCE_RETURN || interp.error || interp.BREAK_COUNTER || interp.CONTINUE_FLAG)
 		{
-			ReturnStatement& rt = *static_cast<ReturnStatement*>(ptr);
-
-			
-			if (rt.has_expr) // If this actually has something to return
-			{
-				Value ret = rt.resolve(interp); // Get the return		
-				//interp.pop_block(); // THEN pop the stack
-				interp.FORCE_RETURN = true;
-				return ret; // THEN return the value.
-			}
-			//interp.pop_block();
-			interp.FORCE_RETURN = true;
-			return Value();
-		}
-		else if (ptr->class_name() == "BreakStatement")
-		{
-			ptr->resolve(interp);
-			//interp.pop_block();
-			return Value();
-		}
-		else
-		{
-			Value vuh = ptr->resolve(interp); // I dunno.
-			if (interp.FORCE_RETURN || interp.error)
-			{
-				//interp.pop_block();
-				return vuh;
-			}
+			return vuh;
 		}
 	}
 	return Value();
@@ -487,6 +449,10 @@ Value ForBlock::resolve(Interpreter& interp)
 			interp.pop_block();
 			return blockret;
 		}
+		if(interp.CONTINUE_FLAG)
+		{
+			interp.CONTINUE_FLAG = false; // Consume the continue
+		}
 		if (interp.FORCE_RETURN || interp.error)
 		{
 			interp.pop_block();
@@ -532,6 +498,10 @@ Value ForEachBlock::resolve(Interpreter& interp)
 			interp.pop_block();
 			return blockret;
 		}
+		if(interp.CONTINUE_FLAG)
+		{
+			interp.CONTINUE_FLAG = false; // Consume the continue
+		}
 		if (interp.FORCE_RETURN || interp.error)
 		{
 			interp.pop_block();
@@ -555,6 +525,10 @@ Value ForEachBlock::resolve(Interpreter& interp)
 			interp.pop_block();
 			return blockret;
 		}
+		if(interp.CONTINUE_FLAG)
+		{
+			interp.CONTINUE_FLAG = false; // Consume the continue
+		}
 		if (interp.FORCE_RETURN || interp.error)
 		{
 			interp.pop_block();
@@ -576,6 +550,10 @@ Value ForEachBlock::resolve(Interpreter& interp)
 			interp.BREAK_COUNTER -= 1; // I don't trust the decrement operator with this and neither should you.
 			interp.pop_block();
 			return blockret;
+		}
+		if(interp.CONTINUE_FLAG)
+		{
+			interp.CONTINUE_FLAG = false; // Consume the continue
 		}
 		if (interp.FORCE_RETURN || interp.error)
 		{
@@ -607,6 +585,11 @@ Value WhileBlock::resolve(Interpreter& interp)
 			interp.pop_block();
 			return blockret;
 		}
+		if (interp.CONTINUE_FLAG)
+		{
+			interp.CONTINUE_FLAG = false; // Consume the continue
+			continue; // lol
+		}
 		if (interp.FORCE_RETURN || interp.error)
 		{
 			//std::cout << "Whileloop got to FORCE_RETURN!\n";
@@ -624,6 +607,15 @@ Value BreakStatement::resolve(Interpreter& interp)
 	increment();
 #endif
 	interp.BREAK_COUNTER = breaknum;
+	return Value();
+}
+
+Value ContinueStatement::resolve(Interpreter& interp)
+{
+#ifdef JOAO_SAFE
+	increment();
+#endif
+	interp.CONTINUE_FLAG = true;
 	return Value();
 }
 
@@ -831,6 +823,7 @@ Value TryBlock::resolve(Interpreter& interp)
 	interp.push_block("try");
 	Value ret = iterate_statements(interp);
 	interp.pop_block();
+	//We don't really care about any break/continue flags as a try{}catch{}, just the error one
 	if(interp.error) // ah, we caught an error, cool
 	{
 		interp.push_block("catch");
