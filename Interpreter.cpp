@@ -307,8 +307,9 @@ Value Interpreter::makeObject(std::string str, std::vector<ASTNode*>& args, ASTN
 	for (size_t i = 0; i < args.size(); ++i)
 	{
 		eval_args.push_back(args[i]->resolve(*this));
+		if (this->error) // Ohp, the arguments were bad!
+			return Value();
 	}
-
 	return Value(prog->definedObjTypes[str]->makeObject(*this, std::move(eval_args)));
 }
 Value Interpreter::makeObject(std::string str, std::vector<Value>&& eval_args, ASTNode* maker)

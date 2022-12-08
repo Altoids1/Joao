@@ -849,6 +849,8 @@ Value ThrowStatement::resolve(Interpreter& interp)
 	}
 
 	Value val = err_node->resolve(interp);
+	if (interp.error)
+		return Value();
 	if (!val || val.t_vType != Value::vType::Object || !val.t_value.as_object_ptr->object_type.begins_with("/error"))
 	{
 		interp.RuntimeError(this, ErrorCode::FailedTypecheck, "Throw keyword invoked with non-error operand!");
