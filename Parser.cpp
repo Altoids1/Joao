@@ -855,7 +855,8 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 					}
 					++tokenheader;
 					ASTNode* table_node = readExp(tokenheader, yonder - 1);
-					consume_paren(false);
+					//assert(yonder == tokenheader);
+					consume_paren(false); // )
 
 					ASTs.push_back(new ForEachBlock(keytoken->word, valtoken->word, table_node, readBlock(BlockType::For, tokenheader, there)));
 					where = tokenheader - 1; // decrement to counteract imminent increment

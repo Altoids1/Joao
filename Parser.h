@@ -410,6 +410,11 @@ class Parser
 				++where;
 				//return new MemberAccess(scoped_access, readVarAccess(tokenheader, there)); // Doing just this would end up being right-associative, which for our purposes would be annoying to deal with interpreter-side.
 				//So we're going to do something else.
+				if(tokens.size() <= where) UNLIKELY // why you gotta be daft like this mang
+				{
+					ParserError(tokens[where-1], "Unexpected EOF when reading MemberAccess!");
+					return scoped_access; // I guess idfk
+				}
 				if (tokens[where]->class_enum() != Token::cEnum::WordToken)
 				{
 					ParserError(tokens[where], "Unexpected Token when reading MemberAccess!");
@@ -562,12 +567,18 @@ ACCESS_END:
 			PairSymbolToken pst = *static_cast<PairSymbolToken*>(t);
 			if (pst.is_start != open || pst.t_pOp != PairSymbolToken::pairOp::Paren)
 			{
-				ParserError(t, "Unexpected PairSymbolToken while attempting to consume open Paren!");
+				if(open)
+					ParserError(t, "Unexpected PairSymbolToken while attempting to consume '('!");
+				else
+					ParserError(t, "Unexpected PairSymbolToken while attempting to consume ')'!");
 			}
 			return;
 		}
 		default:
-			ParserError(t, "Unexpected Token while attempting to consume open Paren!");
+			if (open)
+				ParserError(t, "Unexpected Token while attempting to consume '('!");
+			else
+				ParserError(t, "Unexpected Token while attempting to consume ')'!");
 		}
 	}
 
