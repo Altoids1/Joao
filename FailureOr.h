@@ -23,13 +23,13 @@ struct FailureOr
     }
     FailureOr(const ImmutableString& _what)
         :didError(true)
-        ,data(Failure{ .code = ErrorCode::Unknown,.what = _what })
+        ,data(Failure{ ErrorCode::Unknown, _what })
     {
     }
     FailureOr(ErrorCode _code, const ImmutableString& _what)
         :didError(true)
     {
-        Failure fail = { .code = _code, .what = _what };
+        Failure fail = { _code, _what };
         data = std::variant<Value, Failure>(fail);
     }
 
