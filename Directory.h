@@ -65,4 +65,19 @@ namespace math
 			}
 		}
 	}
+	constexpr size_t get_high_bit(size_t x)
+	{
+		constexpr size_t size_t_max_shift = sizeof(size_t) * 8 - 1;
+#ifndef __cpp_lib_bitops
+		for (int b = size_t_max_shift; b >= 0; --b)
+		{
+			if (x & (1 << b))
+				return 1 << b;
+		}
+		return 0;
+#else
+		//Assumes x != 0
+		return 1 << (size_t_max_shift - std::countl_zero(x));
+#endif
+	}
 }

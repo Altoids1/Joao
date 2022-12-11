@@ -10,6 +10,8 @@ Access is guaranteed to never require iterating over more than the set of keys w
 
 Further, no more than {$collision_block_percent}% of the elements will ever be collided elements, putting a hard cap on access/removal times,
 even for very large HashTables.
+
+This is written somewhat generically, but I did write this for João specifically, so there is some idiolectic functionality here.
 */
 template <typename Key, typename Value>
 class HashTable
@@ -250,13 +252,24 @@ class HashTable
     //Calculates the ideal arena setup to ensure a given capacity, or greater.
     void compute_real_capacities(size_t& new_capacity, size_t& main_capacity, size_t& collision_capacity)
     {
-        //FIXME: This is a slow way to calculate this.
 #ifdef JOAO_SAFE
         if (new_capacity * sizeof(Bucket) > 1048576 * 512) UNLIKELY // If the resulting table would be bigger than 512 MB
         {
             throw std::out_of_range("Hashtable exceeded maximum capacity of 512 megabytes!");
         }
 #endif
+#ifdef __cpp_lib_bitops
+        size_t ideal_capacity = math::get_high_bit(new_capacity);
+        if ((ideal_capacity | (ideal_capacity >> 1)) == new_capacity) UNLIKELY
+        {
+            main_capacity = ideal_capacity;
+            collision_capacity = ideal_capacity >> 1;
+            return;
+        }
+        main_capacity = ideal_capacity << 1;
+        collision_capacity = ideal_capacity;
+        new_capacity = main_capacity | collision_capacity;
+#else
         main_capacity = collision_block_ratio;
         collision_capacity = 1;
         while (main_capacity + collision_capacity < new_capacity)
@@ -265,6 +278,7 @@ class HashTable
             collision_capacity <<= 1;
         }
         new_capacity = main_capacity + collision_capacity;
+#endif
     }
 
     //FIXME: It's somewhat problematic that we iterate over *all* old buckets during a rehash.
