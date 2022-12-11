@@ -251,6 +251,12 @@ class HashTable
     void compute_real_capacities(size_t& new_capacity, size_t& main_capacity, size_t& collision_capacity)
     {
         //FIXME: This is a slow way to calculate this.
+#ifdef JOAO_SAFE
+        if (new_capacity * sizeof(Bucket) > 1048576 * 512) UNLIKELY // If the resulting table would be bigger than 512 MB
+        {
+            throw std::out_of_range("Hashtable exceeded maximum capacity of 512 megabytes!");
+        }
+#endif
         main_capacity = collision_block_ratio;
         collision_capacity = 1;
         while (main_capacity + collision_capacity < new_capacity)
