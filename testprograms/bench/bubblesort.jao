@@ -1,0 +1,46 @@
+/main()
+{
+	Object arr = {};
+	##Populate
+	for(Value i = 0; i < 1_000; i+=1)
+	{
+		arr[#arr] = random(1,4096);
+	}
+	##Sort!
+	bubble_sort(arr);
+	##Lets double check here
+	for(key,val in arr)
+	{
+		if(key == 0)
+		{
+			continue;
+		}
+		if(arr[key-1] > val)
+		{
+			throw /error/New(69,"Bubble sort failed!");
+		}
+	}
+}
+
+/bubble_sort(arr)
+{
+	##This works even if #arr == 0 btw :^)
+	while(true)
+	{
+		Value did_swap = false;
+		for(Number i = 1; i < #arr; i +=1) ## Iterating this way to get the array portion only
+		{
+			Value temp = arr[i];
+			if(temp < arr[i-1])
+			{
+				arr[i] = arr[i-1];
+				arr[i-1] = temp;
+				did_swap = true;
+			}
+		}
+		if(!did_swap)
+		{
+			return;
+		}
+	}
+}

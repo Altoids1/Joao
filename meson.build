@@ -80,10 +80,14 @@ foreach diag : shouldfail
 	test(diag, exe, args: [str], workdir : meson.source_root(), suite: 'diagnostic', should_fail : true, timeout : 2)
 endforeach
 
-
-
-
-# Benchmark tests
-benchmark('primegen', exe, args : ['./testprograms/bench/primegen.jao'], workdir : meson.source_root())
-benchmark('ackermann', exe, args : ['./testprograms/bench/ackermann.jao'], workdir : meson.source_root())
-benchmark('jsoninterp_b', exe, args : ['./testprograms/bench/json_interp.jao'], workdir : meson.source_root())
+## Benchmark tests
+benchmarks = [
+	'ackermann',
+	'bubblesort',
+	'json_interp',
+	'primegen',
+]
+foreach diag : benchmarks
+	str = './testprograms/bench/@0@.jao'.format(diag)
+	benchmark(diag, exe, args: [str], workdir : meson.source_root(), timeout : 10)
+endforeach
