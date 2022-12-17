@@ -17,9 +17,18 @@
     assert(rep("mine",4) == "minemineminemine");
     assert(reverse("racecar") == "racecar");
     assert(substr("apples and oranges",0,5) == "apples");
+
+    ##explode() stuff
     Object boom = explode("coffee,cheetos,chicken",",");
     assert(#boom == 3);
     assert(boom[0] == "coffee");
+    
+    boom = explode("coffee,cheetos,chicken","cheetos");
+    assert(#boom == 2);
+    assert(boom[0] == "coffee,");
+    boom = explode("Hello!","");
+    assert(#boom == 1);
+
     Value result = find("aaaaaaaaab","b");
 	assert(!isnull(result));
     assert(result != 0);

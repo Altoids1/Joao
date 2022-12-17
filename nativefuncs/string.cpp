@@ -5,6 +5,47 @@
 
 #define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
 
+static void explode_with_char(std::vector<Value>& new_arr, const std::string& haystack, char needle)
+{
+	size_t end = haystack.size();
+#ifdef JOAO_SAFE
+	int total_replacements = 0;
+#endif
+	for(size_t pos = 0; pos < end;) {
+		size_t found_needle = haystack.find(needle, pos);
+		if (found_needle == std::string::npos) {
+			new_arr.push_back(Value(haystack.substr(pos, std::string::npos)));
+			break;
+		}
+		new_arr.push_back(Value(haystack.substr(pos, found_needle - pos)));
+#ifdef JOAO_SAFE
+		if (++total_replacements >= MAX_REPLACEMENTS_ALLOWED)
+			break;
+#endif
+		pos = found_needle + 1; // Move to the next character
+	}
+}
+
+static void explode_with_string(std::vector<Value>& new_arr, const std::string& haystack, const std::string& needle)
+{
+	size_t end = haystack.size();
+#ifdef JOAO_SAFE
+	int total_replacements = 0;
+#endif
+	for (size_t pos = 0; pos < end;) {
+		size_t found_needle = haystack.find(needle, pos);
+		if (found_needle == std::string::npos) {
+			new_arr.push_back(Value(haystack.substr(pos, std::string::npos)));
+			break;
+		}
+		new_arr.push_back(Value(haystack.substr(pos, found_needle - pos)));
+#ifdef JOAO_SAFE
+		if (++total_replacements >= MAX_REPLACEMENTS_ALLOWED)
+			break;
+#endif
+		pos = found_needle + needle.size(); // Move to the next character
+	}
+}
 
 void Program::construct_string_library()
 {
@@ -122,47 +163,36 @@ void Program::construct_string_library()
 
 	NATIVE_FUNC("explode")
 	{
-		char sep = ' ';
-		std::string* str_ptr;
+		std::string sep = " ";
 		switch (args.size())
 		{
-		default:
-		case(2):
-			if(args[1].t_vType != Value::vType::String || args[1].t_value.as_string_ptr->empty())
+		default: // Any more than 2 params
+		case(2): // or 2 params exactly
+			if(args[1].t_vType != Value::vType::String)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-			sep = args[1].t_value.as_string_ptr->at(0); // FIXME: Learn to support non-character separators.
+			sep = *args[1].t_value.as_string_ptr; // FIXME: Learn to support non-character separators
 			[[fallthrough]];
 		case(1):
 			if (args[0].t_vType != Value::vType::String)
 				return Value(Value::vType::Null, int(ErrorCode::BadArgType));
-			str_ptr = args[0].t_value.as_string_ptr;
+			//Not setting the haystack here since we kinda can't with how references work :^)
 			break;
 		case(0):
 			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		}
-
-		const std::string& ref_str = *str_ptr;
-		if (ref_str.empty()) return Value(interp.makeObject("/table", {}, nullptr));
-		std::vector<Value> new_arr;
+		const std::string& haystack_str = *args[0].t_value.as_string_ptr;
+		//now for some arg sanitation
+		if(haystack_str.empty()) return Value(interp.makeObject("/table", {}, nullptr));
+		if(sep.empty()) return Value(interp.makeObject("/table", {Value(haystack_str)}, nullptr));
+		std::vector<Value> exploded;
+		exploded.reserve(((haystack_str.length() >> 1) | 4) & 255); // Trying to reserve a reasonable capacity
 		size_t pos = 0;
-		size_t end = ref_str.size();
-#ifdef JOAO_SAFE
-		for (int i = 0; i < MAX_REPLACEMENTS_ALLOWED; ++i) // It just returning the partially-replaced string is... fine, I guess.
-#else
-		while (pos < end)
-#endif
-		{
-			size_t new_pos = ref_str.find(sep, pos);
-			if (new_pos == std::string::npos)
-			{
-				new_arr.push_back(Value(ref_str.substr(pos,std::string::npos)));
-				break;
-			}
-			new_arr.push_back(Value(ref_str.substr(pos, new_pos-pos)));
-			pos = new_pos + 1; // Move to the next character
-		}
-
-		return Value(interp.makeObject("/table",std::move(new_arr),nullptr));
+		size_t end = haystack_str.size();
+		if (sep.length() == 1)
+			explode_with_char(exploded, haystack_str, sep.at(0));
+		else
+			explode_with_string(exploded, haystack_str, sep);
+		return Value(interp.makeObject("/table",std::move(exploded),nullptr));
 	}));
 }
 
