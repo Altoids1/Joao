@@ -3,6 +3,8 @@
 #include "Object.h"
 #include "ObjectTree.h"
 #include "FailureOr.h"
+#include "AST.h"
+#include "Interpreter.h"
 
 #define SYMBOL_ENUMS(a,b) ((a << 9) | b)
 
@@ -13,7 +15,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 	assert(tokens.size() > 0);
 
 	std::vector<ClassDefinition*> classdef_list;
-
+	//Step 1. Generate the AST
 	for (tokenheader = 0; tokenheader < tokens.size(); ++tokenheader)
 	{
 		//Expecting: a bunch of classdefs and funcdefs
@@ -115,11 +117,20 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 			continue;
 		}
 	}
-
+	//Step 2. Generate the object tree
 	generate_object_tree(classdef_list);
 	for(ClassDefinition* ptr : classdef_list)
-	{
 		delete ptr;
+
+	//Step 3. Evaluate all constant expressions
+	Interpreter parsetime_interp = Interpreter(t_program, false);
+	parsetime_interp.push_stack("#init", nullptr); // the Interpreter expects there to always be a topmost stack layer (since usually /main() is there). So here's our own, fake, main.
+	for (ConstExpression* ptr : ConstExpression::Registry()) {
+		ptr->transmute(parsetime_interp);
+		if (parsetime_interp.error) {
+			parsetime_interp.UncaughtRuntime(parsetime_interp.error);
+			t_program.is_malformed = true;
+		}
 	}
 
 	return std::move(t_program);
@@ -414,7 +425,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 		ParserError(t, "Unexpected or underimplemented unary operation!");
 		break;
 	}
-	case(Token::cEnum::ConstructionToken): // Not legally an lvalue but it makes sense to stash this here for now
+	case(Token::cEnum::ConstructionToken): // directory '/New(' [explist] ')' [func_access]
 	{
 		ConstructionToken ct = *static_cast<ConstructionToken*>(t);
 		consume_paren(true, tokens[static_cast<size_t>(here)+1]);
@@ -548,8 +559,15 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 		}
 		break;
 	}
+	case(Token::cEnum::KeywordToken):
+	{
+		const KeywordToken& key_token = *static_cast<KeywordToken*>(t);
+		if (key_token.t_key == KeywordToken::Key::Const) // 'const{' [block] '}'
+			lvalue = new ConstExpression(readBlock(BlockType::Function, here + 1, there)); // readBlock just handles all the busy work for us here :)
+		break;
+	}
 	default:
-		ParserError(t, "Unexpected Token when reading lvalue! " + t->class_name());
+		ParserError(t, "Unexpected Token when reading lvalue!");
 		break;
 	}
 
@@ -790,6 +808,7 @@ LocalAssignmentStatement* Parser::readLocalAssignment(int here, int there) // Va
 	return new LocalAssignmentStatement(id, rvalue, aesop, tuh, tokens[here+1]->line);
 }
 
+//Consumes the open and close braces for you.
 std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) // Tokenheader state should point to the opening brace of this block.
 {
 	//Blocks are composed of a starting brace, following by statements, and are ended by an end brace.

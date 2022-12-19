@@ -1129,3 +1129,29 @@ public:
 	}
 	virtual Value resolve(Interpreter&) override;
 };
+/// <summary>
+/// Holds "const {}" blocks which are evaluated as a returned Value before any other code is run.
+/// </summary>
+class ConstExpression : public Block {
+	static std::vector<ConstExpression*> _registry;
+public:
+	ConstExpression(const std::vector<Expression*>& s)
+		:Block(s)
+	{
+		_registry.push_back(this);
+	}
+	//Evaluates the const expression and transmutes itself into a Literal at its own memory location, which is its return value.
+	void transmute(Interpreter&);
+	static const std::vector<ConstExpression*>& Registry() { return _registry; }
+	virtual Value const_resolve(Parser&, bool) override;
+	virtual const std::string class_name() const override { return "ConstExpression"; }
+	virtual std::string dump(int indent) override
+	{
+		std::string str = std::string(indent, ' '); + "ConstExpression\n";
+		for (auto statement : statements)
+			str += statement->dump(indent + 1);
+		return str;
+	}
+	//ConstExpression, by definition, should never be evaluated at runtime.
+	virtual Value resolve(Interpreter&) override;
+};

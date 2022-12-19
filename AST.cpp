@@ -359,7 +359,7 @@ Value CallExpression::resolve(Interpreter& interp)
 	Value func = func_expr->handle(interp);
 	if (func.t_vType != Value::vType::Function)
 	{
-		interp.RuntimeError(this, ErrorCode::BadCall, "Attempted to call something that isn't a function or method!");
+		interp.RuntimeError(this, ErrorCode::BadCall, "Attempted to call '" + func.to_string() + "' which is not a function nor method!");
 		return Value();
 	}
 
@@ -886,4 +886,27 @@ Value BaseTableConstruction::resolve(Interpreter& interp)
 		return interp.makeBaseTable();
 	}
 	return interp.makeBaseTable({}, resolved_entries,this);
+}
+
+std::vector<ConstExpression*> ConstExpression::_registry;
+
+Value ConstExpression::const_resolve(Parser& parser, bool should_throw) {
+	if(should_throw)
+		parser.ParserError(nullptr, "Being able to use 'const' in this context has yet to be implemented. :(");
+	return Value();
+}
+
+Value ConstExpression::resolve(Interpreter& interp) {
+	interp.RuntimeError(nullptr, ErrorCode::Unknown, "ConstExpression was mysteriously evaluated during runtime! Very strange!");
+	//Since we mutate 'this' when evaluating ConstExpression, I don't even really feel particulary safe just trying to execute at runtime like normal.
+	//Just return null.
+	return Value();
+}
+
+void ConstExpression::transmute(Interpreter& interp) {
+	static_assert(sizeof(Literal) <= sizeof(ConstExpression), "ConstExpression needs to be bigger than Literal for its black magic to work! >:(");
+	Value result = iterate_statements(interp);
+	this->~ConstExpression(); // DELETE THIS
+	new (this) Literal(result); // *yoda deathsound*
+	return; // I'M DEAD
 }

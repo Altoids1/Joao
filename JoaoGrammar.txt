@@ -69,7 +69,7 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	power ::= {lvalue '^'} lvalue
 	
 	lvalue ::= 'null' | 'false' | 'true' | Numeral | LiteralString |
-			tableconstructor | var_access | functioncall | '(' exp ')' | constructor
+			tableconstructor | var_access | functioncall | '(' exp ')' | constructor | constexpr
 			
 	constructor ::= directory '/New(' [explist] ')' [func_access]
 	
@@ -79,3 +79,5 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	assignop ::= '=' | '+=' | '-=' | '*=' | '/='
 
 	unop ::= ‘-’ | '!' | ‘#’ | ‘~’
+	
+	constexpr ::= 'const{' [block] '}'

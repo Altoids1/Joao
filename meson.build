@@ -64,6 +64,7 @@ diagnostics = [ #Meson has a philosophical disagreement with procedurally genera
 	'indirect_access',
 	'try_catch',
 	'break',
+	'constexpr',
 ]
 foreach diag : diagnostics
 	str = './testprograms/tests/mustpass/@0@.jao'.format(diag)

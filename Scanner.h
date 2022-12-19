@@ -475,6 +475,7 @@ class Scanner
 		{"catch",KeywordToken::Key::Catch},
 		{"throw",KeywordToken::Key::Throw},
 		{"continue",KeywordToken::Key::Continue},
+		{"const",KeywordToken::Key::Const},
 	};
 	const Hashtable<std::string, LiteralToken::Literal> literalhash = {
 		{"null",LiteralToken::Literal::Null},
