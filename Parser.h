@@ -585,17 +585,17 @@ class Parser
 		}
 	}
 
-	void consume_open_brace(int here) // FIXME: Kinda weird; this should increment tokenheader.
+	void consume_open_brace(int here)
 	{
 		Token* t = tokens[here];
 		if (t->class_enum() != Token::cEnum::PairSymbolToken)
 		{
-			ParserError(t, "Unexpected character where open-brace was expected!");
+			ParserError(t, "Unexpected token where open-brace was expected!");
 		}
 		PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
 		if (!pt.is_start || pt.t_pOp != PairSymbolToken::pairOp::Brace)
 		{
-			ParserError(t, "Unexpected character where open-brace was expected!");
+			ParserError(t, "Unexpected token where open-brace was expected!");
 		}
 	}
 
@@ -695,11 +695,11 @@ public: // Parser doesn't have much of an API but it does have something
 	void ParserError(Token* t, std::string what)
 	{
 		//This is just a basic setup while everything else is fleshed out.
-		std::cout << "PARSER_ERROR: " << what << "\n";
+		std::cout << "Parser Error: " << what << "\n";
 		if (t)
 			std::cout << t->dump();
 		else
-			std::cout << "ERROR_ERROR: No Token pointer provided to ParserError()!\n";
+			std::cout << "Parser Error Error: No Token pointer provided to ParserError()!\n";
 
 		if (!is_interactive)
 #ifdef JOAO_SAFE

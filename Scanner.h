@@ -52,8 +52,11 @@ public:
 	}
 	virtual ~Token() = default;
 
-	virtual std::string dump() {
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + " " +  class_name();
+	std::string dump() {
+		return "Line " + std::to_string(line) + "," + std::to_string(syntactic_line) + ": " + dumpable_name();
+	}
+	virtual std::string dumpable_name() {
+		return class_name();
 	}
 
 	virtual cEnum class_enum() const { return cEnum::Token; }
@@ -94,9 +97,9 @@ public:
 		is_double = false;
 	}
 
-	virtual std::string dump() override
+	virtual std::string dumpable_name() override
 	{
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" NUMBER: ") + std::to_string(is_double ? num.as_double : num.as_int); // god.
+		return std::to_string(is_double ? num.as_double : num.as_int);
 	}
 	NAME_CONST_METHODS(NumberToken);
 };
@@ -135,14 +138,14 @@ public:
 		return symbol;
 	}
 
-	virtual std::string dump() override {
+	virtual std::string dumpable_name() override {
 		std::string str = "";
 		str.push_back(symbol[0]);
 		if (symbol[1] != '\0')
 		{
 			str.push_back(symbol[1]);
 		}
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" SYMBOL: (") + str + std::string(") LEN: ") + std::to_string(int(len));
+		return std::string(" SYMBOL: (") + str + std::string(") LEN: ") + std::to_string(int(len));
 	}
 	NAME_CONST_METHODS(SymbolToken);
 };
@@ -158,9 +161,9 @@ public:
 		syntactic_line = sl;
 	}
 
-	virtual std::string dump() override
+	virtual std::string dumpable_name() override
 	{
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" WORD: ") + word.to_string();
+		return std::string(" WORD: ") + word.to_string();
 	}
 	NAME_CONST_METHODS(WordToken);
 };
@@ -175,9 +178,9 @@ public:
 		syntactic_line = sl;
 		word = w;
 	}
-	virtual std::string dump() override
+	virtual std::string dumpable_name() override
 	{
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" STRING: ") + word;
+		return std::string(" STRING: ") + word;
 	}
 	NAME_CONST_METHODS(StringToken);
 };
@@ -222,7 +225,7 @@ public:
 			exit(1);
 		}
 	}
-	virtual std::string dump() override
+	virtual std::string dumpable_name() override
 	{
 		std::string str;
 		switch (t_pOp)
@@ -240,7 +243,7 @@ public:
 			str = "UNKNOWN???";
 		}
 
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" PAIRSYMBOL: ") + str;
+		return std::string(" PAIRSYMBOL: ") + str;
 	}
 	NAME_CONST_METHODS(PairSymbolToken);
 };
@@ -260,7 +263,8 @@ public:
 		Continue,
 		Try,
 		Catch,
-		Throw
+		Throw,
+		Const,
 	}t_key;
 
 	KeywordToken(uint32_t linenum, uint32_t sl, Key k)
@@ -271,6 +275,54 @@ public:
 	}
 
 	NAME_CONST_METHODS(KeywordToken);
+	virtual std::string dumpable_name() {
+		std::string str = "KEYWORDTOKEN: ";
+		switch (t_key) {
+		case(Key::If):
+			str += "'if'";
+			break;
+		case(Key::Elseif):
+			str += "'elseif'";
+			break;
+		case(Key::Else):
+			str += "'else'";
+			break;
+		case(Key::While):
+			str += "'while'";
+			break;
+		case(Key::For):
+			str += "'for'";
+			break;
+		case(Key::In):
+			str += "'in'";
+			break;
+		case(Key::Return):
+			str += "'return'";
+			break;
+		case(Key::Break):
+			str += "'break'";
+			break; // lol
+		case(Key::Continue):
+			str += "'continue'";
+			break;
+		case(Key::Try):
+			str += "'try'";
+			break;
+		case(Key::Catch):
+			str += "'Catch'";
+			break;
+		case(Key::Throw):
+			str += "'throw'";
+			break;
+		case(Key::Const):
+			str += "'const'";
+			break;
+		default:
+			str += "???";
+			break;
+		}
+		return str;
+	}
 };
 
 class LocalTypeToken : public Token 
@@ -318,9 +370,9 @@ public:
 		syntactic_line = sl;
 		dir = k;
 	}
-	virtual std::string dump() override
+	virtual std::string dumpable_name() override
 	{
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" DIRECTORY: ") + dir;
+		return std::string(" DIRECTORY: ") + dir;
 	}
 	NAME_CONST_METHODS(DirectoryToken);
 };
@@ -336,9 +388,9 @@ public:
 		syntactic_line = sl;
 		dir = k;
 	}
-	virtual std::string dump() override
+	virtual std::string dumpable_name() override
 	{
-		return "LINE: " + std::to_string(line) + "," + std::to_string(syntactic_line) + std::string(" CONSTRUCTION: ") + dir;
+		return std::string(" CONSTRUCTION: ") + dir;
 	}
 	NAME_CONST_METHODS(ConstructionToken);
 };
