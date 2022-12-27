@@ -65,40 +65,6 @@ void Args::print_help()
 	std::cout << "  -e\tprints the execution time. On by default when compiled with _DEBUG.\n";
 }
 
-//Tries to run the given chunk of strings as if they were all statements in the /main(){} of a program with nothing else in it.
-//Returns true if successful and false if an error occurred.
-bool Args::run_code_block(std::vector<std::string>& statements)
-{
-	std::stringstream dummy;
-
-	dummy << "/main(){\n";
-
-	for (const std::string& s : statements)
-	{
-		dummy << s << std::endl;
-	}
-
-	dummy << "return 0;\n}\n";
-
-	Scanner scn(true);
-	scn.scan(dummy);
-
-	if (scn.is_malformed)
-		return false;
-
-	Parser prs(scn);
-	Program prog = prs.parse();
-
-	if (prog.is_malformed)
-		return false;
-
-	Interpreter interp(prog,true);
-	Value jargs = interp.makeBaseTable();
-	interp.execute(prog, jargs);
-
-	return !(interp.error);
-}
-
 static Program interactive_default_program() {
 	std::stringstream dummy_code;
 	dummy_code << "/main(){return 0;}/quit(){ throw /error/New(1,\"Calling quit() in this way is not yet implemented!\");}";
