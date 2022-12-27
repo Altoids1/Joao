@@ -34,4 +34,5 @@ struct FailureOr
     }
 
     Value get_or_throw(Interpreter&);
+    Value must_get();
 };

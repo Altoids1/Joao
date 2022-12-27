@@ -38,6 +38,13 @@ Value Interpreter::execute(Program& program, Value& jarg)
 	return ret;
 }
 
+Value Interpreter::evaluate_expression(ASTNode* node) {
+	push_stack("#expr",nullptr);
+	Value ret = node->resolve(*this);
+	pop_stack();
+	return ret;
+}
+
 void Interpreter::RuntimeError(ASTNode* a, std::string what)
 {
 	std::cout << "- - - - - - - - - - - - - - - -\n";

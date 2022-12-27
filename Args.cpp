@@ -3,8 +3,10 @@
 #include "Scanner.h"
 #include "Parser.h"
 #include "Interpreter.h"
+#include "FailureOr.h"
 
 #include <sstream>
+#include <exception>
 
 #ifdef __GNUG__
 #include <strings.h>
@@ -97,28 +99,52 @@ bool Args::run_code_block(std::vector<std::string>& statements)
 	return !(interp.error);
 }
 
+static Program interactive_default_program() {
+	std::stringstream dummy_code;
+	dummy_code << "/main(){return 0;}/quit(){ throw /error/New(1,\"Calling quit() in this way is not yet implemented!\");}";
+	Scanner scn;
+	scn.scan(dummy_code);
+	if(scn.is_malformed)
+		throw std::runtime_error("interactive's default program failed to scan! This is a bug :(");
+	Parser prs(scn);
+	Program ret = prs.parse();
+	if(ret.is_malformed)
+		throw std::runtime_error("interactive's default program failed to scan! This is a bug :(");
+	return ret;
+} 
+
+static FailureOr try_run_expression(Program& prog, std::string&& expr_str) {
+	std::stringstream expr_ss(expr_str);
+	Scanner scn(true);
+	scn.scan(expr_ss);
+	if(scn.is_malformed)
+		return FailureOr(ErrorCode::Unknown,"Scanning failed.");
+	Parser prs(scn);
+	ASTNode* ptr = prs.parse_expression();
+	if(ptr == nullptr)
+		return FailureOr(ErrorCode::Unknown,"Parsing failed.");
+	Interpreter interp(prog,true);
+	Value ret = interp.evaluate_expression(ptr);
+	if(interp.error)
+		return FailureOr(std::move(interp.error));
+	return ret;
+}
+
 void Args::interactive_mode()
 {
-	std::vector<std::string> statements;
-
+	Program prog = interactive_default_program();
 	while (true)
 	{
 		std::cout << "> ";
 		std::string input = "";
 		std::getline(std::cin, input);
 
-		//std::cout << input << std::endl;
-
-		if (input == "")
+		if(input == "")
 			continue;
-		if (input == "quit()")
+		if(input == "quit()") // FIXME: support quit() more generically
 			return;
-
-		statements.push_back(std::string(input));
-		if (!run_code_block(statements))
-		{
-			statements.pop_back();
-			std::cout << std::endl;
-		}
+		FailureOr result = try_run_expression(prog, std::move(input));
+		if(!result.didError)
+			std::cout << result.must_get().to_string() << std::endl;
 	}
 }

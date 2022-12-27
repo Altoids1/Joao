@@ -711,6 +711,10 @@ public: // Parser doesn't have much of an API but it does have something
 			t_program.is_malformed = true;
 	}
 	Program parse();
+
+	//Used for interactive mode and other similar contexts.
+	//TODO: Parser probably should know about the metadata within Program during this.
+	ASTNode* parse_expression();
 	
 	//Allows outside programs to include extra "native" types.
 	void IncludeAlienType(ObjectType* ot);

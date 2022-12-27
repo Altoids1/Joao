@@ -18,3 +18,8 @@ Value FailureOr::get_or_throw(Interpreter& interp)
     }
     return std::get<Value>(data);
 }
+
+Value FailureOr::must_get()
+{
+    return std::get<Value>(data);
+}

@@ -40,6 +40,9 @@ public:
 	//Executes the given program. Assumes program already knows about it's parent interp.
 	Value execute(Program&, Value&);
 
+	//Evaluates the result of running the given expression, under the given program.
+	Value evaluate_expression(ASTNode*);
+
 	//Gets function by Directory name.
 	Function* get_func(const std::string& funkname, ASTNode* caller, bool loud = true);
 

@@ -1262,6 +1262,13 @@ READ_CLASSDEF_RETURN_ASTS:
 	return ASTs;
 }
 
+ASTNode* Parser::parse_expression() {
+	ASTNode* ret = readBinExp(Scanner::OperationPrecedence::Logical,0,tokens.size()-1);
+	if(t_program.is_malformed)
+		return nullptr;
+	return ret;
+}
+
 void Parser::IncludeAlienType(ObjectType* ot)
 {
 	uncooked_types[ot->get_name()] = ot;
