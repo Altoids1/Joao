@@ -37,6 +37,14 @@
 {
     return /color;
 }
+/apple/grandparent_method()
+{
+    return 6;
+}
+/apple/rotten/child_method()
+{
+    return ../grandparent_method();
+}
 
 /main()
 {
@@ -47,4 +55,5 @@
     assert(pomme.get_color() == "green");
     assert(pomme.get_base_color() == "red");
     assert(pomme.get_glob_color() == "blue");
+    assert(pomme.child_method() == 6);
 }

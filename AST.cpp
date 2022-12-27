@@ -720,7 +720,9 @@ Value& ParentAccess::handle(Interpreter& interp)
 		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot do ParentAccess in classless function!");
 		return Value::dev_null;
 	}
-
+	Function* funk = o->has_method(interp,prop.to_string());
+	if(funk)
+		return funk->to_value();
 	return *(o->has_property(interp,prop));
 }
 
@@ -745,6 +747,9 @@ Value GlobalAccess::resolve(Interpreter& interp)
 
 Value& GlobalAccess::handle(Interpreter& interp)
 {
+	Function* funk = interp.get_func(var.to_string(),this,false);
+	if(funk)
+		return funk->to_value();
 	return *interp.has_global(var, this);
 }
 
