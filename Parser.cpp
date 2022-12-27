@@ -126,12 +126,16 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 	Interpreter parsetime_interp = Interpreter(t_program, false);
 	parsetime_interp.push_stack("#init", nullptr); // the Interpreter expects there to always be a topmost stack layer (since usually /main() is there). So here's our own, fake, main.
 	for (ConstExpression* ptr : ConstExpression::Registry()) {
+		parsetime_interp.push_block();
 		ptr->transmute(parsetime_interp);
+		parsetime_interp.pop_block();
 		if (parsetime_interp.error) {
 			parsetime_interp.UncaughtRuntime(parsetime_interp.error);
 			t_program.is_malformed = true;
 		}
 	}
+	parsetime_interp.pop_stack();
+	
 
 	return std::move(t_program);
 }
