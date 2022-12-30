@@ -91,6 +91,7 @@ static FailureOr try_run_expression(Program& prog, std::string&& expr_str) {
 		return FailureOr(ErrorCode::Unknown,"Parsing failed.");
 	Interpreter interp(prog,true);
 	Value ret = interp.evaluate_expression(ptr);
+	delete ptr; // FIXME: be RAII about this, come on.
 	if(interp.error)
 		return FailureOr(std::move(interp.error));
 	return ret;
