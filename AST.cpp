@@ -124,7 +124,7 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 	Value rhs_val = rhs->resolve(interp);
 	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 
-	if (t_op != aOps::Assign)
+	if (t_op != aOps::Assign) UNLIKELY // This is mostly derelict code, but might come up later if composite assignment gets refactored at the AST layer, for some reason.
 	{
 		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + std::to_string((int)t_op));
 		return rhs_val; // If anything.
