@@ -681,6 +681,9 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 					auto literalLHS = static_cast<Literal*>(lhs);
 					auto literalRHS = static_cast<Literal*>(right);
 					FailureOr ret = BinaryExpression::BinaryOperation(literalLHS->const_resolve(*this,true),literalRHS->const_resolve(*this,true),boopitybeep);
+					//Don't need those old literals anymore!
+					delete literalLHS;
+					delete literalRHS;
 					if(ret.didError)
 					{
 						ParserError(t2,std::get<FailureOr::Failure>(ret.data).what.to_string());
@@ -961,7 +964,8 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 						elif_cond = readExp(tokenheader, yonder - 1);
 						consume_paren(false); // )
 						block_start = tokenheader;
-					}//ROLLS INTO THE ELSE CODE
+						[[fallthrough]]; //ROLLS INTO THE ELSE CODE
+					}
 					case(KeywordToken::Key::Else):
 					{
 						elif_block = readBlock(BlockType::If, block_start, there);
