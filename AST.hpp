@@ -30,7 +30,7 @@ Value NativeFunction<Lambda>::resolve(Interpreter& interp)
 	return result; // Woag.
 }
 
-#if defined(__GNUC__) && __GNUC__ <= 8
+#if defined(__GNUC__) && __GNUC__ <= 8 && !defined(__llvm__) && !defined(__INTEL_COMPILER)
 //This macro exists, in part, to get around a bug in GCC 8.1,
 //that caused it to be unable to do type deduction of lambda expressions for template-class constructors.
 //That whole jumble of words is just too jumbly for it to understand, despite it definitely being compliant with C++17 spec.
