@@ -139,6 +139,8 @@ Value& Table::talloc(Value index, const Value& newval)
 	case(Value::vType::Double): // It looks like you were trying to index by doubles. Did you mean to use Integers?
 		index = math::round({ index });
 		break;
+	default: UNLIKELY // This is a bug, but, whatever.
+		index = Value(0);
 	}
 
 	Value::JoaoInt array_index = index.t_value.as_int;
@@ -221,6 +223,8 @@ void Table::tfree(const Value& index)
 	case(Value::vType::Double): // It looks like you were trying to index by doubles. Did you mean to use Integers?
 		array_index = math::round({ index }).t_value.as_int;
 		break;
+	default: UNLIKELY // This is a bug, but, whatever.
+		array_index = 0;
 	}
 
 	Value array_val = Value(array_index);

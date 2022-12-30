@@ -64,6 +64,7 @@ namespace math
 				return 1ull << b; // Then that's your answer.
 			}
 		}
+		return size_t(1) << (sizeof(size_t)*8 - 1);
 	}
 	constexpr size_t get_high_bit(size_t x)
 	{

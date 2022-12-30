@@ -11,9 +11,9 @@
 
 #ifdef __has_builtin
 #if __has_builtin (__builtin_bit_cast) // Making use of the fact that this compiler probably has C++20 spec internally
-#define DND(op) return Value(__builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double))
-#define DNI(op) return Value(__builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,static_cast<int64_t>(rhs.t_value.as_int)))
-#define IND(op) return Value(__builtin_bit_cast(uint64_t,static_cast<int64_t>(lhs.t_value.as_int)) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double))
+#define DND(op) return Value(int64_t(__builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double)))
+#define DNI(op) return Value(int64_t(__builtin_bit_cast(uint64_t,lhs.t_value.as_double) op __builtin_bit_cast(uint64_t,static_cast<int64_t>(rhs.t_value.as_int))))
+#define IND(op) return Value(int64_t(__builtin_bit_cast(uint64_t,static_cast<int64_t>(lhs.t_value.as_int)) op __builtin_bit_cast(uint64_t,rhs.t_value.as_double)))
 #endif
 #endif
 #ifndef DND // Horrifying fallback implementation

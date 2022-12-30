@@ -110,6 +110,8 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 	case(aOps::Assign):
 		lhs_val = rhs_val;
 		break;
+	default: UNLIKELY
+		interp.RuntimeError(this,"Invalid Assignment statement discovered. This is a bug!");
 	}
 	return lhs_val; // If anything.
 }
@@ -124,7 +126,7 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 
 	if (t_op != aOps::Assign)
 	{
-		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + (int)t_op);
+		interp.RuntimeError(this, "Attempt to call unimplemented Assignment operation: " + std::to_string((int)t_op));
 		return rhs_val; // If anything.
 	}
 

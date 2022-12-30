@@ -49,8 +49,8 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual Value const_resolve(Parser&, bool) override;
-	virtual const std::string class_name() const { return "Literal"; } 
-	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Literal: " + heldval.to_string() + "\n"; }
+	virtual const std::string class_name() const override { return "Literal"; } 
+	virtual std::string dump(int indent) override { return std::string(indent, ' ') + "Literal: " + heldval.to_string() + "\n"; }
 };
 
 // Expressions are ASTNodes that make sense to be done on their lonesome as a statement w/o other context.
@@ -91,7 +91,7 @@ public:
 	virtual Value& handle(Interpreter&) override;
 	
 	virtual const std::string class_name() const override { return "Identifier"; }
-	virtual std::string dump(int indent) { return std::string(indent, ' ') + "Identifier: " + t_name.to_string() + "\n"; }
+	virtual std::string dump(int indent) override { return std::string(indent, ' ') + "Identifier: " + t_name.to_string() + "\n"; }
 };
 
 class AssignmentStatement : public Expression
@@ -123,7 +123,7 @@ public:
 		delete rhs;
 	}
 	virtual Value resolve(Interpreter&) override;
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{ 
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "AssignmentStatement, Operation: Assign\n";
@@ -190,7 +190,7 @@ public:
 	//A special-snowflake resolver for LocalAssignmentStatement which returns the key-value pair of the property it describes.
 	std::pair<ImmutableString, Value> resolve_property(Parser&);
 
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "LocalAssignmentStatement, Type: Value, Operation: Assign\n";
@@ -307,7 +307,7 @@ public:
 		delete t_rhs;
 	}
 	virtual Value resolve(Interpreter&) override;
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string sop;
@@ -385,7 +385,7 @@ public:
 		delete held_expr; // Deleting nullptr is ok!
 	}
 	virtual Value resolve(Interpreter& interp) override;
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ReturnStatement:\n";
@@ -633,7 +633,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "IfBlock"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind;
@@ -685,7 +685,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ForBlock"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ForBlock\n";
@@ -724,7 +724,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ForEachBlock"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ForEachBlock\n";
@@ -758,7 +758,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "WhileBlock"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "WhileBlock\n";
@@ -787,7 +787,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "BreakStatement"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "Break " + std::to_string(breaknum) + ";\n";
@@ -806,7 +806,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "ContinueStatement"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "Continue;\n";
@@ -837,7 +837,7 @@ public:
 	virtual Value& handle(Interpreter&) override;
 
 	virtual const std::string class_name() const override { return "MemberAccess"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "MemberAccess\n";
@@ -878,7 +878,7 @@ public:
 	void append_properties(Parser&, ObjectType*);
 
 	virtual const std::string class_name() const override { return "ClassDefinition"; }
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		std::string ind = std::string(indent, ' ');
 		std::string str = ind + "ClassDefinition " + direct.to_string() + ";\n";
@@ -1055,7 +1055,7 @@ public:
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "TryBlock"; }
 
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		const std::string ind = std::string(indent, ' ');
 		std::string str = ind + "TryBlock\n";
@@ -1089,7 +1089,7 @@ public:
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "Throw"; }
 
-	virtual std::string dump(int indent)
+	virtual std::string dump(int indent) override
 	{
 		const std::string ind = std::string(indent, ' ');
 		return ind + "Throw\n" + err_node->dump(indent + 1);
@@ -1147,7 +1147,7 @@ public:
 	virtual const std::string class_name() const override { return "ConstExpression"; }
 	virtual std::string dump(int indent) override
 	{
-		std::string str = std::string(indent, ' '); + "ConstExpression\n";
+		std::string str = std::string(indent, ' ') + "ConstExpression\n";
 		for (auto statement : statements)
 			str += statement->dump(indent + 1);
 		return str;

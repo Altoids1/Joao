@@ -275,7 +275,7 @@ public:
 	}
 
 	NAME_CONST_METHODS(KeywordToken);
-	virtual std::string dumpable_name() {
+	virtual std::string dumpable_name() override {
 		std::string str = "KEYWORDTOKEN: ";
 		switch (t_key) {
 		case(Key::If):
