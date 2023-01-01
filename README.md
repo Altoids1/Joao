@@ -53,15 +53,9 @@ I hope you like it.
 	return ./color;
 }
 ```
+## Documentation
+The documentation is available both on [Github Pages](https://altoids1.github.io/Joao/index.html) and within the contents of this repository, under the /docs folder.
 
 ## Building
 
-João is built using Meson. It is very easy to build:
-
-```
-$ meson builddir
-$ cd builddir
-$ meson compile
-```
-
-You may also run `meson test` to run tests!
+João is built using Meson. Details are available within the [Documentation](https://altoids1.github.io/Joao/content.html#1.2).

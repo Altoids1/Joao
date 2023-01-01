@@ -10,7 +10,7 @@
 		
 		<header>
 			<img src="https://user-images.githubusercontent.com/29939414/114955666-c9ffe700-9e22-11eb-95fd-649fd2ef250b.png">
-			Documentation for João v2.0.0
+			Documentation for João v2.2.0
 		</header>
 		<hr/>
 		<nav>
@@ -40,7 +40,6 @@
 			<p>
 				The current only official software that can run João programs is an interpreter located on Github. Its source code may be viewed there,
 				and it may be <a href='https://github.com/Altoids1/Joao/releases'>downloaded there as well.</a> The official releases ship out with a 64-bit pre-compiled binary for Windows and a Linux binary created on a Linux Mint system.
-				João may be capable of compiling on other systems, but those are the only ones officially supported, and resolving my build system is an exercise passive-aggressively left to the reader.
 			</p>
 			<p>
 				Using the binary is simple, but may be confusing to those new to command-line-only software. To use, create a text file containing your script,
@@ -57,7 +56,49 @@
 C:\joao_folder>Joao.exe your_file.txt</pre>
 				João will then attempt to run the program, hopefully printing a friendly "Hello, world!" into the command line before exiting.
 			</p>
-
+			<h2>1.2 - <a name='1.2'>Building João</a></h2>
+			<p>
+				João uses <a href="https://mesonbuild.com/">Meson</a>, a build system. I'm not willing to put the entire documentation for that here,
+				but you will likely need Meson if you wish to compile João yourself.
+			</p>
+			<p>
+				To compile, clone this repository with Git:
+			</p>
+			<pre>
+git clone https://github.com/Altoids1/Joao.git
+			</pre>
+			<p>
+				After that, go into the directory and, assuming you have <a href="https://mesonbuild.com/Getting-meson.html">Meson installed</a>,
+				execute this command in your terminal:
+			</p>
+			<pre>
+meson setup --buildtype release release
+			</pre>
+			<p>
+				This will create a folder named "release" within the directory, with everything Meson needs in order to compile an optimized build of João.
+			</p>
+			<p>
+				Enter the "release" directory and execute this command to compile & test João:
+			</p>
+			<pre>
+meson test
+			</pre>
+			<p>
+				If everything went well, all tests should be either passing or an expected failure. Within the "release" directory is now a self-contained binary
+				(called "joao" on Linux and "joao.exe" on Windows) which you can now interact with.
+			</p>
+			<h3>1.2.1 - Emscripten</h3>
+			<p>
+				João has tenuous support for running as a WASM executable under Emscripten. To create a Meson folder capable of compiling to the target,
+				place <a href="cross_wasm.txt">this text file</a> into the João directory (with the proper paths to your local copy of the emscripten repo),
+				and run the following command in the João directory:			
+			</p>
+			<pre>
+meson setup --cross-file cross_wasm.txt wasm
+			</pre>
+			<p>
+				When compiled as normal, this should generate some JS and WASM, plus an example HTML page.
+			</p>
 
 			<h1>2 - <a name='2'>The Language</a></h1>
 			<p>
@@ -474,6 +515,45 @@ C:\joao_folder>Joao.exe your_file.txt</pre>
 
 			<h3>/replace(hay,needle,better_needle)</h3>
 			Replaces all instances of the substring needle within hay with the alternative String better_needle. Returns the resulting String.
+
+			<h2>3.3 - <a name='3.3'>The Math Library</a></h2>
+
+			<h3>/abs(val)</h3>
+			Returns the absolute value. If a Boolean is passed, it returns the argument given.
+
+			<h3>/acos, /asin, /atan, /cos, /sin, /tan</h3>
+			These functions are the typical trigometric functions. They do not error on out-of-domain arguments, but instead return NaN or other signals, identically to the functions found in the C library.
+			
+			<h3>/ceil(x)</h3>
+			Returns the ceiling of x. Simply returns the argument if it's a Boolean or Integer.
+
+			<h3>/floor(x)</h3>
+			Returns the floor of x. Simply returns the argument if it's a Boolean or Integer.
+
+			<h3>/log(x)</h3>
+			Returns the natural log of x, a Double value.
+
+			<h3>/log10(x)</h3>
+			Returns the log-base-10 of x.
+
+			<h3>/max(...)</h3>
+			Returns the largest value of all arguments given, according to João's &gt; operator.
+
+			<h3>/min(...)</h3>
+			Returns the largest value of all arguments given, according to João's &lt; operator.
+
+			<h3>/random([lower = 1, upper])</h3>
+			If no arguments are given, returns a random Double between 0 and 1. If one argument is given, returns an Integer between that argument and 1, inclusive.
+			If two arguments are given, returns an integer between those two, inclusive.
+
+			<h3>/randomseed(seed)</h3>
+			Uses the given value to seed the random number generator. Seed can be of any type.
+
+			<h3>/sqrt(x)</h3>
+			Returns the square root of x.
+
+			<h3>/ult(a,b)</h3>
+			Returns the result of a &lt; b, if a and b are perceived as unsigned integers. Both arguments must be Integers.
 	
 			<h2>3.3 - <a name='3.3'>The Table Library</a></h2>
 
