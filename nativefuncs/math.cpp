@@ -55,6 +55,8 @@ void Program::construct_math_library()
 	//GLOBAL FUNCTIONS
 	NATIVE_FUNC("abs")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -70,6 +72,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("acos")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -85,6 +89,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("asin")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -100,6 +106,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("atan")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -115,6 +123,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("ceil")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -131,6 +141,8 @@ void Program::construct_math_library()
 
 	NATIVE_FUNC("cos")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -146,6 +158,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("deg")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -161,6 +175,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("exp")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 
 		//Literal eugh = Literal(Value(MATH_E));
@@ -180,6 +196,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("floor")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -195,7 +213,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("log")
 	{
-		if (args.size() == 0)
+		if (args.empty())
 			return Value();
 
 		const Value& arg = args[0];
@@ -213,7 +231,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("log10")
 	{
-		if (args.size() == 0)
+		if (args.empty())
 			return Value();
 
 		const Value& arg = args[0];
@@ -231,7 +249,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("max")
 	{
-		if (args.size() == 0)
+		if (args.empty())
 			return Value();
 
 		Value biggest = args[0];
@@ -247,7 +265,7 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("min")
 	{
-		if (args.size() == 0)
+		if (args.empty())
 			return Value();
 
 		Value smallest = args[0];
@@ -263,6 +281,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("rad")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -350,6 +370,8 @@ void Program::construct_math_library()
 
 	NATIVE_FUNC("sin")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -365,6 +387,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("sqrt")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -380,6 +404,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("tan")
 	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& arg = args[0];
 		switch (arg.t_vType)
 		{
@@ -395,6 +421,8 @@ void Program::construct_math_library()
 	}));
 	NATIVE_FUNC("ult")
 	{
+		if(args.size() < 2)
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
 		const Value& lhs = args[0];
 		const Value& rhs = args[1];
 
