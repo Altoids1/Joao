@@ -311,6 +311,7 @@ READPOWER_LEAVE_POWERSEARCH:
 }
 
 //lvalue ::= 'null' | 'false' | 'true' | Numeral | LiteralString | tableconstructor | var_access | functioncall |'(' exp ')'
+//WARNING: this CAN! return an lvalue in some contexts! (such as during interactive mode, or in any other circumstance where errors aren't fatal)
 ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we know for certain that there's no damned binary operator within it.
 {
 #ifdef LOUD_TOKENHEADER
@@ -676,7 +677,7 @@ ASTNode* Parser::readBinExp(Scanner::OperationPrecedence op, int here, int there
 
 				ASTNode* right = readBinExp(static_cast<Scanner::OperationPrecedence>(static_cast<uint8_t>(op) - 1), where+1, there);
 
-				if(lhs->class_name() == "Literal" && right->class_name() == "Literal") // Really primitive const-rolling
+				if(lhs && lhs->class_name() == "Literal" && right && right->class_name() == "Literal") // Really primitive const-rolling
 				{
 					auto literalLHS = static_cast<Literal*>(lhs);
 					auto literalRHS = static_cast<Literal*>(right);
