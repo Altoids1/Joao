@@ -97,16 +97,53 @@ static FailureOr try_run_expression(Program& prog, std::string&& expr_str) {
 	return ret;
 }
 
+#ifdef __EMSCRIPTEN__ 
+#include <emscripten.h>
+//In Emscripten's current setup, innocently doing std::getline() with std::cin actually causes us
+//to hammer the external JS function that is feeding us stuff from stdin,
+//as well as the fake /dev/tty.
+//
+//This means that we'll have to get kinda funky with it if we want to get user input w/o the front-end being a laggy, spinny, crashy mess.
+//
+//Make sure to use the -sASYNCIFY arg to em++ to make this work.
+//I'd add something to detect if you forget, but since it's a linker arg, the compiler doesn't get to know about that.
+static void detail_get_line(std::string& ret) 
+{
+	using std::cin;
+	char tryget;
+	while(true) {
+		tryget = cin.get();
+		if(std::char_traits<char>::not_eof(tryget))
+			break;
+		emscripten_sleep(100); // To avoid hammering it for characters.
+	}
+	ret.push_back(tryget);
+	while(true) {
+		tryget = cin.get();
+		if(tryget == std::char_traits<char>::eof() || !cin.good())
+			return;
+		if(tryget == '\n' || tryget == '\r')
+			return;
+		ret.push_back(tryget);
+	}
+	return;
+}
+#endif
+
 void Args::interactive_mode()
 {
 	Program prog = interactive_default_program();
 	while (true)
 	{
 		std::cout << "> ";
-		std::string input = "";
+		std::string input;
+#ifdef __EMSCRIPTEN__ // Explanation at the top of detail_get_line()'s def/impl.
+		detail_get_line(input);
+#else
 		std::getline(std::cin, input);
+#endif
 
-		if(input == "")
+		if(input.empty())
 			continue;
 		if(input == "quit()") // FIXME: support quit() more generically
 			return;
