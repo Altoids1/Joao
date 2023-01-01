@@ -98,7 +98,8 @@ int Scanner::readNumber(int it)
 				ScannerError(it, ScanError::MalformedNumber);
 				return it;
 			}
-			is_double = true; // WARNING: CASCADING CASE BLOCK
+			is_double = true;
+			[[fallthrough]]; // WARNING: CASCADING CASE BLOCK
 		DIGITS:
 			str.push_back(c);
 			break;
@@ -252,6 +253,11 @@ int Scanner::readSymbol(int it, std::istream& ifst)
 				return it;
 			}
 			//Casually rolls-over into the default case when it realizes this isn't a two-char symbol
+			break;
+		DIGITS:
+			if(first == '.') // Oh this is a quirky number that starts with the decimal point. ".123" or whatever.
+				return readNumber(it);
+			[[fallthrough]];
 		default:
 			break;
 		}

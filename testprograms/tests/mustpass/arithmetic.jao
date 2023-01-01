@@ -27,6 +27,7 @@
     asserteq(2.0 * 2.0,4.0);
     asserteq(4.5 % 2.0,0.5);
     asserteq(4.5 // 2.0,2);
+    asserteq(.2 , 0.2); ## Making sure we have starting-dot support :B
 
     assert(1.1 | -1.1);
 
