@@ -1091,8 +1091,10 @@ public:
 
 	virtual std::string dump(int indent) override
 	{
-		const std::string ind = std::string(indent, ' ');
-		return ind + "Throw\n" + err_node->dump(indent + 1);
+		std::string ret = std::string(indent, ' ') + "Throw\n";
+		if (err_node)
+			ret += err_node->dump(indent + 1);
+		return ret;
 	}
 };
 
