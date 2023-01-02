@@ -1134,11 +1134,11 @@ public:
 /// <summary>
 /// Holds "const {}" blocks which are evaluated as a returned Value before any other code is run.
 /// </summary>
-class
-	alignas(Literal) alignas(64) // The point of this is to make absolutely sure that ConstExpression is able to store a Literal;
-								 // on 32-bit platforms and a few compilers, this is a necessary addition to uphold the static_assert in transmute().
-ConstExpression : public Block {
+class ConstExpression : public Block {
 	static std::vector<ConstExpression*> _registry;
+#ifdef ENVIRONMENT32
+	char bloat[16];
+#endif
 public:
 	ConstExpression(const std::vector<Expression*>& s)
 		:Block(s)
