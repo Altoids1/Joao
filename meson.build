@@ -42,8 +42,14 @@ configure_file(input : 'config.h.in', output : 'config.h',
 	'patch': version_parts[2],
   }
 )
-
-exe = executable('joao', nativefuncs + src)
+if build_machine.system() == 'emscripten'
+	exe =  executable('joao', nativefuncs + src,
+		cpp_args : [],
+		link_args : ['-sASYNCIFY']
+	)
+else
+	exe = executable('joao', nativefuncs + src)
+endif
 
 # Diagnostic tests
 diagnostics = [ #Meson has a philosophical disagreement with procedurally generating the list of files in a directory, so...

@@ -699,8 +699,8 @@ public: // Parser doesn't have much of an API but it does have something
 		if (t)
 			std::cout << t->dump();
 		else
-			std::cout << "Parser Error Error: No Token pointer provided to ParserError()!\n";
-
+			std::cout << "Parser Error Error: No Token pointer provided to ParserError()!";
+		std::cout << std::endl; // This is an emscripten thing. We need to make sure this is flushed.
 		if (!is_interactive)
 #ifdef JOAO_SAFE
 			throw error::parser(what);

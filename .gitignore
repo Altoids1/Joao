@@ -374,3 +374,4 @@ Joao.exe
 
 ## Meson garbage
 builddir
+cross_wasm.txt

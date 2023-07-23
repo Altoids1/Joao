@@ -106,7 +106,7 @@ static FailureOr try_run_expression(Program& prog, std::string&& expr_str) {
 //This means that we'll have to get kinda funky with it if we want to get user input w/o the front-end being a laggy, spinny, crashy mess.
 //
 //Make sure to use the -sASYNCIFY arg to em++ to make this work.
-//I'd add something to detect if you forget, but since it's a linker arg, the compiler doesn't get to know about that.
+//meson.build *SHOULD* have it as a default linker argument. Try not to override it or the whole binary may just, not work at runtime.
 static void detail_get_line(std::string& ret) 
 {
 	using std::cin;

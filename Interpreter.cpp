@@ -99,6 +99,7 @@ void Interpreter::UncaughtRuntime(const Value& err)
 	throw err;
 #else
 	int code = err.t_value.as_object_ptr->get_property(*this, "code").t_value.as_int;
+	std::cout.flush();
 	if (code)
 		exit(code);
 	else
