@@ -10,10 +10,10 @@ struct ImmutableString
 {
 	static Hashtable<const char*, size_t> cstr_to_refcount;
 	const char* data = nullptr; // This is a C string, probably on the heap.
+	bool heap;
 	size_t precomputed_hash;
 	//This is the length NOT INCLUDING THE NULL CHARACTER
 	size_t precomputed_length;
-	bool heap;
 
 	// ASSUMES THE C-STRING GIVEN ISN'T FROM THE HEAP
 	ImmutableString(const char* c_str)
@@ -44,9 +44,9 @@ struct ImmutableString
 		cstr_to_refcount[data] = 1u;
 	}
 	ImmutableString(const ImmutableString& other)
-		:precomputed_hash(other.precomputed_hash)
+		:heap(other.heap)
+		,precomputed_hash(other.precomputed_hash)
 		,precomputed_length(other.precomputed_length)
-		,heap(other.heap)
 	{
 		data = other.data;
 		if (heap)

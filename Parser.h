@@ -8,8 +8,8 @@
 class Parser
 {
 	Program t_program;
-	std::vector<Token*> tokens;
 	const bool is_interactive;
+	std::vector<Token*> tokens;
 
 	//Used to store extraneous, native types
 	HashTable<std::string, ObjectType*> uncooked_types;

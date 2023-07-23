@@ -247,7 +247,7 @@ struct std::hash<Value>
 };
 
 #if defined(_DEBUG) || defined(HASHTABLE_DEBUG) // FOR DEBUGGING ONLY. DO NOT SWALLOW OR SUBMERGE IN ACID
-static std::ostream& operator<<(std::ostream& os, const Value& obj)
+[[maybe_unused]] static std::ostream& operator<<(std::ostream& os, const Value& obj)
 {
 	os << obj.to_string();
 	return os;
