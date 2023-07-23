@@ -32,6 +32,9 @@ if build_machine.system() == 'windows'
 	windows = import('windows')
 	src += windows.compile_resources('./Joao.rc')
 endif
+if build_machine.system() == 'linux'
+	src += 'Daemon.cpp'
+endif
 
 version_parts = VERSION.split('.')
 configure_file(input : 'config.h.in', output : 'config.h',

@@ -10,7 +10,8 @@ namespace Args
 		Version,
 		Help,
 		Main,
-		Executetime
+		Executetime,
+		InitializeDaemon
 	};
 
 	//Returns the string which is the actual filename.
