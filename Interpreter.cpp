@@ -3,6 +3,7 @@
 #include "Interpreter.h"
 #include "Object.h"
 #include "Table.h"
+#include "Error.h"
 
 Interpreter::Interpreter()
 	:is_interactive(false)
@@ -45,39 +46,39 @@ Value Interpreter::evaluate_expression(ASTNode* node) {
 	return ret;
 }
 
-void Interpreter::RuntimeError(ASTNode* a, std::string what)
+void Interpreter::RuntimeError(ASTNode* a, const std::string& what)
 {
 	std::cout << "- - - - - - - - - - - - - - - -\n";
 	std::cout << "FATAL RUNTIME ERROR: " << what << "\n";
 
 	//Stack dump
 	if(objectscope.empty() || blockscope.empty()) // Can't stack dump if we never entered the program (a lack of a /main() function does this)
-	{
-		return;
-	}
-	std::string whatfunk;
+		throw error::interpreter("Unknown runtime error, no stacktrace available!");
+
+	std::string whatFunction;
 	if(objectscope.top()) // If we runtimed within a method
 	{
-		whatfunk = "method of object of type " + objectscope.top()->object_type.to_string();
+		whatFunction = "method of object of type " + objectscope.top()->object_type.to_string();
 	}
 	else
 	{
-		whatfunk = "global function";
+		whatFunction = "global function";
 	}
 	
-	std::cout << "Line number: ";
+	std::string lineNumber;
 	if(a && a->my_line)
-	{
-		std::cout << std::to_string(a->my_line);
-	}
+		lineNumber = std::to_string(a->my_line);
 	else
-	{
-		std::cout << "Unknown!"; // Eventually things should be configured to never do this
-	}
-	
-	std::cout << "\nRuntime in " << blockscope.top().get_back_name().to_string() << ", a " << whatfunk << std::endl;
+		lineNumber = "Unknown!"; // Eventually things should be configured to never do this
+	std::string errorMessage = "\nRuntime in " + blockscope.top().get_back_name().to_string() + ", a " + whatFunction + ", Line number: " + lineNumber + "\n";
+	errorMessage += what;
+#ifdef JOAO_SAFE
+	throw error::interpreter(errorMessage);
+#else
+	std::cout << errorMessage;
 	if(!is_interactive)
 		exit(1);
+#endif
 }
 
 void Interpreter::RuntimeError(ASTNode* node, ErrorCode err,const std::string& what)

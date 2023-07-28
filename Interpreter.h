@@ -80,7 +80,7 @@ public:
 	}
 	
 	//Treated as a special, fatal error.
-	void RuntimeError(ASTNode*, std::string);
+	void RuntimeError(ASTNode*, const std::string&);
 
 	//Treated as a runtime which can be resumed from.
 	void RuntimeError(ASTNode* node, ErrorCode err, const std::string&);

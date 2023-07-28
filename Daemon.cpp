@@ -28,6 +28,8 @@ extern "C" {
 }
 
 //NOTE: Consider having pledge for linux as a dependency: https://justine.lol/pledge/
+//      the following nonsense is practically necessary to use Linux's suspiciously obtuse syscall security system,
+//      but it'd be nice if it were all obscured into that dependency.
 
 #define ArchField offsetof(struct seccomp_data, arch)
 
@@ -36,23 +38,23 @@ extern "C" {
     BPF_STMT(BPF_RET+BPF_K, SECCOMP_RET_ALLOW)
 
 struct sock_filter filter[] = {
-    /* validate arch */
+    //validate arch
     BPF_STMT(BPF_LD+BPF_W+BPF_ABS, ArchField),
     BPF_JUMP( BPF_JMP+BPF_JEQ+BPF_K, AUDIT_ARCH_X86_64, 1, 0),
     BPF_STMT(BPF_RET+BPF_K, SECCOMP_RET_KILL),
 
-    /* load syscall */
+    //load syscall
     BPF_STMT(BPF_LD+BPF_W+BPF_ABS, offsetof(struct seccomp_data, nr)),
 
     /* list of allowed syscalls */
-    Allow(exit_group),  /* exits a process */
-    Allow(brk),         /* for malloc(), inside libc */
-    Allow(mmap),        /* also for malloc() */
-    Allow(munmap),      /* for free(), inside libc */
-    Allow(write),       /* called by Joao himself */
-    Allow(read),        /* called by Joao himself */
+    Allow(exit_group),  // exits a process
+    Allow(brk),         // for malloc(), inside libc
+    Allow(mmap),        // also for malloc()
+    Allow(munmap),      // for free(), inside libc
+    Allow(write),       // called by Joao himself
+    Allow(read),        // called by Joao himself
 
-    /* and if we don't match above, die */
+    //and if we don't match above, die
     BPF_STMT(BPF_RET+BPF_K, SECCOMP_RET_KILL),
 };
 struct sock_fprog filterprog = {
@@ -67,7 +69,7 @@ static int ActivateSandbox() {
     // (with extra garnishes and flavours from yours truly)
     int ret = 0;
     ret |= prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); // Make sure we can't change our seccomp setup after it's been done.
-    ret |= prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &filterprog);
+    ret |= prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &filterprog); // and then draw the rest of the fucking owl
     return ret;
 }
 
@@ -76,6 +78,7 @@ namespace Daemon
 std::vector<std::vector<Token>> cache;
 const std::filesystem::path JOAO_INPUT_PIPE = "/tmp/JoaoPipeInput";
 const std::filesystem::path JOAO_OUTPUT_PIPE = "/tmp/JoaoPipeOutput";
+const std::filesystem::path JOAO_ERR_PIPE = "/tmp/JoaoPipeError";
 
 using FileDescriptor = int;
 
@@ -92,10 +95,9 @@ std::string exec(const char* cmd) noexcept {
     return result;
 }
 
-[[noreturn]] void derror(const std::string& what)
+void DaemonError(int errorPipe, const std::string& what)
 {
-    std::cout << "Joao daemon error: " << what << '\n';
-    exit(EXIT_FAILURE);
+    write(errorPipe, what.c_str(),what.size());
 }
 
 void initialize()
@@ -104,15 +106,20 @@ void initialize()
     //thereby making our parent process be 'init' and turning us into a free-floating chunk of code in the background.
     pid_t my_pid = fork();
 
-    if(my_pid < 0) UNLIKELY
-        derror("Failed to create child process for daemonification.");
-    
-    if(my_pid > 0 )// If we are the parent
+    if(my_pid < 0) UNLIKELY {
+        std::cerr << "Joao daemon error: Failed to create child process for daemonification.\n";
+        exit(EXIT_FAILURE);
+    }
+    if(my_pid > 0 ) {// If we are the parent
+        std::cout << "Terminating parent process...\n";
         return; // Go die
+    }
 
     //We are now the child process.
-    if(setsid() < 0) UNLIKELY
-        derror("Failed to set session ID for daemonification.");
+    if(setsid() < 0) UNLIKELY {
+        std::cerr << "Joao daemon error: Failed to set session ID for daemonification.\n";
+        exit(EXIT_FAILURE);
+    }
 
     //Close standard i/o ports
     close(STDIN_FILENO);
@@ -124,13 +131,16 @@ void initialize()
         mkfifo(JOAO_INPUT_PIPE.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if(!std::filesystem::is_fifo(JOAO_OUTPUT_PIPE))
         mkfifo(JOAO_OUTPUT_PIPE.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    if(!std::filesystem::is_fifo(JOAO_ERR_PIPE))
+        mkfifo(JOAO_ERR_PIPE.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);    
     //FIXME: Here would be a great place to check to see if an old pipe exists
     //and it still has some data in it that was never read for some reason.
     //However, apparently (???) Linux doesn't have any way to peek a pipe, AFAIK, so.
 
-    FileDescriptor inputPipe = open(JOAO_INPUT_PIPE.c_str(),O_RDONLY);
-    FileDescriptor outputPipe = open(JOAO_OUTPUT_PIPE.c_str(),O_WRONLY);
-    if(inputPipe < 0 || outputPipe < 0) {
+    const FileDescriptor inputPipe = open(JOAO_INPUT_PIPE.c_str(),O_RDONLY);
+    const FileDescriptor outputPipe = open(JOAO_OUTPUT_PIPE.c_str(),O_WRONLY);
+    const FileDescriptor errorPipe = open(JOAO_ERR_PIPE.c_str(),O_WRONLY);
+    if(inputPipe < 0 || outputPipe < 0 || errorPipe < 0) {
         return; // FIXME: Try to find a way to emit an error in this situation.
     }
 
@@ -146,19 +156,25 @@ void initialize()
             readString.append(readBuffer.data(),readBytes);
         }
         std::stringstream scriptStream(readString);
-        Scanner scn;
-        scn.scan(scriptStream);
-        if(scn.is_malformed)
-            continue; // TODO
-        Parser prs(scn);
-        Program parsed = prs.parse();
-	    Interpreter interpreter(parsed,false);
-        
-        std::vector<Value> joao_args;
-        Value jargs = interpreter.makeBaseTable(joao_args,{},nullptr);
+        try {
+            Scanner scn;
+            scn.scan(scriptStream);
+            Parser prs(scn);
+            Program parsed = prs.parse();
+            Interpreter interpreter(parsed,false);
+            
+            std::vector<Value> joao_args;
+            Value jargs = interpreter.makeBaseTable(joao_args,{},nullptr);
 
-        //Execute!
-        Value v = interpreter.execute(parsed, jargs);
+            //Execute!
+            Value v = interpreter.execute(parsed, jargs);
+            std::string resultString = v.to_string();
+            write(outputPipe,resultString.c_str(),resultString.size());
+        } catch(error::scanner scannerError) {
+            write(errorPipe, scannerError.what(), strlen(scannerError.what()));
+        } catch(error::parser parserError) {
+            write(errorPipe, parserError.what(), strlen(parserError.what()));
+        }
     }
 }
 
