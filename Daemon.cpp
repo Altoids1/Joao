@@ -7,7 +7,7 @@
 #include "Program.h"
 #include "Interpreter.h"
 
-#include <memory>
+#include <regex>
 #include <filesystem>
 
 extern "C" {
@@ -82,17 +82,23 @@ const std::filesystem::path JOAO_ERR_PIPE = "/tmp/JoaoPipeError";
 
 using FileDescriptor = int;
 
+//Executes a command-line command and returns the result.
 std::string exec(const char* cmd) noexcept {
     std::array<char, 128> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipePointer (popen(cmd, "r"), pclose);
+    FILE* pipePointer = popen(cmd, "r");
     if (!pipePointer) {
         return "";
     }
-    while (fgets(buffer.data(), buffer.size(), pipePointer.get()) != nullptr) {
+    while (fgets(buffer.data(), buffer.size(), pipePointer) != nullptr) {
         result += buffer.data();
     }
+    pclose(pipePointer);
     return result;
+}
+
+std::string exec(const std::string& cmd) noexcept {
+    return exec(cmd.c_str());
 }
 
 void DaemonError(int errorPipe, const std::string& what)
@@ -178,9 +184,21 @@ void initialize()
     }
 }
 
+//Finds and halts the daemon, if there is one.
 void stop()
 {
-
+    const std::string daemonList = exec("ps -eo 'tty,pid,comm'"); // Stack Overflow says this lists all daemons running.
+    const std::regex daemonRegex = std::regex(R"(\?\s+(\d+) joao)"); // ps outputs in a semi-consistent pattern, we can regex agains it.
+    std::smatch daemonRegexMatch;
+    if(!std::regex_search(daemonList,daemonRegexMatch, daemonRegex) || daemonRegexMatch.size() < 2) {
+        std::cout << "No daemon found to stop.\n";
+        return;
+    }
+    std::cout << "Halting daemon...\n";
+    // -2 is the CTRL+C interrupt signal. Gives the daemon some room to do cleanup before dying.
+    // FIXME: Add a forceful mode for when Joao really needs to die right this second.
+    std::string killCommand = "kill -2 " + daemonRegexMatch[1].str();
+    std::cout << exec(killCommand);
 }
 
 }
