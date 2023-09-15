@@ -204,25 +204,27 @@ public:
 		{
 		case('{'):
 			is_start = true;
+			[[fallthrough]];
 		case('}'):
 			t_pOp = pairOp::Brace;
 			break;
 
 		case('['):
 			is_start = true;
+			[[fallthrough]];
 		case(']'):
 			t_pOp = pairOp::Bracket;
 			break;
 
 		case('('):
 			is_start = true;
+			[[fallthrough]];
 		case(')'):
 			t_pOp = pairOp::Paren;
 			break;
 
 		default:
-			std::cout << "Unknown character given to PairSymbolToken!";
-			exit(1);
+			throw error::scanner("Unknown character given to PairSymbolToken!");
 		}
 	}
 	virtual std::string dumpable_name() override

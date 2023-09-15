@@ -158,7 +158,7 @@ void initialize()
         std::string readString;
         // Doing some intentional i/o blocking here.
         ssize_t readBytes;
-        while(readBytes = read(inputPipe,readBuffer.data(),readBuffer.size() > 0)) {
+        while((readBytes = read(inputPipe,readBuffer.data(),readBuffer.size())) > 0) {
             readString.append(readBuffer.data(),readBytes);
         }
         std::stringstream scriptStream(readString);
@@ -181,9 +181,9 @@ void initialize()
                 resultString = v.to_string();
             }
             write(outputPipe,resultString.c_str(),resultString.size());
-        } catch(error::scanner scannerError) {
+        } catch(error::scanner& scannerError) {
             write(errorPipe, scannerError.what(), strlen(scannerError.what()));
-        } catch(error::parser parserError) {
+        } catch(error::parser& parserError) {
             write(errorPipe, parserError.what(), strlen(parserError.what()));
         }
     }

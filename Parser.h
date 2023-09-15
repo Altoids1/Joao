@@ -227,7 +227,7 @@ class Parser
 	std::vector<Expression*> readBlock(BlockType, int, int);
 
 	//Here-there-update; does not update if no last bracket found
-	std::vector<LocalAssignmentStatement*> readClassDef(std::string, int, int);
+	std::vector<LocalAssignmentStatement*> readClassDef(int, int);
 
 	//Reads a strongly-expected LocalAssignment (of form, "Value x = 3" or whatever). Does not consume a semicolon.
 	LocalAssignmentStatement* readLocalAssignment(int, int);
@@ -401,7 +401,7 @@ class Parser
 		int where = tokenheader;
 		for(; where <= there; ++where) // This is all here to handle repetitive Member and Index accesses.
 		{
-			Token* propeller = tokens[where]; // PROPerty or ELLERment. I guess. Shut up.
+			Token* propeller = tokens.at(where); // PROPerty or ELLERment. I guess. Shut up.
 
 			switch (propeller->class_enum())
 			{
@@ -410,7 +410,7 @@ class Parser
 				++where;
 				//return new MemberAccess(scoped_access, readVarAccess(tokenheader, there)); // Doing just this would end up being right-associative, which for our purposes would be annoying to deal with interpreter-side.
 				//So we're going to do something else.
-				if(tokens.size() <= where) UNLIKELY // why you gotta be daft like this mang
+				if(tokens.size() <= static_cast<size_t>(where)) UNLIKELY // why you gotta be daft like this mang
 				{
 					ParserError(tokens[where-1], "Unexpected EOF when reading MemberAccess!");
 					return scoped_access; // I guess idfk

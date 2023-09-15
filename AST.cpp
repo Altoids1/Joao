@@ -39,11 +39,11 @@ Value& ASTNode::handle(Interpreter& interp)
 
 
 //resolve()
-Value Literal::resolve(Interpreter& interp)
+Value Literal::resolve([[maybe_unused]] Interpreter& interp)
 {
 	return heldval;
 }
-Value Literal::const_resolve(Parser& parse, bool loudfail)
+Value Literal::const_resolve([[maybe_unused]] Parser& parse, [[maybe_unused]] bool loudfail)
 {
 	return heldval;
 }
@@ -245,7 +245,7 @@ Value BinaryExpression::resolve(Interpreter& interp)
 
 
 
-void Function::give_args(Interpreter& interp, std::vector<Value>& args, Object* o = nullptr)
+void Function::give_args([[maybe_unused]] Interpreter& interp, std::vector<Value>& args, Object* o = nullptr)
 {
 	if (o)
 	{
@@ -426,7 +426,7 @@ Value IfBlock::resolve(Interpreter& interp)
 	//Getting here either means our condition is true or we have no condition because we're an else statement
 	//Either way, lets go innit
 
-	interp.push_block("if");
+	interp.push_block();
 	Value blockret = iterate_statements(interp);
 	interp.pop_block();
 	return blockret;
@@ -437,12 +437,12 @@ Value ForBlock::resolve(Interpreter& interp)
 #ifdef JOAO_SAFE
 	Expression::increment();
 #endif
-	interp.push_block("for"); // Has to happen here since initializer takes place in the for-loops var stack
+	interp.push_block(); // Has to happen here since initializer takes place in the for-loops var stack
 	if (initializer)
 		initializer->resolve(interp);
 	while (condition && condition->resolve(interp))
 	{
-		interp.push_block("for2"); // The "secondary layer" of the for-loop's block, which is actually reset each iteration
+		interp.push_block(); // The "secondary layer" of the for-loop's block, which is actually reset each iteration
 		Value blockret = iterate_statements(interp);
 		interp.pop_block();
 		if (interp.BREAK_COUNTER)
@@ -541,7 +541,7 @@ Value ForEachBlock::resolve(Interpreter& interp)
 	for (auto it = tbl->t_hash.begin(); it != tbl->t_hash.end(); ++it)
 	{
 		const Value& key = it.key();
-		if (key.t_vType == Value::vType::Integer && key.t_value.as_int < array_it) // Skipping over "silly keys" that we've already iterated over
+		if (key.t_vType == Value::vType::Integer && key.t_value.as_int < static_cast<Value::JoaoInt>(array_it)) // Skipping over "silly keys" that we've already iterated over
 			continue;
 
 		interp.override_var(key_name, key, this);
@@ -572,13 +572,13 @@ Value WhileBlock::resolve(Interpreter& interp)
 #ifdef JOAO_SAFE
 	increment();
 #endif
-	interp.push_block("while");
+	interp.push_block();
 	if(!condition) // if condition not defined
 		interp.RuntimeError(this, "Missing condition in WhileBlock!");
 
 	while (condition->resolve(interp))
 	{
-		interp.push_block("while2");
+		interp.push_block();
 		Value blockret = iterate_statements(interp);
 		interp.pop_block();
 		if (interp.BREAK_COUNTER)
@@ -827,13 +827,13 @@ Value TryBlock::resolve(Interpreter& interp)
 #ifdef JOAO_SAFE
 	increment();
 #endif
-	interp.push_block("try");
+	interp.push_block(); // try block
 	Value ret = iterate_statements(interp);
 	interp.pop_block();
 	//We don't really care about any break/continue flags as a try{}catch{}, just the error one
 	if(interp.error) // ah, we caught an error, cool
 	{
-		interp.push_block("catch");
+		interp.push_block(); // catch block
 		interp.init_var(err_name,interp.error,this); // init the error parameter
 		interp.error = Value();
 		Value ret = iterate(catch_statements,interp);

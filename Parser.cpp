@@ -97,7 +97,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 #ifdef LOUD_TOKENHEADER
 			std::cout << "Classdefinition began read at tokenheader " << std::to_string(tokenheader) << std::endl;
 #endif
-			std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, static_cast<int>(tokens.size() - 1));
+			std::vector<LocalAssignmentStatement*> lasses = readClassDef(tokenheader, static_cast<int>(tokens.size() - 1));
 
 			classdef_list.push_back(new ClassDefinition(dir_name, lasses, t->line));
 
@@ -1213,7 +1213,7 @@ BLOCK_RETURN_ASTS:
 	return ASTs;
 }
 
-std::vector<LocalAssignmentStatement*> Parser::readClassDef(std::string name, int here, int there)
+std::vector<LocalAssignmentStatement*> Parser::readClassDef(int here, int there)
 {
 	Token* t = tokens[here];
 	consume_open_brace(here);

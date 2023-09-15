@@ -913,6 +913,7 @@ FailureOr BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, 
 			{
 				return Value(lhs && true);
 			}
+			[[fallthrough]];
 		default:
 			return FailureOr(
 				ErrorCode::FailedOperation,

@@ -131,7 +131,7 @@ struct ImmutableString
 	//This is a bit silly but whatever
 	bool begins_with(const char* c_str)
 	{
-		int other_len = strlen(c_str);
+		size_t other_len = strlen(c_str);
 		if(precomputed_length < other_len)
 			return false;
 		return strncmp(data,c_str,other_len) == 0;

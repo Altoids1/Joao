@@ -13,8 +13,8 @@ struct FailureOr
         ErrorCode code;
         ImmutableString what;
     };
-    std::variant<Value, Failure> data;
     bool didError;
+    std::variant<Value, Failure> data;
 
     FailureOr(Value&& ret)
         :didError(false)

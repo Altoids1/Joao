@@ -4,7 +4,7 @@
 #include "Table.h"
 #include "Value.h"
 
-Value* Object::has_property(Interpreter& interp, const ImmutableString& name)
+Value* Object::has_property([[maybe_unused]] Interpreter& interp, const ImmutableString& name)
 {
 	Value* ret;
 	if (ret = properties.lazy_at(name); ret != nullptr)
@@ -72,7 +72,7 @@ Value Object::call_method(Interpreter& interp, const ImmutableString& name, std:
 }
 
 //If it fails, it simply returns a nullptr w/o throwing a Runtime. Part of scope resolution of function calls.
-Function* Object::has_method(Interpreter& interp, const ImmutableString& name)
+Function* Object::has_method([[maybe_unused]]  Interpreter& interp, const ImmutableString& name)
 {
 	if (Function** ptr = base_funcs->lazy_at(name); ptr != nullptr)
 	{
@@ -125,7 +125,7 @@ Value ObjectType::get_typeproperty(Interpreter& interp, const ImmutableString& s
 	return typeproperties.at(str);
 }
 
-Function* ObjectType::has_typemethod(Interpreter& interp, const ImmutableString& str, ASTNode* getter)
+Function* ObjectType::has_typemethod([[maybe_unused]] Interpreter& interp, const ImmutableString& str,[[maybe_unused]] ASTNode* getter)
 {
 	if (!typefuncs.count(str))
 	{

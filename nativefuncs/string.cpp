@@ -3,7 +3,7 @@
 #include "../Object.h"
 #include "../Interpreter.h"
 
-#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , []([[maybe_unused]] Interpreter& interp, [[maybe_unused]] const std::vector<Value>& args)
 
 static void explode_with_char(std::vector<Value>& new_arr, const std::string& haystack, char needle)
 {
@@ -186,8 +186,6 @@ void Program::construct_string_library()
 		if(sep.empty()) return Value(interp.makeObject("/table", {Value(haystack_str)}, nullptr));
 		std::vector<Value> exploded;
 		exploded.reserve(((haystack_str.length() >> 1) | 4) & 255); // Trying to reserve a reasonable capacity
-		size_t pos = 0;
-		size_t end = haystack_str.size();
 		if (sep.length() == 1)
 			explode_with_char(exploded, haystack_str, sep.at(0));
 		else

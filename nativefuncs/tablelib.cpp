@@ -65,7 +65,7 @@ ObjectType* Program::construct_table_library()
 		return Value(result);
 	});
 
-	NATIVEMETHOD(table,"pick", [](const std::vector<Value>& args, Object* obj) {
+	NATIVEMETHOD(table,"pick", []([[maybe_unused]] const std::vector<Value>& args, Object* obj) {
 		Table* t = static_cast<Table*>(obj);
 
 		if (!t->t_array.size())
@@ -74,7 +74,7 @@ ObjectType* Program::construct_table_library()
 		return Value(t->t_array[rand() % t->t_array.size()]);
 	});
 
-	definedFunctions["pick"] = new NativeFunction("pick", [](Interpreter& interp, const std::vector<Value>& args)
+	definedFunctions["pick"] = new NativeFunction("pick", []([[maybe_unused]] Interpreter& interp, const std::vector<Value>& args)
 		{
 			if (!args.size())
 				return Value();
@@ -101,7 +101,7 @@ ObjectType* Program::construct_table_library()
 			if (index >= 0)
 			{
 				auto& arr = table->t_array;
-				if (index < arr.size()) // if we're trying to insert at a place where an element already exists
+				if (index < Value::JoaoInt(arr.size())) // if we're trying to insert at a place where an element already exists
 				{
 					auto& hash = table->t_hash;
 					//Before we do this, imagine that there's an index [9] present in the hashtable, and the array only goes from [0] to [8].

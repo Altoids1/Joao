@@ -81,14 +81,14 @@ void Interpreter::RuntimeError(ASTNode* a, const std::string& what)
 #endif
 }
 
-void Interpreter::RuntimeError(ASTNode* node, ErrorCode err,const std::string& what)
+void Interpreter::RuntimeError([[maybe_unused]] ASTNode* node, ErrorCode err,const std::string& what)
 {
 	error = Value(prog->definedObjTypes["/error"]->makeObject(*this, {Value(static_cast<int>(err)),Value(what) }));
 	//assert(error.t_value.as_object_ptr->get_property_raw("what").t_vType == Value::vType::String);
 	return;
 }
 
-void Interpreter::RuntimeError(ASTNode* node, Value& err_val)
+void Interpreter::RuntimeError([[maybe_unused]] ASTNode* node, Value& err_val)
 {
 	error = err_val;
 	return;
@@ -108,7 +108,7 @@ void Interpreter::UncaughtRuntime(const Value& err)
 #endif
 }
 
-void Interpreter::init_var(const ImmutableString& varname, const Value& val, ASTNode* setter)
+void Interpreter::init_var(const ImmutableString& varname, const Value& val, [[maybe_unused]] ASTNode* setter)
 {
 #ifdef JOAO_SAFE
 	++value_init_count;
@@ -334,7 +334,7 @@ Value Interpreter::makeBaseTable()
 	return Value(prog->definedObjTypes["/table"]->makeObject(*this, {}));
 }
 
-Value Interpreter::makeBaseTable( std::vector<Value> elements, Hashtable<std::string,Value> entries, ASTNode* maker = nullptr)
+Value Interpreter::makeBaseTable( std::vector<Value> elements, Hashtable<std::string,Value> entries, [[maybe_unused]] ASTNode* maker = nullptr)
 {
 	Object* objdesk = prog->definedObjTypes["/table"]->makeObject(*this,{});
 	

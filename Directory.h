@@ -22,7 +22,7 @@ namespace string
 namespace math
 {
 	Value round(const std::vector<Value>&);
-	Value round_safe(Interpreter& interp, const std::vector<Value>&);
+	Value round_safe([[maybe_unused]] Interpreter& interp, const std::vector<Value>&);
 	//A math-"library" wrapper around whatever builtin/fallback is actually happening in this context.
 	constexpr size_t popcount(size_t x)
 	{

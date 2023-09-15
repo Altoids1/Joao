@@ -476,18 +476,19 @@ public:
 	const std::string& get_name() const { return t_name; }
 	Object* get_obj() const { return obj; }
 	void set_obj(Object* o) { obj = o; };
-	Function(std::string name, Expression* expr)
+	Function(const std::string& name, Expression* expr)
 		:my_value(Value(this))
 	{
+		t_name = name;
 		statements = std::vector<Expression*>{ expr };
 	}
-	Function(std::string name, std::vector<Expression*> exprs) // argument-less-ness
+	Function(const std::string& name, std::vector<Expression*> exprs) // argument-less-ness
 		:my_value(Value(this))
 	{
 		t_name = name;
 		statements = exprs;
 	}
-	Function(std::string name, std::vector<Expression*>&& exprs, std::vector<ImmutableString>&& sargs, int linenum = 0)
+	Function(const std::string& name, std::vector<Expression*>&& exprs, std::vector<ImmutableString>&& sargs, int linenum = 0)
 		:my_value(Value(this))
 	{
 		t_name = name;
@@ -545,7 +546,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "NativeFunction"; }
-	virtual std::string dump(int indent) override
+	virtual std::string dump([[maybe_unused]] int indent) override
 	{
 		return "NativeFunction, name: " + t_name + "\n";
 	}
@@ -570,7 +571,7 @@ public:
 
 	virtual Value resolve(Interpreter&) override;
 	virtual const std::string class_name() const override { return "NativeMethod"; }
-	virtual std::string dump(int indent) override
+	virtual std::string dump([[maybe_unused]] int indent) override
 	{
 		return "NativeMethod, name: " + t_name + "\n";
 	}

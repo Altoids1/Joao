@@ -113,7 +113,7 @@ public:
 	}
 
 	//Like get_global but returns the pointer instead, and quietly allocates a new global when you ask for one it hasn't seen before.
-	Value* has_global(const ImmutableString& name, ASTNode* getter)
+	Value* has_global(const ImmutableString& name, [[maybe_unused]] ASTNode* getter)
 	{
 		if (!globalscope.table.count(name))
 		{
@@ -133,7 +133,7 @@ public:
 			
 		return globalscope.table.at(name);
 	}
-	void set_global(const ImmutableString& name, Value& val, ASTNode* setter)
+	void set_global(const ImmutableString& name, Value& val, [[maybe_unused]] ASTNode* setter)
 	{
 #ifdef JOAO_SAFE
 		if(!globalscope.table.contains(name)) {
@@ -145,11 +145,6 @@ public:
 		}
 #endif
 		globalscope.table[name] = Value(val);
-	}
-
-	void push_block(const char* dummy)
-	{
-		blockscope.top().push();
 	}
 	void push_block()
 	{
