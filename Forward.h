@@ -1,22 +1,7 @@
 #pragma once
 
-#ifndef JOAO_NO_INCLUDE_STD // If you say so!
-//Core Libraries
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <unordered_set>
-#include <vector>
-#include <forward_list>
-#include <list>
-#include <stack>
-#include <queue>
-#include <deque>
-#include <initializer_list>
-#include <functional>
-#include <type_traits>
-#include <utility>
-#include <variant>
+//Most of the core libraries are included via a precompiled header, located elsewhere.
+
 #ifdef __GNUG__
 #include <cstring>
 #include <cmath>
@@ -24,7 +9,6 @@
 #endif
 #ifdef __cpp_lib_bitops
 #include <bit>
-#endif
 #endif
 
 #if __cplusplus > 202000L

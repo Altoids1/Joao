@@ -1,0 +1,16 @@
+//Core Libraries
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <unordered_set>
+#include <vector>
+#include <forward_list>
+#include <list>
+#include <stack>
+#include <queue>
+#include <deque>
+#include <initializer_list>
+#include <functional>
+#include <type_traits>
+#include <utility>
+#include <variant>

@@ -48,10 +48,11 @@ configure_file(input : 'config.h.in', output : 'config.h',
 if build_machine.system() == 'emscripten'
 	exe =  executable('joao', nativefuncs + src,
 		cpp_args : [],
-		link_args : ['-sASYNCIFY']
+		link_args : ['-sASYNCIFY'],
+		cpp_pch : 'pch/PrecompiledHeaders.h'
 	)
 else
-	exe = executable('joao', nativefuncs + src)
+	exe = executable('joao', nativefuncs + src, cpp_pch : 'pch/PrecompiledHeaders.h')
 endif
 
 # Diagnostic tests
