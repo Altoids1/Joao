@@ -158,8 +158,11 @@ public:
 
 		return st + "}";
 	}
+
+	// you ever work on a project for so long that you start to change your mind about its naming conventions
+	std::string to_json();
 	
-	bool virtual is_table() { return false; }
+	bool virtual is_table() const { return false; }
 
 	friend class ObjectType;
 };

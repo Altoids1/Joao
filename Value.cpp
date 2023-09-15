@@ -133,6 +133,31 @@ std::string Value::typestring() const
 	}
 }
 
+std::string Value::to_json() const
+{
+    switch (t_vType)
+	{
+	case(vType::Null):
+		return "null";
+	case(vType::Bool):
+		return t_value.as_bool ? "true" : "false";
+	case(vType::Integer):
+		return std::to_string(t_value.as_int);
+	case(vType::Double):
+		return std::to_string(t_value.as_double); // FIXME: Bad!! this might not be correct JSON number formatting!!!
+	case(vType::String):
+		return math::concat("\"",*t_value.as_string_ptr,"\""); // Strings need to be quoted >_>
+	case(vType::Object):
+		return t_value.as_object_ptr->to_json();
+	case(vType::Function):
+		return "(Function)";
+	default:
+		return "UNKNOWN!!";
+	}
+}
+
+
+
 Value& Value::operator=(const Value& rhs)
 {
 	if (this == &Value::dev_null)

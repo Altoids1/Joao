@@ -194,6 +194,13 @@ void Program::construct_string_library()
 			explode_with_string(exploded, haystack_str, sep);
 		return Value(interp.makeObject("/table",std::move(exploded),nullptr));
 	}));
+
+	NATIVE_FUNC("json")
+	{
+		if(args.empty())
+			return Value(Value::vType::Null, int(ErrorCode::NotEnoughArgs));
+		return Value(args[0].to_json());
+	}));
 }
 
 

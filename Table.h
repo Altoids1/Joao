@@ -47,5 +47,5 @@ public:
 	bool at_set_raw(Value, const Value&);
 
 	size_t length() { return t_array.size(); }
-	bool virtual is_table() override { return true; }
+	bool virtual is_table() const override { return true; }
 };

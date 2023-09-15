@@ -224,6 +224,7 @@ public:
 
 	std::string to_string() const;
 	std::string typestring() const;
+	std::string to_json() const;
 };
 
 

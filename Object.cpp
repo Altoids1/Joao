@@ -2,6 +2,7 @@
 #include "Interpreter.h"
 #include "Parser.h"
 #include "Table.h"
+#include "Value.h"
 
 Value* Object::has_property(Interpreter& interp, const ImmutableString& name)
 {
@@ -183,4 +184,37 @@ void ObjectType::set_typemethod(Parser& parse, std::string name, Function* f)
 void ObjectType::set_typemethod_raw(const ImmutableString& name, Function* f)
 {
 	typefuncs[name] = f;
+}
+
+std::string Object::to_json()  { 
+	std::string jsonOutput = "{";
+	jsonOutput.reserve(512); // I hereby promote you to StringBuilder
+	jsonOutput += math::concat("\"__TYPE__\":\"",object_type.data,"\"");
+	if(this->is_table()) {
+		const Table* self = static_cast<const Table*>(this);
+		jsonOutput += ",\"__TABLE__\" : [[";
+		//first the array
+		for(const Value& v : self->t_array) {
+			jsonOutput += v.to_json() + ",";
+		}
+		jsonOutput.pop_back(); // No trailing commas! :^)
+		jsonOutput += "],{";
+		//second, the hashtable portion
+		for(auto it = self->t_hash.begin(); it != self->t_hash.end(); ++it) {
+			//Mindlessly using a Value as a JSON member key may seem suspicious
+			//(since JSON member keys can *only* be strings)
+			//however, João tables may only have integers and strings as keys. This should be okay!
+			jsonOutput += math::concat("\"",it.key().to_string(),"\":",it.value().to_json(),",");
+		}
+		jsonOutput.pop_back(); // Delete the trailing comma :^)
+		jsonOutput += "}]";
+	}
+	for(auto it = base_properties->begin(); it != base_properties->end(); ++it) {
+		//Comma is placed at the front to avoid having a trailing comma.
+		//(we'll always need this first comma since the TYPE element always comes before this)
+		jsonOutput += math::concat(",\"",it.key().data,"\":",get_property_raw(it.key()).to_json());
+	}
+
+	jsonOutput += "}";
+	return jsonOutput;
 }

@@ -1,0 +1,18 @@
+/food
+{
+    Value taste = "Good";
+    Value smell = "Bad";
+}
+
+/main()
+{
+	if(json(/food/New()) != "{\"__TYPE__\":\"/food\",\"taste\":\"Good\",\"smell\":\"Bad\"}") {
+        throw /error/New(1,"Unable to jsonify base object properties!");
+    }
+    Object foodObj = /food/New();
+    foodObj.taste = "Bad";
+    if(json(/food/New()) != "{\"__TYPE__\":\"/food\",\"taste\":\"Bad\",\"smell\":\"Bad\"}") {
+        throw /error/New(1,"Unable to jsonify non-base object properties!");
+    }
+
+}
