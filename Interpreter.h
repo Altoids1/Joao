@@ -135,6 +135,15 @@ public:
 	}
 	void set_global(const ImmutableString& name, Value& val, ASTNode* setter)
 	{
+#ifdef JOAO_SAFE
+		if(!globalscope.table.contains(name)) {
+			++value_init_count;
+			if (value_init_count > MAX_VARIABLES)
+			{
+				throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
+			}
+		}
+#endif
 		globalscope.table[name] = Value(val);
 	}
 
