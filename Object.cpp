@@ -176,21 +176,25 @@ std::string Object::to_json()  {
 	jsonOutput += math::concat("\"__TYPE__\":\"",object_type.data,"\"");
 	if(this->is_table()) {
 		const Table* self = static_cast<const Table*>(this);
-		jsonOutput += ",\"__TABLE__\" : [[";
+		jsonOutput += ",\"__TABLE__\":[[";
 		//first the array
-		for(const Value& v : self->t_array) {
-			jsonOutput += v.to_json() + ",";
+		if(!self->t_array.empty()) {
+			for(const Value& v : self->t_array) {
+				jsonOutput += v.to_json() + ",";
+			}
+			jsonOutput.pop_back(); // No trailing commas! :^)
 		}
-		jsonOutput.pop_back(); // No trailing commas! :^)
 		jsonOutput += "],{";
 		//second, the hashtable portion
-		for(auto it = self->t_hash.begin(); it != self->t_hash.end(); ++it) {
-			//Mindlessly using a Value as a JSON member key may seem suspicious
-			//(since JSON member keys can *only* be strings)
-			//however, João tables may only have integers and strings as keys. This should be okay!
-			jsonOutput += math::concat("\"",it.key().to_string(),"\":",it.value().to_json(),",");
+		if(!self->t_hash.empty()) {
+			for(auto it = self->t_hash.begin(); it != self->t_hash.end(); ++it) {
+				//Mindlessly using a Value as a JSON member key may seem suspicious
+				//(since JSON member keys can *only* be strings)
+				//however, João tables may only have integers and strings as keys. This should be okay!
+				jsonOutput += math::concat("\"",it.key().to_string(),"\":",it.value().to_json(),",");
+			}
+			jsonOutput.pop_back(); // Delete the trailing comma :^)
 		}
-		jsonOutput.pop_back(); // Delete the trailing comma :^)
 		jsonOutput += "}]";
 	}
 	for(auto it = base_properties->begin(); it != base_properties->end(); ++it) {
