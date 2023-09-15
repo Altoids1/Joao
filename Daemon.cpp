@@ -174,7 +174,12 @@ void initialize()
 
             //Execute!
             Value v = interpreter.execute(parsed, jargs);
-            std::string resultString = v.to_string();
+            std::string resultString;
+            if(v.t_vType == Value::vType::Object) {
+                resultString = v.t_value.as_object_ptr->to_json();
+            } else {
+                resultString = v.to_string();
+            }
             write(outputPipe,resultString.c_str(),resultString.size());
         } catch(error::scanner scannerError) {
             write(errorPipe, scannerError.what(), strlen(scannerError.what()));
