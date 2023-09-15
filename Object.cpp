@@ -6,29 +6,29 @@
 
 Value* Object::has_property(Interpreter& interp, const ImmutableString& name)
 {
-	if (properties.count(name))
-		return &(properties.at(name));
-	if (base_properties->count(name))
-		return &(base_properties->at(name));
-
-	return nullptr;
+	Value* ret;
+	if (ret = properties.lazy_at(name); ret != nullptr)
+		return ret;
+	return base_properties->lazy_at(name);
 }
 Value Object::get_property(Interpreter& interp, const ImmutableString& name)
 {
-	if (properties.count(name))
-		return properties.at(name);
-	if (base_properties->count(name))
-		return base_properties->at(name);
+	Value* ptr;
+	if (ptr = properties.lazy_at(name); ptr != nullptr)
+		return *ptr;
+	if (ptr = base_properties->lazy_at(name); ptr != nullptr)
+		return *ptr;
 	
 	interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access property of object!");
 	return Value();
 }
 Value Object::get_property_raw(const ImmutableString& name)
 {
-	if (properties.count(name))
-		return properties.at(name);
-	if (base_properties->count(name))
-		return base_properties->at(name);
+	Value* ptr;
+	if (ptr = properties.lazy_at(name); ptr != nullptr)
+		return *ptr;
+	if (ptr = base_properties->lazy_at(name); ptr != nullptr)
+		return *ptr;
 	return Value();
 }
 void Object::set_property(Interpreter& interp, const ImmutableString& name, Value rhs)
@@ -38,30 +38,14 @@ void Object::set_property(Interpreter& interp, const ImmutableString& name, Valu
 		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access property of object!");
 		return;
 	}
-	if (properties.count(name))
-	{
-		properties.erase(name);
-		properties[name] = rhs;
-	}
-	else
-	{
-		properties[name] = rhs;
-	}
+	properties[name] = rhs;
 }
 void Object::set_property_raw(const ImmutableString& name, Value rhs)
 {
 	if (base_properties->count(name) == 0)
 		return;
 
-	if (properties.count(name))
-	{
-		properties.erase(name);
-		properties[name] = rhs;
-	}
-	else
-	{
-		properties[name] = rhs;
-	}
+	properties[name] = rhs;
 }
 
 Value Object::call_method(Interpreter& interp, const ImmutableString& name, std::vector<Value> &args)
@@ -90,9 +74,9 @@ Value Object::call_method(Interpreter& interp, const ImmutableString& name, std:
 //If it fails, it simply returns a nullptr w/o throwing a Runtime. Part of scope resolution of function calls.
 Function* Object::has_method(Interpreter& interp, const ImmutableString& name)
 {
-	if (base_funcs->count(name))
+	if (Function** ptr = base_funcs->lazy_at(name); ptr != nullptr)
 	{
-		return base_funcs->at(name);
+		return *ptr;
 	}
 	else if (mt && mt->metamethods.contains(name))
 	{
