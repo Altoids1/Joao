@@ -155,7 +155,7 @@ int main(int argc, char** argv)
 	Value v = interpreter.execute(parsed, jargs);
 	if (print_main_result)
 	{
-		std::cout << v.to_string();
+		std::cout << v.to_json();
 	}
 	if (print_execution_times)
 		std::cout << "Execution took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";
