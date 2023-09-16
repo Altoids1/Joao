@@ -1,7 +1,9 @@
 #pragma once
 
 //Most of the core libraries are included via a precompiled header, located elsewhere.
-
+#ifdef __INTELLISENSE__ // Usually, intellisense engines won't understand what Meson is doing and won't include the PCH itself.
+#include "pch/PrecompiledHeaders.h" // So, we're doing it here.
+#endif
 #ifdef __GNUG__
 #include <cstring>
 #include <cmath>
