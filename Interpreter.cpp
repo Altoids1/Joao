@@ -48,12 +48,16 @@ Value Interpreter::evaluate_expression(ASTNode* node) {
 
 void Interpreter::RuntimeError(ASTNode* a, const std::string& what)
 {
-	std::cout << "- - - - - - - - - - - - - - - -\n";
-	std::cout << "FATAL RUNTIME ERROR: " << what << "\n";
-
 	//Stack dump
-	if(objectscope.empty() || blockscope.empty()) // Can't stack dump if we never entered the program (a lack of a /main() function does this)
-		throw error::interpreter("Unknown runtime error, no stacktrace available!");
+	if(objectscope.empty() || blockscope.empty()) UNLIKELY {// Can't stack dump if we never entered the program (a lack of a /main() function does this)
+		if(a) // if we should have some data
+			throw error::interpreter("Unknown runtime error, no stacktrace available!");
+		//if we shouldn't (this is the path that no /main() gets you to)
+		
+		//NOTE: Although I want to point out that this shouldn't happen --
+		//      Parser should throw a fit about there being no main way before interpretation occurs!
+		exit(1);
+	}
 
 	std::string whatFunction;
 	if(objectscope.top()) // If we runtimed within a method

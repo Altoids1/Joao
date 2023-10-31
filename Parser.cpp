@@ -12,7 +12,10 @@
 
 Program Parser::parse() // This Parser is w/o question the hardest part of this to write.
 {
-	assert(tokens.size() > 0);
+	if(tokens.size() == 0) {
+		ParserError(nullptr,"Empty programs are not valid!");
+		return std::move(t_program);
+	}
 
 	std::vector<ClassDefinition*> classdef_list;
 	//Step 1. Generate the AST
@@ -222,7 +225,10 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	
 	t_program.definedObjTypes = std::move(uncooked_types); // They're cooked *at this point*, I will note
 	
-
+	//Check to make sure that main was defined
+	if(!t_program.definedFunctions.lazy_at("main")) {
+		ParserError(tokens[0],"/main() function was never defined!");
+	}
 	return;
 }
 
