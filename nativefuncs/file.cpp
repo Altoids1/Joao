@@ -64,7 +64,7 @@ ObjectType* Program::construct_file_library()
 	Returns a table with its array part filled with the lines of this file.
 	*/
 	APPENDMETHOD(__mt, "lines",
-	[](std::vector<Value> args, Object* obj)
+	[]([[maybe_unused]] std::vector<Value> args, Object* obj)
 	{
 		PolyTable& privates = obj->get_privates();
 		std::fstream* our_file = privates.lazy_at<std::fstream>("FSTREAM");
@@ -106,7 +106,7 @@ ObjectType* Program::construct_file_library()
 
 
 	APPENDMETHOD(__mt,"close",
-	[](std::vector<Value> args, Object* obj)
+	[]([[maybe_unused]] std::vector<Value> args, Object* obj)
 	{
 		PolyTable& privates = obj->get_privates();
 		std::fstream* our_file = privates.lazy_at<std::fstream>("FSTREAM");

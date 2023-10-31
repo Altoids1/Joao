@@ -7,7 +7,7 @@
 #define MATH_E 2.71828182845904523536
 #define PI 3.14159265358979323846
 
-#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , []([[maybe_unused]] Interpreter& interp, [[maybe_unused]] const std::vector<Value>& args)
 
 #define MAXMIN_ENUM(type,thebool) (static_cast<uint16_t>(type) | (static_cast<uint16_t>(thebool) << 8))
 
@@ -38,7 +38,7 @@ Value math::round(const std::vector<Value>& args)
 
 //A goofy alternative definition to resolve some awkwardness in how NativeFunctions are implemented.
 //FIXME: This is stupid.
-Value math::round_safe(Interpreter& interp, const std::vector<Value>& args)
+Value math::round_safe([[maybe_unused]] Interpreter& interp, const std::vector<Value>& args)
 {
 	return math::round(args);
 }

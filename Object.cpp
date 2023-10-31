@@ -2,32 +2,33 @@
 #include "Interpreter.h"
 #include "Parser.h"
 #include "Table.h"
+#include "Value.h"
 
-Value* Object::has_property(Interpreter& interp, const ImmutableString& name)
+Value* Object::has_property([[maybe_unused]] Interpreter& interp, const ImmutableString& name)
 {
-	if (properties.count(name))
-		return &(properties.at(name));
-	if (base_properties->count(name))
-		return &(base_properties->at(name));
-
-	return nullptr;
+	Value* ret;
+	if (ret = properties.lazy_at(name); ret != nullptr)
+		return ret;
+	return base_properties->lazy_at(name);
 }
 Value Object::get_property(Interpreter& interp, const ImmutableString& name)
 {
-	if (properties.count(name))
-		return properties.at(name);
-	if (base_properties->count(name))
-		return base_properties->at(name);
+	Value* ptr;
+	if (ptr = properties.lazy_at(name); ptr != nullptr)
+		return *ptr;
+	if (ptr = base_properties->lazy_at(name); ptr != nullptr)
+		return *ptr;
 	
 	interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access property of object!");
 	return Value();
 }
 Value Object::get_property_raw(const ImmutableString& name)
 {
-	if (properties.count(name))
-		return properties.at(name);
-	if (base_properties->count(name))
-		return base_properties->at(name);
+	Value* ptr;
+	if (ptr = properties.lazy_at(name); ptr != nullptr)
+		return *ptr;
+	if (ptr = base_properties->lazy_at(name); ptr != nullptr)
+		return *ptr;
 	return Value();
 }
 void Object::set_property(Interpreter& interp, const ImmutableString& name, Value rhs)
@@ -37,30 +38,14 @@ void Object::set_property(Interpreter& interp, const ImmutableString& name, Valu
 		interp.RuntimeError(nullptr, ErrorCode::BadMemberAccess, "Unable to access property of object!");
 		return;
 	}
-	if (properties.count(name))
-	{
-		properties.erase(name);
-		properties[name] = rhs;
-	}
-	else
-	{
-		properties[name] = rhs;
-	}
+	properties[name] = rhs;
 }
 void Object::set_property_raw(const ImmutableString& name, Value rhs)
 {
 	if (base_properties->count(name) == 0)
 		return;
 
-	if (properties.count(name))
-	{
-		properties.erase(name);
-		properties[name] = rhs;
-	}
-	else
-	{
-		properties[name] = rhs;
-	}
+	properties[name] = rhs;
 }
 
 Value Object::call_method(Interpreter& interp, const ImmutableString& name, std::vector<Value> &args)
@@ -87,11 +72,11 @@ Value Object::call_method(Interpreter& interp, const ImmutableString& name, std:
 }
 
 //If it fails, it simply returns a nullptr w/o throwing a Runtime. Part of scope resolution of function calls.
-Function* Object::has_method(Interpreter& interp, const ImmutableString& name)
+Function* Object::has_method([[maybe_unused]]  Interpreter& interp, const ImmutableString& name)
 {
-	if (base_funcs->count(name))
+	if (Function** ptr = base_funcs->lazy_at(name); ptr != nullptr)
 	{
-		return base_funcs->at(name);
+		return *ptr;
 	}
 	else if (mt && mt->metamethods.contains(name))
 	{
@@ -140,7 +125,7 @@ Value ObjectType::get_typeproperty(Interpreter& interp, const ImmutableString& s
 	return typeproperties.at(str);
 }
 
-Function* ObjectType::has_typemethod(Interpreter& interp, const ImmutableString& str, ASTNode* getter)
+Function* ObjectType::has_typemethod([[maybe_unused]] Interpreter& interp, const ImmutableString& str,[[maybe_unused]] ASTNode* getter)
 {
 	if (!typefuncs.count(str))
 	{
@@ -183,4 +168,41 @@ void ObjectType::set_typemethod(Parser& parse, std::string name, Function* f)
 void ObjectType::set_typemethod_raw(const ImmutableString& name, Function* f)
 {
 	typefuncs[name] = f;
+}
+
+std::string Object::to_json()  { 
+	std::string jsonOutput = "{";
+	jsonOutput.reserve(512); // I hereby promote you to StringBuilder
+	jsonOutput += math::concat("\"__TYPE__\":\"",object_type.data,"\"");
+	if(this->is_table()) {
+		const Table* self = static_cast<const Table*>(this);
+		jsonOutput += ",\"__TABLE__\":[[";
+		//first the array
+		if(!self->t_array.empty()) {
+			for(const Value& v : self->t_array) {
+				jsonOutput += v.to_json() + ",";
+			}
+			jsonOutput.pop_back(); // No trailing commas! :^)
+		}
+		jsonOutput += "],{";
+		//second, the hashtable portion
+		if(!self->t_hash.empty()) {
+			for(auto it = self->t_hash.begin(); it != self->t_hash.end(); ++it) {
+				//Mindlessly using a Value as a JSON member key may seem suspicious
+				//(since JSON member keys can *only* be strings)
+				//however, João tables may only have integers and strings as keys. This should be okay!
+				jsonOutput += math::concat("\"",it.key().to_string(),"\":",it.value().to_json(),",");
+			}
+			jsonOutput.pop_back(); // Delete the trailing comma :^)
+		}
+		jsonOutput += "}]";
+	}
+	for(auto it = base_properties->begin(); it != base_properties->end(); ++it) {
+		//Comma is placed at the front to avoid having a trailing comma.
+		//(we'll always need this first comma since the TYPE element always comes before this)
+		jsonOutput += math::concat(",\"",it.key().data,"\":",get_property_raw(it.key()).to_json());
+	}
+
+	jsonOutput += "}";
+	return jsonOutput;
 }

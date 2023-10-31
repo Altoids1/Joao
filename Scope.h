@@ -76,7 +76,7 @@ public:
 		return false;
 	}
 
-	void push(const std::string& name = "") // Add a new stack layer
+	void push() // Add a new stack layer
 	{
 		//std::cout << "Creating new scope layer called " << name << "...\n";
 		stack.push_front(Scopelet<_Ty>());

@@ -3,6 +3,7 @@
 #include "Interpreter.h"
 #include "Object.h"
 #include "Table.h"
+#include "Error.h"
 
 Interpreter::Interpreter()
 	:is_interactive(false)
@@ -45,49 +46,53 @@ Value Interpreter::evaluate_expression(ASTNode* node) {
 	return ret;
 }
 
-void Interpreter::RuntimeError(ASTNode* a, std::string what)
+void Interpreter::RuntimeError(ASTNode* a, const std::string& what)
 {
-	std::cout << "- - - - - - - - - - - - - - - -\n";
-	std::cout << "FATAL RUNTIME ERROR: " << what << "\n";
-
 	//Stack dump
-	if(objectscope.empty() || blockscope.empty()) // Can't stack dump if we never entered the program (a lack of a /main() function does this)
-	{
-		return;
+	if(objectscope.empty() || blockscope.empty()) UNLIKELY {// Can't stack dump if we never entered the program (a lack of a /main() function does this)
+		if(a) // if we should have some data
+			throw error::interpreter("Unknown runtime error, no stacktrace available!");
+		//if we shouldn't (this is the path that no /main() gets you to)
+		
+		//NOTE: Although I want to point out that this shouldn't happen --
+		//      Parser should throw a fit about there being no main way before interpretation occurs!
+		exit(1);
 	}
-	std::string whatfunk;
+
+	std::string whatFunction;
 	if(objectscope.top()) // If we runtimed within a method
 	{
-		whatfunk = "method of object of type " + objectscope.top()->object_type.to_string();
+		whatFunction = "method of object of type " + objectscope.top()->object_type.to_string();
 	}
 	else
 	{
-		whatfunk = "global function";
+		whatFunction = "global function";
 	}
 	
-	std::cout << "Line number: ";
+	std::string lineNumber;
 	if(a && a->my_line)
-	{
-		std::cout << std::to_string(a->my_line);
-	}
+		lineNumber = std::to_string(a->my_line);
 	else
-	{
-		std::cout << "Unknown!"; // Eventually things should be configured to never do this
-	}
-	
-	std::cout << "\nRuntime in " << blockscope.top().get_back_name().to_string() << ", a " << whatfunk << std::endl;
+		lineNumber = "Unknown!"; // Eventually things should be configured to never do this
+	std::string errorMessage = "\nRuntime in " + blockscope.top().get_back_name().to_string() + ", a " + whatFunction + ", Line number: " + lineNumber + "\n";
+	errorMessage += what;
+#ifdef JOAO_SAFE
+	throw error::interpreter(errorMessage);
+#else
+	std::cout << errorMessage;
 	if(!is_interactive)
 		exit(1);
+#endif
 }
 
-void Interpreter::RuntimeError(ASTNode* node, ErrorCode err,const std::string& what)
+void Interpreter::RuntimeError([[maybe_unused]] ASTNode* node, ErrorCode err,const std::string& what)
 {
 	error = Value(prog->definedObjTypes["/error"]->makeObject(*this, {Value(static_cast<int>(err)),Value(what) }));
 	//assert(error.t_value.as_object_ptr->get_property_raw("what").t_vType == Value::vType::String);
 	return;
 }
 
-void Interpreter::RuntimeError(ASTNode* node, Value& err_val)
+void Interpreter::RuntimeError([[maybe_unused]] ASTNode* node, Value& err_val)
 {
 	error = err_val;
 	return;
@@ -107,7 +112,7 @@ void Interpreter::UncaughtRuntime(const Value& err)
 #endif
 }
 
-void Interpreter::init_var(const ImmutableString& varname, const Value& val, ASTNode* setter)
+void Interpreter::init_var(const ImmutableString& varname, const Value& val, [[maybe_unused]] ASTNode* setter)
 {
 #ifdef JOAO_SAFE
 	++value_init_count;
@@ -333,7 +338,7 @@ Value Interpreter::makeBaseTable()
 	return Value(prog->definedObjTypes["/table"]->makeObject(*this, {}));
 }
 
-Value Interpreter::makeBaseTable( std::vector<Value> elements, Hashtable<std::string,Value> entries, ASTNode* maker = nullptr)
+Value Interpreter::makeBaseTable( std::vector<Value> elements, Hashtable<std::string,Value> entries, [[maybe_unused]] ASTNode* maker = nullptr)
 {
 	Object* objdesk = prog->definedObjTypes["/table"]->makeObject(*this,{});
 	

@@ -1,0 +1,35 @@
+/food
+{
+    Value taste = "Good";
+    Value smell = "Bad";
+}
+
+/table/foo {
+    Value bar = "foo";
+}
+
+/main()
+{
+	if(json(/food/New()) != "{\"__TYPE__\":\"/food\",\"taste\":\"Good\",\"smell\":\"Bad\"}") {
+        throw /error/New(1,"Unable to jsonify base object properties!");
+    }
+    Object foodObj = /food/New();
+    foodObj.taste = "Bad";
+    if(json(/food/New()) != "{\"__TYPE__\":\"/food\",\"taste\":\"Bad\",\"smell\":\"Bad\"}") {
+        throw /error/New(1,"Unable to jsonify non-base object properties!");
+    }
+    Object tbl = {
+        1,2,3,4,5,6,7,8,9,10
+    };
+    if(json(tbl) != "{\"__TYPE__\":\"/table\",\"__TABLE__\":[[1,2,3,4,5,6,7,8,9,10],{}]}") {
+        throw /error/New(1,"Unable to jsonify simple table, got this instead: " .. json(tbl));
+    }
+    Object weirdo = /table/foo/New();
+    for(Value i = 0; i < 10; i += 1) {
+        weirdo[i] = i+1;
+    }
+    weirdo[27] = 28;
+    if(json(weirdo) != "{\"__TYPE__\":\"/table/foo\",\"__TABLE__\":[[1,2,3,4,5,6,7,8,9,10],{\"27\":28}],\"bar\":\"foo\"}") {
+        throw /error/New(1,"Unable to jsonify hybridized object-table, got this instead: " .. json(weirdo));
+    }
+}

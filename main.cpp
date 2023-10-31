@@ -1,7 +1,7 @@
 /*
 GOAL:
 
-Create an interpreter which can run "João," a simple OOP language made to use a directory-oriented object tree
+Create an interpreter which can run "Joï¿½o," a simple OOP language made to use a directory-oriented object tree
 
 Somewhat dynamically typed but lets not get too angsty about it
 
@@ -15,6 +15,13 @@ Somewhat dynamically typed but lets not get too angsty about it
 #include "Object.h"
 #include "Parser.h"
 #include "Args.h"
+#ifdef __linux__
+namespace Daemon
+{
+	void initialize(); // Forward-declare for main.cpp specifically
+	void stop();
+}
+#endif
 
 #include <chrono>
 
@@ -57,6 +64,39 @@ int main(int argc, char** argv)
 	{
 		Args::print_help();
 		exit(0);
+	}
+	if(has(flags,Args::Flags::InitializeDaemon))
+	{
+#ifdef __linux__
+	#ifdef JOAO_SAFE
+		//FIXME: Make this case-insensitive
+		if(!filestr.size() || filestr == "start")
+		{
+			Daemon::initialize();
+		}
+		else if (filestr == "stop")
+		{
+			Daemon::stop();
+		}
+		else if (filestr == "restart")
+		{
+			Daemon::stop();
+			Daemon::initialize();
+		}
+		else
+		{
+			std::cout << "Unrecognized daemon directive '" << filestr << "'\n";
+			exit(EXIT_FAILURE);
+		}
+		exit(EXIT_SUCCESS);
+	#else
+		std::cout << "Joao can only run as a daemon when compiled in Safe Mode.\n";
+		exit(EXIT_FAILURE);
+	#endif
+#else
+		std::cout << "Opening as a daemon is not available on this platform!\n";
+		exit(EXIT_FAILURE);
+#endif
 	}
 
 	if (has(flags, Args::Flags::Main))
@@ -115,7 +155,7 @@ int main(int argc, char** argv)
 	Value v = interpreter.execute(parsed, jargs);
 	if (print_main_result)
 	{
-		std::cout << v.to_string();
+		std::cout << v.to_json();
 	}
 	if (print_execution_times)
 		std::cout << "Execution took " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - t1).count() << " seconds.\n";

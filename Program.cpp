@@ -2,7 +2,7 @@
 #include "Object.h"
 #include "AST.hpp"
 
-#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , [](Interpreter& interp, const std::vector<Value>& args)
+#define NATIVE_FUNC(name) definedFunctions[ name ] = static_cast<Function*>(new NativeFunction( name , []([[maybe_unused]] Interpreter& interp, [[maybe_unused]] const std::vector<Value>& args)
 
 HashTable<std::string,ObjectType*> Program::construct_natives()
 {

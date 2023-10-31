@@ -42,6 +42,11 @@ std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv, int& f
 			v.push_back(Flags::Executetime);
 			continue;
 		}
+		if (_strcmpi(argv[i], "-d") == 0)
+		{
+			v.push_back(Flags::InitializeDaemon);
+			continue;
+		}
 
 		//If this isn't any of these argless flags then I guess it's the file
 		file_start = i;
@@ -61,8 +66,11 @@ void Args::print_help()
 	std::cout << "  -v\tshow version information\n";
 	std::cout << "  -h\tshow help dialog\n";
 	std::cout << "  -i\tenter interactive mode\n";
-	std::cout << "  -m\tprints the output of /main() into stdout after program completion\n";
+	std::cout << "  -m\tprints the output of /main() into stdout after program completion, in JSON format.\n";
 	std::cout << "  -e\tprints the execution time. On by default when compiled with _DEBUG.\n";
+#if defined(__linux__) && defined(JOAO_SAFE)
+	std::cout << "  -d\tInitializes Joao as a daemon, instead of executing a script.\n";
+#endif
 }
 
 static Program interactive_default_program() {

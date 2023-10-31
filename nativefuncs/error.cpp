@@ -49,7 +49,7 @@ ObjectType* Program::construct_error_library()
 	});
 
 	NATIVEMETHOD(error,"#tostring",
-	[](const std::vector<Value>& args, Object* obj) {
+	[]([[maybe_unused]] const std::vector<Value>& args, Object* obj) {
 		return obj->get_property_raw("what");
 	});
 

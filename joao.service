@@ -1,0 +1,13 @@
+[Unit]
+Description=Joao operated as a service, along a socket.
+Alias=joao
+Documentation=https://altoids1.github.io/Joao/
+
+[Service]
+Type=forking
+ExecStart=joao -d start
+ExecReload=joao -d reload
+ExecStop=joao -d stop
+
+[Install]
+WantedBy=multi-user.target

@@ -40,6 +40,16 @@ namespace error
 		explicit parser(const char* _Message) : _Mybase(_Message) {}
 	};
 
+	class interpreter : public fatal
+	{
+	public:
+		using _Mybase = fatal;
+
+		explicit interpreter(const std::string& _Message) : _Mybase(_Message.c_str()) {}
+
+		explicit interpreter(const char* _Message) : _Mybase(_Message) {}
+	};
+
 	/* MALICIOUS ERRORS */
 	// Abstract class that all errors that are (probably!) the result of something bad the user did.
 	class malicious : public std::runtime_error

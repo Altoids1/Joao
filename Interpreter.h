@@ -80,7 +80,7 @@ public:
 	}
 	
 	//Treated as a special, fatal error.
-	void RuntimeError(ASTNode*, std::string);
+	void RuntimeError(ASTNode*, const std::string&);
 
 	//Treated as a runtime which can be resumed from.
 	void RuntimeError(ASTNode* node, ErrorCode err, const std::string&);
@@ -113,7 +113,7 @@ public:
 	}
 
 	//Like get_global but returns the pointer instead, and quietly allocates a new global when you ask for one it hasn't seen before.
-	Value* has_global(const ImmutableString& name, ASTNode* getter)
+	Value* has_global(const ImmutableString& name, [[maybe_unused]] ASTNode* getter)
 	{
 		if (!globalscope.table.count(name))
 		{
@@ -133,14 +133,18 @@ public:
 			
 		return globalscope.table.at(name);
 	}
-	void set_global(const ImmutableString& name, Value& val, ASTNode* setter)
+	void set_global(const ImmutableString& name, Value& val, [[maybe_unused]] ASTNode* setter)
 	{
+#ifdef JOAO_SAFE
+		if(!globalscope.table.contains(name)) {
+			++value_init_count;
+			if (value_init_count > MAX_VARIABLES)
+			{
+				throw error::max_variables(std::string("Program reached the limit of ") + std::to_string(MAX_VARIABLES) + std::string("instantiated variables!"));
+			}
+		}
+#endif
 		globalscope.table[name] = Value(val);
-	}
-
-	void push_block(const char* dummy)
-	{
-		blockscope.top().push();
 	}
 	void push_block()
 	{

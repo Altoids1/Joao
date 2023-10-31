@@ -22,7 +22,7 @@ namespace string
 namespace math
 {
 	Value round(const std::vector<Value>&);
-	Value round_safe(Interpreter& interp, const std::vector<Value>&);
+	Value round_safe([[maybe_unused]] Interpreter& interp, const std::vector<Value>&);
 	//A math-"library" wrapper around whatever builtin/fallback is actually happening in this context.
 	constexpr size_t popcount(size_t x)
 	{
@@ -80,5 +80,16 @@ namespace math
 		//Assumes x != 0
 		return 1 << (size_t_max_shift - std::countl_zero(x));
 #endif
+	}
+	template<typename... Args>
+	//FIXME: Allow this to take a StringBuilder argument :3
+	std::string concat(Args&&... args)
+	{
+		#ifndef __cpp_fold_expressions
+			#error "The C++17 Fold Expressions feature is required for compilation."
+		#endif
+		std::string result;
+		result.reserve(512);
+		return (result + ... + args);
 	}
 }

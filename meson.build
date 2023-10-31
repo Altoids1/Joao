@@ -32,6 +32,9 @@ if build_machine.system() == 'windows'
 	windows = import('windows')
 	src += windows.compile_resources('./Joao.rc')
 endif
+if build_machine.system() == 'linux'
+	src += 'Daemon.cpp'
+endif
 
 version_parts = VERSION.split('.')
 configure_file(input : 'config.h.in', output : 'config.h',
@@ -45,10 +48,11 @@ configure_file(input : 'config.h.in', output : 'config.h',
 if build_machine.system() == 'emscripten'
 	exe =  executable('joao', nativefuncs + src,
 		cpp_args : [],
-		link_args : ['-sASYNCIFY']
+		link_args : ['-sASYNCIFY'],
+		cpp_pch : 'pch/PrecompiledHeaders.h'
 	)
 else
-	exe = executable('joao', nativefuncs + src)
+	exe = executable('joao', nativefuncs + src, cpp_pch : 'pch/PrecompiledHeaders.h')
 endif
 
 # Diagnostic tests
@@ -71,6 +75,7 @@ diagnostics = [ #Meson has a philosophical disagreement with procedurally genera
 	'try_catch',
 	'break',
 	'constexpr',
+	'to_json',
 ]
 foreach diag : diagnostics
 	str = './testprograms/tests/mustpass/@0@.jao'.format(diag)

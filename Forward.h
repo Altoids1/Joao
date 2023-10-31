@@ -1,22 +1,9 @@
 #pragma once
 
-#ifndef JOAO_NO_INCLUDE_STD // If you say so!
-//Core Libraries
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <unordered_set>
-#include <vector>
-#include <forward_list>
-#include <list>
-#include <stack>
-#include <queue>
-#include <deque>
-#include <initializer_list>
-#include <functional>
-#include <type_traits>
-#include <utility>
-#include <variant>
+//Most of the core libraries are included via a precompiled header, located elsewhere.
+#ifdef __INTELLISENSE__ // Usually, intellisense engines won't understand what Meson is doing and won't include the PCH itself.
+#include "pch/PrecompiledHeaders.h" // So, we're doing it here.
+#endif
 #ifdef __GNUG__
 #include <cstring>
 #include <cmath>
@@ -24,7 +11,6 @@
 #endif
 #ifdef __cpp_lib_bitops
 #include <bit>
-#endif
 #endif
 
 #if __cplusplus > 202000L
@@ -74,7 +60,7 @@
 //#define JOAO_SAFE // Uncomment if you want Joao to be extremely suspicious of its code. Disables OS-interfacing libraries and enables throttling.
 #ifdef JOAO_SAFE
 #define MAX_STATEMENTS 10000 // The maximum number of statements that will be executed in JOAO_SAFE mode.
-#define MAX_VARIABLES 1024 // How many variables Joao is allowed to use, as a hard limit. Includes indices.
+#define MAX_VARIABLES 2048 // How many variables Joao is allowed to use, as a hard limit. Includes indices.
 #define MAX_RECURSION 64 // The maximum depth of recursion of Joao functions.
 #define MAX_REPLACEMENTS_ALLOWED 256 // The maximum number of replacements that /replace() can carry out.
 #endif

@@ -140,8 +140,8 @@ public:
 	Object(const ImmutableString& objty, Hashtable<ImmutableString, Value>* puh, Hashtable<ImmutableString, Function*>* fuh, Metatable* m = nullptr)
 		:base_properties(puh)
 		,base_funcs(fuh)
-		,object_type(objty)
 		,mt(m)
+		,object_type(objty)
 	{
 
 	}
@@ -158,8 +158,11 @@ public:
 
 		return st + "}";
 	}
+
+	// you ever work on a project for so long that you start to change your mind about its naming conventions
+	std::string to_json();
 	
-	bool virtual is_table() { return false; }
+	bool virtual is_table() const { return false; }
 
 	friend class ObjectType;
 };
@@ -207,7 +210,7 @@ public:
 
 	Value get_typeproperty(Interpreter&, const ImmutableString&, ASTNode*);
 
-	Value* has_typeproperty(Interpreter& interp, const ImmutableString& str, ASTNode* getter)
+	Value* has_typeproperty([[maybe_unused]] Interpreter& interp, const ImmutableString& str, [[maybe_unused]] ASTNode* getter)
 	{
 		if (!typeproperties.count(str))
 		{

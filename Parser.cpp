@@ -12,7 +12,10 @@
 
 Program Parser::parse() // This Parser is w/o question the hardest part of this to write.
 {
-	assert(tokens.size() > 0);
+	if(tokens.size() == 0) {
+		ParserError(nullptr,"Empty programs are not valid!");
+		return std::move(t_program);
+	}
 
 	std::vector<ClassDefinition*> classdef_list;
 	//Step 1. Generate the AST
@@ -97,7 +100,7 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 #ifdef LOUD_TOKENHEADER
 			std::cout << "Classdefinition began read at tokenheader " << std::to_string(tokenheader) << std::endl;
 #endif
-			std::vector<LocalAssignmentStatement*> lasses = readClassDef(dir_name, tokenheader, static_cast<int>(tokens.size() - 1));
+			std::vector<LocalAssignmentStatement*> lasses = readClassDef(tokenheader, static_cast<int>(tokens.size() - 1));
 
 			classdef_list.push_back(new ClassDefinition(dir_name, lasses, t->line));
 
@@ -222,7 +225,10 @@ void Parser::generate_object_tree(std::vector<ClassDefinition*>& cdefs)
 	
 	t_program.definedObjTypes = std::move(uncooked_types); // They're cooked *at this point*, I will note
 	
-
+	//Check to make sure that main was defined
+	if(!t_program.definedFunctions.lazy_at("main")) {
+		ParserError(tokens[0],"/main() function was never defined!");
+	}
 	return;
 }
 
@@ -1213,7 +1219,7 @@ BLOCK_RETURN_ASTS:
 	return ASTs;
 }
 
-std::vector<LocalAssignmentStatement*> Parser::readClassDef(std::string name, int here, int there)
+std::vector<LocalAssignmentStatement*> Parser::readClassDef(int here, int there)
 {
 	Token* t = tokens[here];
 	consume_open_brace(here);

@@ -11,7 +11,7 @@ Access is guaranteed to never require iterating over more than the set of keys w
 Further, no more than {$collision_block_percent}% of the elements will ever be collided elements, putting a hard cap on access/removal times,
 even for very large HashTables.
 
-This is written somewhat generically, but I did write this for João specifically, so there is some idiolectic functionality here.
+This is written somewhat generically, but I did write this for Joï¿½o specifically, so there is some idiolectic functionality here.
 */
 template <typename Key, typename Value>
 class HashTable
@@ -429,6 +429,7 @@ public:
     size_t bucket_count() const { return total_capacity;}
     constexpr float max_load_factor() const { return 1.0;}
     size_t size() const { return used_bucket_count;}
+    bool empty() const { return used_bucket_count == 0;}
     bool contains(const Key& key) const { return at_bucket(key) != nullptr;}
     size_t count(const Key& key) const { return contains(key);}
 
