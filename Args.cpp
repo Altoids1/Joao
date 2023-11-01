@@ -6,6 +6,7 @@
 #include "FailureOr.h"
 #include "Terminal.h"
 #include "Object.h"
+#include "Error.h"
 
 #include <sstream>
 #include <exception>
@@ -103,7 +104,12 @@ static std::optional<Value> try_run_expression(Program& prog, std::string&& expr
 	if(scn.is_malformed)
 		return {};
 	Parser prs(scn);
-	ASTNode* ptr = prs.parse_repl_expression();
+	ASTNode* ptr;
+	try {
+		ptr = prs.parse_repl_expression();
+	} catch (error::parser& err) {
+		return {};
+	}
 	if(ptr == nullptr)
 		return {};
 	Interpreter interp(prog,true);

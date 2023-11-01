@@ -698,14 +698,15 @@ public: // Parser doesn't have much of an API but it does have something
 		if (t)
 			std::cerr << t->dump();
 		std::cerr << std::endl; // This is an emscripten thing. We need to make sure this is flushed.
-		if (!is_interactive)
-#ifdef JOAO_SAFE
-			throw error::parser(what);
-#else
-			exit(1);
-#endif
-		else
+		if(is_interactive) {
 			t_program.is_malformed = true;
+			throw error::parser(what);
+		}
+#ifdef JOAO_SAFE
+		throw error::parser(what);
+#else
+		exit(1);
+#endif
 	}
 	Program parse();
 
