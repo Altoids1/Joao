@@ -1,9 +1,9 @@
 #pragma once
 
 #include "AST.h"
-
 #include "Scanner.h"
 #include "Program.h"
+#include "Terminal.h"
 
 class Parser
 {
@@ -687,20 +687,17 @@ public: // Parser doesn't have much of an API but it does have something
 			delete t_ptr;
 		}
 	}
-	void ParserError()
-	{
-		std::cout << "PARSER_ERROR: UNKNOWN!";
-		exit(1);
-	}
 	void ParserError(Token* t, std::string what)
 	{
 		//This is just a basic setup while everything else is fleshed out.
-		std::cout << "Parser Error: " << what << "\n";
+		Terminal::SetColor(std::cerr, Terminal::Color::Red);
+		Terminal::SetBold(std::cerr, true);
+		std::cerr << "Parser Error:";
+		Terminal::ClearFormatting(std::cerr);
+		std::cerr << what << "\n";
 		if (t)
-			std::cout << t->dump();
-		else
-			std::cout << "Parser Error Error: No Token pointer provided to ParserError()!";
-		std::cout << std::endl; // This is an emscripten thing. We need to make sure this is flushed.
+			std::cerr << t->dump();
+		std::cerr << std::endl; // This is an emscripten thing. We need to make sure this is flushed.
 		if (!is_interactive)
 #ifdef JOAO_SAFE
 			throw error::parser(what);
@@ -713,8 +710,7 @@ public: // Parser doesn't have much of an API but it does have something
 	Program parse();
 
 	//Used for interactive mode and other similar contexts.
-	//TODO: Parser probably should know about the metadata within Program during this.
-	ASTNode* parse_expression();
+	ASTNode* parse_repl_expression();
 	
 	//Allows outside programs to include extra "native" types.
 	void IncludeAlienType(ObjectType* ot);

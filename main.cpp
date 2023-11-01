@@ -15,6 +15,9 @@ Somewhat dynamically typed but lets not get too angsty about it
 #include "Object.h"
 #include "Parser.h"
 #include "Args.h"
+#include "Terminal.h"
+#include <chrono>
+
 #ifdef __linux__
 namespace Daemon
 {
@@ -23,7 +26,7 @@ namespace Daemon
 }
 #endif
 
-#include <chrono>
+
 
 template <typename Ty_>
 bool has(const std::vector<Ty_>& v, const Ty_& value)
@@ -50,9 +53,11 @@ int main(int argc, char** argv)
 #else
 	bool print_execution_times = false;
 #endif
+	if(has(flags, Args::Flags::DisableFormatting)) {
+		Terminal::disableFormatting = true;
+	}
 	if ((flags.empty() && filestr.empty()) || has(flags,Args::Flags::Interactive)) 
 	{
-		Args::print_version();
 		Args::interactive_mode();
 		exit(0);
 	}

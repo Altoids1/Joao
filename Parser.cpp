@@ -1274,7 +1274,7 @@ READ_CLASSDEF_RETURN_ASTS:
 }
 
 //This pointer has to be cleaned up by the caller when they're done with it.
-ASTNode* Parser::parse_expression() {
+ASTNode* Parser::parse_repl_expression() {
 	ASTNode* ret = readBinExp(Scanner::OperationPrecedence::Logical,0,tokens.size()-1);
 	if(t_program.is_malformed)
 		return nullptr;

@@ -4,6 +4,7 @@
 #include "Object.h"
 #include "Table.h"
 #include "Error.h"
+#include "Terminal.h"
 
 Interpreter::Interpreter()
 	:is_interactive(false)
@@ -74,12 +75,15 @@ void Interpreter::RuntimeError(ASTNode* a, const std::string& what)
 		lineNumber = std::to_string(a->my_line);
 	else
 		lineNumber = "Unknown!"; // Eventually things should be configured to never do this
-	std::string errorMessage = "\nRuntime in " + blockscope.top().get_back_name().to_string() + ", a " + whatFunction + ", Line number: " + lineNumber + "\n";
-	errorMessage += what;
+	std::string errorHeader = "\nRuntime in " + blockscope.top().get_back_name().to_string() + ", a " + whatFunction + ", Line number: " + lineNumber + "\n";
 #ifdef JOAO_SAFE
-	throw error::interpreter(errorMessage);
+	throw error::interpreter(errorHeader + what);
 #else
-	std::cout << errorMessage;
+	Terminal::SetColor(std::cerr,Terminal::Color::Red);
+	Terminal::SetBold(std::cerr,true);
+	std::cerr << errorHeader;
+	Terminal::ClearFormatting(std::cerr);
+	std::cerr << what;
 	if(!is_interactive)
 		exit(1);
 #endif
@@ -99,7 +103,10 @@ void Interpreter::RuntimeError([[maybe_unused]] ASTNode* node, Value& err_val)
 }
 void Interpreter::UncaughtRuntime(const Value& err)
 {
-	std::cout << *(err.t_value.as_object_ptr->get_property(*this, "what").t_value.as_string_ptr);
+	if(err.t_vType != Value::vType::Object) UNLIKELY {
+		exit(-(1 << 16));
+	}
+	std::cerr << *(err.t_value.as_object_ptr->get_property(*this, "what").t_value.as_string_ptr);
 #ifdef JOAO_SAFE
 	throw err;
 #else

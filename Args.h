@@ -11,7 +11,8 @@ namespace Args
 		Help,
 		Main,
 		Executetime,
-		InitializeDaemon
+		InitializeDaemon,
+		DisableFormatting
 	};
 
 	//Returns the string which is the actual filename.

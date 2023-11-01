@@ -72,12 +72,6 @@ public:
 	Value makeBaseTable();
 	//Constructs an anonymous table with no derived classes and returns it.
 	Value makeBaseTable( std::vector<Value>, Hashtable<std::string,Value>, ASTNode*);
-
-	void RuntimeError()
-	{
-		std::cout << "RUNTIME_ERROR: UNKNOWN!";
-		exit(1);
-	}
 	
 	//Treated as a special, fatal error.
 	void RuntimeError(ASTNode*, const std::string&);

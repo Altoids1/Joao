@@ -17,6 +17,7 @@ src = [
 	'Program.cpp',
 	'Scanner.cpp',
 	'Table.cpp',
+	'Terminal.cpp',
 	'Value.cpp',
 ]
 

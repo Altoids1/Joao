@@ -4,6 +4,8 @@
 #include "Parser.h"
 #include "Interpreter.h"
 #include "FailureOr.h"
+#include "Terminal.h"
+#include "Object.h"
 
 #include <sstream>
 #include <exception>
@@ -47,6 +49,11 @@ std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv, int& f
 			v.push_back(Flags::InitializeDaemon);
 			continue;
 		}
+		if (_strcmpi(argv[i], "-f") == 0)
+		{
+			v.push_back(Flags::DisableFormatting);
+			continue;
+		}
 
 		//If this isn't any of these argless flags then I guess it's the file
 		file_start = i;
@@ -57,7 +64,7 @@ std::string Args::read_args(std::vector<Flags>& v, int argc, char** argv, int& f
 
 void Args::print_version()
 {
-	std::cout << "Joao v" << VERSION_STRING <<"\tCopyright (C) 2021 Altoids1 (mom-puter@hotmail.com)\n";
+	std::cout << "Joao v" << VERSION_STRING <<"\tCopyright (C) 2021-2023 Altoids1 (mom-puter@hotmail.com)\n";
 }
 void Args::print_help()
 {
@@ -71,11 +78,13 @@ void Args::print_help()
 #if defined(__linux__) && defined(JOAO_SAFE)
 	std::cout << "  -d\tInitializes Joao as a daemon, instead of executing a script.\n";
 #endif
+	std::cout << "  -f\tDisables colour (and other formatting) when emitting errors or messages.\n";
+}
 }
 
 static Program interactive_default_program() {
 	std::stringstream dummy_code;
-	dummy_code << "/main(){return 0;}/quit(){ throw /error/New(1,\"Calling quit() in this way is not yet implemented!\");}";
+	dummy_code << "/main(){return 0;}/quit(){ throw /error/New(0,\"REPL exited via quit() call.\");}";
 	Scanner scn;
 	scn.scan(dummy_code);
 	if(scn.is_malformed)
@@ -87,21 +96,35 @@ static Program interactive_default_program() {
 	return ret;
 } 
 
-static FailureOr try_run_expression(Program& prog, std::string&& expr_str) {
+static std::optional<Value> try_run_expression(Program& prog, std::string&& expr_str) {
 	std::stringstream expr_ss(expr_str);
 	Scanner scn(true);
 	scn.scan(expr_ss);
 	if(scn.is_malformed)
-		return FailureOr(ErrorCode::Unknown,"Scanning failed.");
+		return {};
 	Parser prs(scn);
-	ASTNode* ptr = prs.parse_expression();
+	ASTNode* ptr = prs.parse_repl_expression();
 	if(ptr == nullptr)
-		return FailureOr(ErrorCode::Unknown,"Parsing failed.");
+		return {};
 	Interpreter interp(prog,true);
 	Value ret = interp.evaluate_expression(ptr);
 	delete ptr; // FIXME: be RAII about this, come on.
-	if(interp.error)
-		return FailureOr(std::move(interp.error));
+	if(interp.error) {
+		//In this case, we have to display this error value manually.
+		if(interp.error.t_vType == Value::vType::Object) {
+			Object* obj = interp.error.t_value.as_object_ptr;
+			if(Value* whatPtr = obj->has_property(interp,"what"); whatPtr != nullptr) {
+				Terminal::SetColor(std::cout, Terminal::Color::Red);
+				std::cout << whatPtr->to_string() << '\n';
+				Terminal::ClearFormatting(std::cout);
+				return {};
+			}
+		}
+		Terminal::SetColor(std::cout, Terminal::Color::Red);
+		std::cout << interp.error.to_string();
+		Terminal::ClearFormatting(std::cout);
+		return {};
+	}
 	return ret;
 }
 
@@ -143,20 +166,21 @@ void Args::interactive_mode()
 	Program prog = interactive_default_program();
 	while (true)
 	{
+		Terminal::SetColor(std::cout,Terminal::Color::Red);
 		std::cout << "> ";
+		Terminal::SetColor(std::cout,Terminal::Color::RESET);
 		std::string input;
 #ifdef __EMSCRIPTEN__ // Explanation at the top of detail_get_line()'s def/impl.
 		detail_get_line(input);
 #else
 		std::getline(std::cin, input);
 #endif
-
 		if(input.empty())
 			continue;
 		if(input == "quit()") // FIXME: support quit() more generically
 			return;
-		FailureOr result = try_run_expression(prog, std::move(input));
-		if(!result.didError)
-			std::cout << result.must_get().to_string() << std::endl;
+		auto result = try_run_expression(prog, std::move(input));
+		if(result)
+			std::cout << result.value().to_string() << std::endl;
 	}
 }
