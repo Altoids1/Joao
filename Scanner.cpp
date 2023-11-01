@@ -483,7 +483,9 @@ void Scanner::scan(std::istream& ifst)
 			includedfile.open(strfile);
 			if (!includedfile.good())
 			{
-				std::cout << "Unable to open file " << strfile << "!\n";
+				Terminal::SetColor(std::cerr,Terminal::Color::Red);
+				std::cerr << "Unable to open file " << strfile << "!\n";
+				Terminal::SetColor(std::cerr,Terminal::Color::RESET);
 				exit(1);
 			}
 			

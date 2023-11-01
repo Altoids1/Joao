@@ -6,6 +6,7 @@
 #include "Directory.h"
 #include "ImmutableString.h"
 #include "Error.h"
+#include "Terminal.h"
 
 #define NAME_CONST_METHODS(the_thing) virtual cEnum class_enum() const override { return cEnum :: the_thing; } \
 						  virtual std::string class_name() const override { return #the_thing; }
@@ -548,31 +549,30 @@ class Scanner
 
 	void ScannerError(unsigned int column_num = 0, ScanError what = ScanError::Unknown)
 	{
-		std::string msg = "";
-
-		unsigned int spaces = (column_num) ? (column_num - 1) : 0;
-		std::string squiggly = std::string(spaces, ' ') + std::string("^");;  // A string to print under a print-out of the line we're looking at,
-		//which points to the offending character.
-
+		Terminal::SetColor(std::cerr, Terminal::Color::Red);
+		Terminal::SetBold(std::cerr, true);
+		std::cerr << "Scanner Error: ";
+		Terminal::ClearFormatting(std::cerr);
+		std::string msg;
 		switch (what)
 		{
 		case(ScanError::UnterminatedString):
-			msg =  "SCANNER_ERROR: Unterminated String!";
+			msg = "Unterminated String!";
 			break;
 		case(ScanError::UnterminatedLongComment):
-			msg = "SCANNER_ERROR: Unterminated long comment!";
+			msg = "Unterminated long comment!";
 			break;
 		case(ScanError::UnknownCharacter):
-			msg = "SCANNER_ERROR: Unknown character!\nCharacter is: " + std::to_string(int(line[column_num]));
+			msg = "Unknown, unexpected, or unsupported character! (Character code: " + std::to_string(int(line[column_num])) + ")";
 			break;
 		case(ScanError::MalformedNumber):
-			msg = "SCANNER_ERROR: Malformed Number!";
+			msg = "Malformed Number!";
 			break;
 		case(ScanError::MalformedString):
-			msg = "SCANNER_ERROR: Malformed String!";
+			msg = "Malformed String!";
 			break;
 		case(ScanError::MalformedLongComment):
-			msg = "SCANNER_ERROR: Long comments cannot start nor end on lines containing functional code!";
+			msg = "Long comments cannot start nor end on lines containing functional code!";
 			/*
 			Picky? Yes.
 
@@ -581,23 +581,26 @@ class Scanner
 			*/
 			break;
 		case(ScanError::MalformedDirectory):
-			msg = "SCANNER_ERROR: Malformed Directory!";
+			msg = "Malformed Directory!";
 			break;
 		case(ScanError::BadDaddy):
-			msg = "SCANNER_ERROR: Improper Parent Access!"; // don't you access your daddy like that
+			msg = "Improper Parent Access!"; // don't you access your daddy like that
 			break;
 		case(ScanError::BadGrandpa):
-			msg = "SCANNER_ERROR: Improper Grandparent Access!";
+			msg = "Improper Grandparent Access!";
 			break;
 		case(ScanError::SwappedEqOp):
-			msg = "SCANNER_ERROR: Improper comparison operation! Did you mean " + std::string({line[column_num], line[column_num-1]}) + "?";
+			msg = "Improper comparison operation! Did you mean " + std::string({line[column_num], line[column_num-1]}) + "?";
 			break;
 		default:
 		case(ScanError::Unknown):
-			std::cout << "SCANNER_ERROR: UNKNOWN!"; // This is an error at printing an error. So meta!
+			std::cerr << "UNKNOWN!"; // This is an error at printing an error. So meta!
 			exit(1);
 		}
-
+		unsigned int spaces = (column_num) ? (column_num - 1) : 0;
+		std::string squiggly = std::string(spaces, ' ') + std::string("^");;
+		//          ^ this is to help place a little caret to point at the offending token.
+		// TODO: Add this sort of caret-ing to Parser errors, as well :)
 		std::cout << msg << std::endl << string::replace_all(line,'\t',' ') << std::endl << squiggly << std::endl;
 		if (!is_interactive)
 #ifdef JOAO_SAFE

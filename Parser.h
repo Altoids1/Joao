@@ -692,7 +692,7 @@ public: // Parser doesn't have much of an API but it does have something
 		//This is just a basic setup while everything else is fleshed out.
 		Terminal::SetColor(std::cerr, Terminal::Color::Red);
 		Terminal::SetBold(std::cerr, true);
-		std::cerr << "Parser Error:";
+		std::cerr << "Parser Error: ";
 		Terminal::ClearFormatting(std::cerr);
 		std::cerr << what << "\n";
 		if (t)
