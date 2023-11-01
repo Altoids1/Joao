@@ -51,4 +51,22 @@
         didFail = true;
     }
     assert(didFail);
+    didFail = false;
+    ## Dividing by zero runtimes, at least for now.
+    ## We're just making sure here that there isn't a whole coredump crash about it (since it's UB in C++ to do this)
+    try {
+        Value evading_const_folding_again = 1;
+        Value x = evading_const_folding_again / 0; 
+    } catch(_) {
+        didFail = true;
+    }
+    assert(didFail);
+    didFail = false;
+    try {
+        Value evading_const_folding_yet_again = 1;
+        Value x = evading_const_folding_yet_again / 0;
+    } catch(_) {
+        didFail = true;
+    }
+    assert(didFail);
 }

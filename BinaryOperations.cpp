@@ -294,10 +294,16 @@ FailureOr BinaryExpression::BinaryOperation(const Value& lhs, const Value& rhs, 
 	case(BIN_ENUMS(bOps::Divide, Value::vType::Integer, Value::vType::Integer)): // Intentionally cascades to FloorDivide
 	//
 	case(BIN_ENUMS(bOps::FloorDivide, Value::vType::Integer, Value::vType::Integer)): // :)
+		if(rhs.t_value.as_int == 0) UNLIKELY {
+			return FailureOr(ErrorCode::FailedOperation,ImmutableString("Division by zero!"));
+		}
 		return Value(lhs.t_value.as_int / rhs.t_value.as_int);
 	case(BIN_ENUMS(bOps::Exponent, Value::vType::Integer, Value::vType::Integer)):
 		return Value(static_cast<Value::JoaoInt>(pow(lhs.t_value.as_int, rhs.t_value.as_int)));
 	case(BIN_ENUMS(bOps::Modulo, Value::vType::Integer, Value::vType::Integer)):
+		if(rhs.t_value.as_int == 0) UNLIKELY {
+			return FailureOr(ErrorCode::FailedOperation,ImmutableString("Division by zero!"));
+		}
 		return Value(lhs.t_value.as_int % rhs.t_value.as_int);
 	//
 	case(BIN_ENUMS(bOps::BitwiseAnd, Value::vType::Integer, Value::vType::Integer)):
