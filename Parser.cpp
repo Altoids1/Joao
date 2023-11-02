@@ -42,6 +42,8 @@ Program Parser::parse() // This Parser is w/o question the hardest part of this 
 		
 
 		++tokenheader;
+		if(tokenheader >= tokens.size())
+			ParserError(t, "Unexpected end of file!");
 		//The next token has to be either a '(', which disambiguates us into being a funcdef,
 		//or a '{', which brings us towards being a classdef.
 		t = tokens[tokenheader];
@@ -573,8 +575,12 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	case(Token::cEnum::KeywordToken):
 	{
 		const KeywordToken& key_token = *static_cast<KeywordToken*>(t);
-		if (key_token.t_key == KeywordToken::Key::Const) // 'const{' [block] '}'
+		if (key_token.t_key == KeywordToken::Key::Const) {// 'const{' [block] '}'
+			if(is_interactive) {
+				ParserError(t,"Const blocks are not available in interactive mode.");
+			}
 			lvalue = new ConstExpression(readBlock(BlockType::Function, here + 1, there)); // readBlock just handles all the busy work for us here :)
+		}
 		break;
 	}
 	default:
@@ -585,6 +591,7 @@ ASTNode* Parser::readlvalue(int here, int there) // Read an Expression where we 
 	if (!lvalue)
 	{
 		ParserError(t, "Failed to comprehend lvalue of Expression!");
+		lvalue = new Literal(Value());
 	}
 
 	
@@ -828,387 +835,47 @@ std::vector<Expression*> Parser::readBlock(BlockType bt, int here, int there) //
 	//Blocks are composed of a starting brace, following by statements, and are ended by an end brace.
 
 	//Starting brace checks
-
-
 	Token* t = tokens[here];
 	consume_open_brace(here);
 
+	//Now the fun begins!
+
 	//In AST land, blocks are a list of expressions associated with a particular scope.
-	std::vector<Expression*> ASTs;
-	//++tokenheader;
-	//I wanna point out that block is the only grammar object that has stats, so we can unroll the description of stats into this for-and-switch.
-	int where = here+1;
-	for (; where <= there; ++where)
+	std::vector<Expression*> allStatements;
+	//I miss the pre-REPL era where statement parsing was unrolled into this thing.
+	for (int where = here+1; where <= there; where = tokenheader)
 	{
 		t = tokens[where];
-		switch (t->class_enum())
-		{
-			//this switch kinda goes from most obvious implementation to least obvious, heh
-		case(Token::cEnum::EndLineToken):
-			ParserError(t, "Unexpected semicolon in block!"); // Yes I'm *that* picky, piss off
-			continue;
-		case(Token::cEnum::KeywordToken):
-		{
-			KeywordToken kt = *static_cast<KeywordToken*>(t);
-			switch (kt.t_key)
-			{
-			case(KeywordToken::Key::For):
-			{
-				++where; tokenheader = where;// Move the header past the for keyword
-				consume_paren(true); // (
-				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
-
-				size_t semicolon = find_first_semicolon(tokenheader, yonder-1); // Using "find" instead of "get" here,
-				//since we not sure whether this is a generic for-loop or a for-each.
-
-				if (!semicolon) // Can't be a generic for-loop, then. Attempt to read foreach
-				{
-					WordToken* keytoken, *valtoken; // This syntax is so borked
-					if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //keytoken
-					{
-						ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
-					}
-					keytoken = static_cast<WordToken*>(tokens[tokenheader]);
-					++tokenheader;
-					if (tokens[tokenheader]->class_enum() != Token::cEnum::CommaToken) // The comma
-					{
-						ParserError(tokens[tokenheader], "Unexpected token when Comma expected while reading for-each!");
-					}
-					++tokenheader;
-					if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //valtoken
-					{
-						ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
-					}
-					valtoken = static_cast<WordToken*>(tokens[tokenheader]);
-					++tokenheader;
-					if (tokens[tokenheader]->class_enum() != Token::cEnum::KeywordToken
-						|| static_cast<KeywordToken*>(tokens[tokenheader])->t_key != KeywordToken::Key::In) //"in" keyword
-					{
-						ParserError(tokens[tokenheader], "Unexpected token when 'in' keyword expected while reading for-each!");
-					}
-					++tokenheader;
-					ASTNode* table_node = readExp(tokenheader, yonder - 1);
-					//assert(yonder == tokenheader);
-					consume_paren(false); // )
-
-					ASTs.push_back(new ForEachBlock(keytoken->word, valtoken->word, table_node, readBlock(BlockType::For, tokenheader, there)));
-					where = tokenheader - 1; // decrement to counteract imminent increment
-					continue;
-				}
-
-				ASTNode* init;
-				if (find_aOp(tokenheader, static_cast<int>(semicolon)))
-				{
-					if (tokens[tokenheader]->class_enum() == Token::cEnum::LocalTypeToken)
-						init = readLocalAssignment(tokenheader, static_cast<int>(semicolon));
-					else
-						init = readAssignmentStatement(tokenheader, static_cast<int>(semicolon));
-				}
-				else
-				{
-					init = readExp(tokenheader, static_cast<int>(semicolon));
-				}
-
-				where = static_cast<int>(semicolon + 1);
-				semicolon = get_first_semicolon(where, yonder-1);
-				ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in Jo�o so putting one in a conditional is silly
-				where = static_cast<int>(semicolon + 1);
-				ASTNode* inc;
-				if (find_aOp(where, yonder-1))
-				{
-					inc = readAssignmentStatement(where, yonder-1);
-				}
-				else
-				{
-					inc = readExp(where, yonder - 1);
-				}
-				 
-				consume_paren(false); // )
-
-				std::vector<Expression*> for_block = readBlock(BlockType::For,tokenheader,there); // { ...block... }
-
-				ASTs.push_back(new ForBlock(init, cond, inc, for_block));
-
-				where = tokenheader - 1; // decrement to counteract imminent increment
-				
-
-				//ParserError(t, "For-loops are not implemented!");
+		switch(t->class_enum()) {
+			case(Token::cEnum::EndLineToken):
+				ParserError(t, "Unexpected semicolon in block!"); // Yes I'm *that* picky, piss off
 				continue;
+			case(Token::cEnum::PairSymbolToken): {
+				PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
+				if (pt.t_pOp == PairSymbolToken::pairOp::Brace && !pt.is_start)
+				{
+					//This pretty much has to be the end of the block; lets return our vector of shit.
+					tokenheader = where + 1;
+					goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
+				}
+				ParserError(t, "Unexpected PairSymbol while traversing block!");
+				break;
 			}
-			case(KeywordToken::Key::If):
-			{
-				++where; tokenheader = where;
-				consume_paren(true); // (
-				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
-				ASTNode* cond = readExp(tokenheader, yonder-1);
-				consume_paren(false); // )
-
-				std::vector<Expression*> if_block = readBlock(BlockType::If,tokenheader,there);
-
-				IfBlock* ifstatement = new IfBlock(cond, if_block, tokens[where]->line);
-				
-				while (tokens[tokenheader]->class_enum() == Token::cEnum::KeywordToken)
-				{
-					KeywordToken* ktptr = static_cast<KeywordToken*>(tokens[tokenheader]);
-
-					ASTNode* elif_cond = nullptr;
-					std::vector<Expression*> elif_block = {};
-
-					int block_start = tokenheader + 1;
-
-					bool was_else = true;
-
-					switch (ktptr->t_key)
-					{
-					default:
-						goto IF_BLOCK_LEAVE_ELIF_SEARCH;
-					case(KeywordToken::Key::Elseif):
-					{
-						was_else = false;
-						++tokenheader;
-						consume_paren(true); // (
-						int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
-						elif_cond = readExp(tokenheader, yonder - 1);
-						consume_paren(false); // )
-						block_start = tokenheader;
-						[[fallthrough]]; //ROLLS INTO THE ELSE CODE
-					}
-					case(KeywordToken::Key::Else):
-					{
-						elif_block = readBlock(BlockType::If, block_start, there);
-						ifstatement->append_else(new IfBlock(elif_cond, elif_block, ktptr->line));
-					}
-					}
-
-					if (was_else) // Stops the Parser from accepting multiple else blocks, or an elif after an else, or whatever
-						break;
-				}
-				IF_BLOCK_LEAVE_ELIF_SEARCH:
-				
-
-				ASTs.push_back(ifstatement);
-				where = tokenheader - 1;
-				continue;
-			}
-			case(KeywordToken::Key::Elseif):
-				ParserError(t, "Unexpected Elseif keyword with no corresponding If!");
-				continue;
-			case(KeywordToken::Key::Else):
-				ParserError(t, "Unexpected Else keyword with no corresponding If!");
-				continue;
-			case(KeywordToken::Key::Break):
-			{
-				if (bt == BlockType::Function)
-					ParserError(t, "Unexpected Break statement in Function block!");
-				++where; tokenheader = where; // Consume break token
-				Token* t2 = tokens[where];
-
-				int brk = 1;
-
-				switch (t2->class_enum())
-				{
-				case(Token::cEnum::NumberToken):
-				{
-					NumberToken* nt = static_cast<NumberToken*>(t2);
-					if (nt->is_double)
-					{
-						if(nt->num.as_double != int64_t(nt->num.as_double))
-							ParserError(t, "Unexpected double-type literal after Break keyword; 'break' may only take expressionless integer literals as input!");
-						brk = nt->num.as_double;
-					}
-					else
-					{
-						brk = nt->num.as_int;
-					}
-
-					if (brk < 1) // No "break 0;" please, thanks
-					{
-						ParserError(t, "Non-positive integer given as argument to Break statement!");
-					}
-
-					++where; tokenheader = where; // Consume Number token
-					consume_semicolon();
-					break;
-				}//Rolls over into EndLineToken case
-				case(Token::cEnum::EndLineToken):
-					consume_semicolon();
-					break;
-				default:
-					ParserError(t, "Unexpected Token after Break keyword; 'break' may only take expressionless integer literals as input!");
-					continue;
-				}
-
-				ASTs.push_back(new BreakStatement(brk));
-
-				where = tokenheader - 1;
-				//ParserError(t, "Break statements are not implemented!");
-				continue;
-			}
-			case(KeywordToken::Key::Continue):
-			{
-				if (bt == BlockType::Function)
-					ParserError(t, "Unexpected continue statement in Function block!");
-				++where; tokenheader = where; // Consume continue token
-				consume_semicolon();
-				ASTs.push_back(new ContinueStatement());
-				continue; // lol
-			}
-			case(KeywordToken::Key::While):
-			{				
-				++where; tokenheader = where;
-				consume_paren(true); // (
-				int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
-				ASTNode* cond = readExp(tokenheader, yonder-1);
-				consume_paren(false); // )
-
-				std::vector<Expression*> while_block = readBlock(BlockType::While,tokenheader,there);
-
-				ASTs.push_back(new WhileBlock(cond, while_block, tokens[where]->line));
-
-				where = tokenheader - 1;
-
-				//ParserError(t, "While-loops are not implemented!");
-				continue;
-			}
-			case(KeywordToken::Key::Try):
-			{
-				++where; tokenheader = where; // Consume this try token
-				std::vector<Expression*> try_block = readBlock(BlockType::Try, tokenheader, there);
-				Token* _catch = tokens[tokenheader];
-				if (_catch->class_enum() != Token::cEnum::KeywordToken || static_cast<KeywordToken*>(_catch)->t_key != KeywordToken::Key::Catch)
-				{
-					ParserError(_catch, "Unexpected token when 'catch' block was expected!");
-				}
-				++tokenheader;
-				consume_paren(true); // (
-				ImmutableString err_name = readName(tokenheader);
-				consume_paren(false); // )
-				std::vector<Expression*> catch_block = readBlock(BlockType::Catch, tokenheader, there);
-
-				ASTs.push_back(new TryBlock(try_block, err_name, catch_block));
-				where = tokenheader - 1;
-				continue;
-			}
-			case(KeywordToken::Key::Return):
-			{
-				++where; tokenheader = where; // Consume this return token
-				/*
-				Return can either have an expression, or no expression, in which case it returns null.
-				*/
-				ReturnStatement* rs;
-				if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // Return null
-				{
-					rs = new ReturnStatement(new Literal(Value()), tokens[where]->line);
-				}
-				else // Return stuff
-				{
-					rs = new ReturnStatement(readExp(where, there - 1), tokens[where]->line);
-					
-				}
-				ASTs.push_back(rs);
-				consume_semicolon();
-				where = tokenheader - 1;
-				continue;
-			}
-			case(KeywordToken::Key::Catch):
-			{
-				ParserError(t, "'catch' keyword found with no associated 'try' block!");
-				continue;
-			}
-			case(KeywordToken::Key::Throw):
-			{
-				++where; tokenheader = where;
-				/*
-				There's two possibilities for throw:
-				1. There's no error object operand and we're supposed to return a generic /error object.
-				2. There is an expression which we (the Parser) will assume somehow resolves towards being an /error object.
-				
-				Lets test for both.
-				*/
-				if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // #1
-				{
-					ASTs.push_back(new ThrowStatement(nullptr)); // we can't create a default /error object yet because the object tree has yet to be generated,
-					//so lets just have the interpreter handle it :)
-				}
-				else // #2
-				{
-					int yonder = get_first_semicolon(where + 1, there);
-					ASTs.push_back(new ThrowStatement(readExp(where, yonder-1)));
-					consume_semicolon();
-					where = tokenheader - 1;
-				}
-				continue;
-			}
-			default:
-				ParserError(t, "Unknown keyword!");
-				continue;
-			}
+			case(Token::cEnum::StringToken):
+			case(Token::cEnum::NumberToken):
+				ParserError(t, "Misplaced literal detected while traversing block!");
+				break;
+			default: LIKELY
+				break;
 		}
-		case(Token::cEnum::PairSymbolToken):
-		{
-			PairSymbolToken pt = *static_cast<PairSymbolToken*>(t);
-			if (pt.t_pOp == PairSymbolToken::pairOp::Brace && !pt.is_start)
-			{
-				//This pretty much has to be the end of the block; lets return our vector of shit.
-				tokenheader = where + 1;
-				goto BLOCK_RETURN_ASTS; // Can't break because we're in a switch in a for-loop :(
-			}
-			ParserError(t, "Unexpected PairSymbol while traversing block!");
-			break;
-		}
-		
-		
-		case(Token::cEnum::SymbolToken):
-		{
-			ParserError(t, "Unexpected or underimplemented Symbol while traversing block!"); //FIXME: Allow for unary expressions to be their own statements (important for ++ and -- when they are implemented)
-			break;
-		}
-		case(Token::cEnum::WordToken):
-		case(Token::cEnum::DirectoryToken):
-		case(Token::cEnum::ParentToken):
-		//If the Grammar serves me right, this is either a varstat or a functioncall.
-		//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
-		{
-			int yonder = static_cast<int>(get_first_semicolon(where+1, there));
-			int found_aop = find_aOp(where + 1, yonder - 1);
-
-			if(found_aop) // varstat
-				ASTs.push_back(readAssignmentStatement(where, yonder));
-			else // functioncall
-			{ // defers to readlvalue(), since it contains the functioncall constructor within it
-				ASTNode* luh = readlvalue(where, yonder - 1);
-				if (luh->is_expression())
-					ASTs.push_back(static_cast<Expression*>(luh));
-				else
-					ParserError(t, "Unexpected " + luh->class_name() +  " expression when Statement was expected!");
-			}
-			consume_semicolon();
-			where = tokenheader-1; // Decrement so that the impending increment puts us in the correct place.
-			continue;
-		}
-		case(Token::cEnum::LocalTypeToken): // So this implies we're about to read in an initialization.
-		{
-			//std::cout << "Before: " << std::to_string(tokenheader) << std::endl ;
-			LocalAssignmentStatement* localassign = readLocalAssignment(where, there);
-			consume_semicolon();
-			if(localassign) // if not nullptr
-				ASTs.push_back(localassign);
-			where = tokenheader - 1; // decrement to counteract imminent increment
-			//std::cout << "After: " << std::to_string(tokenheader) << std::endl;
-			continue;
-		}
-		case(Token::cEnum::StringToken):
-		case(Token::cEnum::NumberToken):
-			ParserError(t, "Misplaced literal detected while traversing block!");
-			break;
-		default:
-			ParserError(t, "Unknown Token type found when traversing block!");
-		}
+		Expression* statement = readStatement(bt, where, there);
+		if(statement != nullptr)
+			allStatements.push_back(statement);
 	}
 	ParserError(t, "Unable to find ending brace of block!");
 
 BLOCK_RETURN_ASTS:
-	if (ASTs.size() == 0)
+	if (allStatements.size() == 0)
 	{
 		ParserError(t, "Block created with no Expressions inside!");
 	}
@@ -1216,7 +883,331 @@ BLOCK_RETURN_ASTS:
 #ifdef LOUD_TOKENHEADER
 	std::cout << "Exiting block with header pointed at " << std::to_string(tokenheader) << ".\n";
 #endif
-	return ASTs;
+	return allStatements;
+}
+
+Expression* Parser::readStatement(BlockType bt, int& where, int there) {
+	Token* t = tokens[where];
+	switch (t->class_enum())
+	{
+	case(Token::cEnum::EndLineToken): UNLIKELY
+		return nullptr;
+	case(Token::cEnum::KeywordToken):
+	{
+		KeywordToken kt = *static_cast<KeywordToken*>(t);
+		switch (kt.t_key)
+		{
+		case(KeywordToken::Key::For):
+		{
+			++where; tokenheader = where;// Move the header past the for keyword
+			consume_paren(true); // (
+			int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
+
+			size_t semicolon = find_first_semicolon(tokenheader, yonder-1); // Using "find" instead of "get" here,
+			//since we not sure whether this is a generic for-loop or a for-each.
+
+			if (!semicolon) // Can't be a generic for-loop, then. Attempt to read foreach
+			{
+				WordToken* keytoken, *valtoken; // This syntax is so borked
+				if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //keytoken
+				{
+					ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
+				}
+				keytoken = static_cast<WordToken*>(tokens[tokenheader]);
+				++tokenheader;
+				if (tokens[tokenheader]->class_enum() != Token::cEnum::CommaToken) // The comma
+				{
+					ParserError(tokens[tokenheader], "Unexpected token when Comma expected while reading for-each!");
+				}
+				++tokenheader;
+				if (tokens[tokenheader]->class_enum() != Token::cEnum::WordToken) //valtoken
+				{
+					ParserError(tokens[tokenheader], "Unexpected token when Word expected while reading for-each!");
+				}
+				valtoken = static_cast<WordToken*>(tokens[tokenheader]);
+				++tokenheader;
+				if (tokens[tokenheader]->class_enum() != Token::cEnum::KeywordToken
+					|| static_cast<KeywordToken*>(tokens[tokenheader])->t_key != KeywordToken::Key::In) //"in" keyword
+				{
+					ParserError(tokens[tokenheader], "Unexpected token when 'in' keyword expected while reading for-each!");
+				}
+				++tokenheader;
+				ASTNode* table_node = readExp(tokenheader, yonder - 1);
+				//assert(yonder == tokenheader);
+				consume_paren(false); // )
+
+				return new ForEachBlock(keytoken->word, valtoken->word, table_node, readBlock(BlockType::For, tokenheader, there));
+			}
+
+			ASTNode* init;
+			if (find_aOp(tokenheader, static_cast<int>(semicolon)))
+			{
+				if (tokens[tokenheader]->class_enum() == Token::cEnum::LocalTypeToken)
+					init = readLocalAssignment(tokenheader, static_cast<int>(semicolon));
+				else
+					init = readAssignmentStatement(tokenheader, static_cast<int>(semicolon));
+			}
+			else
+			{
+				init = readExp(tokenheader, static_cast<int>(semicolon));
+			}
+
+			where = static_cast<int>(semicolon + 1);
+			semicolon = get_first_semicolon(where, yonder-1);
+			ASTNode* cond = readExp(where, static_cast<int>(semicolon)); // Assignments do not evaluate to anything in Jo�o so putting one in a conditional is silly
+			where = static_cast<int>(semicolon + 1);
+			ASTNode* inc;
+			if (find_aOp(where, yonder-1))
+			{
+				inc = readAssignmentStatement(where, yonder-1);
+			}
+			else
+			{
+				inc = readExp(where, yonder - 1);
+			}
+				
+			consume_paren(false); // )
+
+			std::vector<Expression*> for_block = readBlock(BlockType::For,tokenheader,there); // { ...block... }
+			return new ForBlock(init, cond, inc, for_block);
+		}
+		case(KeywordToken::Key::If):
+		{
+			++where; tokenheader = where;
+			consume_paren(true); // (
+			int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
+			ASTNode* cond = readExp(tokenheader, yonder-1);
+			consume_paren(false); // )
+
+			std::vector<Expression*> if_block = readBlock(BlockType::If,tokenheader,there);
+
+			IfBlock* ifStatement = new IfBlock(cond, if_block, tokens[where]->line);
+			
+			while (tokens[tokenheader]->class_enum() == Token::cEnum::KeywordToken)
+			{
+				KeywordToken* ktptr = static_cast<KeywordToken*>(tokens[tokenheader]);
+
+				ASTNode* elif_cond = nullptr;
+				std::vector<Expression*> elif_block = {};
+
+				int block_start = tokenheader + 1;
+
+				bool was_else = true;
+
+				switch (ktptr->t_key)
+				{
+				default:
+					goto IF_BLOCK_LEAVE_ELIF_SEARCH;
+				case(KeywordToken::Key::Elseif):
+				{
+					was_else = false;
+					++tokenheader;
+					consume_paren(true); // (
+					int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
+					elif_cond = readExp(tokenheader, yonder - 1);
+					consume_paren(false); // )
+					block_start = tokenheader;
+					[[fallthrough]]; //ROLLS INTO THE ELSE CODE
+				}
+				case(KeywordToken::Key::Else):
+				{
+					elif_block = readBlock(BlockType::If, block_start, there);
+					ifStatement->append_else(new IfBlock(elif_cond, elif_block, ktptr->line));
+				}
+				}
+
+				if (was_else) // Stops the Parser from accepting multiple else blocks, or an elif after an else, or whatever
+					break;
+			}
+			IF_BLOCK_LEAVE_ELIF_SEARCH:
+			return ifStatement;
+		}
+		case(KeywordToken::Key::Elseif):
+			ParserError(t, "Unexpected Elseif keyword with no corresponding If!");
+			break;
+		case(KeywordToken::Key::Else):
+			ParserError(t, "Unexpected Else keyword with no corresponding If!");
+			break;
+		case(KeywordToken::Key::Break):
+		{
+			if (bt == BlockType::Function)
+				ParserError(t, "Unexpected Break statement in Function block!");
+			++where; tokenheader = where; // Consume break token
+			Token* t2 = tokens[where];
+
+			int brk = 1;
+
+			switch (t2->class_enum())
+			{
+			case(Token::cEnum::NumberToken):
+			{
+				NumberToken* nt = static_cast<NumberToken*>(t2);
+				if (nt->is_double)
+				{
+					if(nt->num.as_double != int64_t(nt->num.as_double))
+						ParserError(t, "Unexpected double-type literal after Break keyword; 'break' may only take expressionless integer literals as input!");
+					brk = nt->num.as_double;
+				}
+				else
+				{
+					brk = nt->num.as_int;
+				}
+
+				if (brk < 1) // No "break 0;" please, thanks
+				{
+					ParserError(t, "Non-positive integer given as argument to Break statement!");
+				}
+
+				++where; tokenheader = where; // Consume Number token
+				consume_semicolon();
+				break;
+			}//Rolls over into EndLineToken case
+			case(Token::cEnum::EndLineToken):
+				consume_semicolon();
+				break;
+			default:
+				ParserError(t, "Unexpected Token after Break keyword; 'break' may only take expressionless integer literals as input!");
+				break;
+			}
+			return new BreakStatement(brk);
+		}
+		case(KeywordToken::Key::Continue):
+		{
+			if (bt == BlockType::Function)
+				ParserError(t, "Unexpected continue statement in Function block!");
+			++where; tokenheader = where; // Consume continue token
+			consume_semicolon();
+			return new ContinueStatement(); // no more lol :(
+		}
+		case(KeywordToken::Key::While):
+		{				
+			++where; tokenheader = where;
+			consume_paren(true); // (
+			int yonder = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader);
+			ASTNode* cond = readExp(tokenheader, yonder-1);
+			consume_paren(false); // )
+
+			std::vector<Expression*> while_block = readBlock(BlockType::While,tokenheader,there);
+			return new WhileBlock(cond, while_block, tokens[where]->line);
+		}
+		case(KeywordToken::Key::Try):
+		{
+			++where; tokenheader = where; // Consume this try token
+			std::vector<Expression*> try_block = readBlock(BlockType::Try, tokenheader, there);
+			Token* _catch = tokens[tokenheader];
+			if (_catch->class_enum() != Token::cEnum::KeywordToken || static_cast<KeywordToken*>(_catch)->t_key != KeywordToken::Key::Catch)
+			{
+				ParserError(_catch, "Unexpected token when 'catch' block was expected!");
+			}
+			++tokenheader;
+			consume_paren(true); // (
+			ImmutableString err_name = readName(tokenheader);
+			consume_paren(false); // )
+			std::vector<Expression*> catch_block = readBlock(BlockType::Catch, tokenheader, there);
+			return new TryBlock(try_block, err_name, catch_block);
+		}
+		case(KeywordToken::Key::Return):
+		{
+			++where; tokenheader = where; // Consume this return token
+			/*
+			Return can either have an expression, or no expression, in which case it returns null.
+			*/
+			ReturnStatement* returnStatement;
+			if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // Return null
+			{
+				returnStatement = new ReturnStatement(new Literal(Value()), tokens[where]->line);
+			}
+			else // Return stuff
+			{
+				returnStatement = new ReturnStatement(readExp(where, there - 1), tokens[where]->line);
+				
+			}
+			
+			consume_semicolon();
+			return returnStatement;
+		}
+		case(KeywordToken::Key::Catch):
+		{
+			ParserError(t, "'catch' keyword found with no associated 'try' block!");
+			break;
+		}
+		case(KeywordToken::Key::Throw):
+		{
+			++where; tokenheader = where;
+			/*
+			There's two possibilities for throw:
+			1. There's no error object operand and we're supposed to return a generic /error object.
+			2. There is an expression which we (the Parser) will assume somehow resolves towards being an /error object.
+			
+			Lets test for both.
+			*/
+			if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // #1
+			{
+				return new ThrowStatement(nullptr); // we can't create a default /error object yet because the object tree has yet to be generated,
+				//so lets just have the interpreter handle it :)
+			}
+			// #2
+			int yonder = get_first_semicolon(where + 1, there);
+			auto exp = readExp(where, yonder-1);
+			consume_semicolon();
+			return new ThrowStatement(exp);
+		}
+		default:
+			ParserError(t, "Unknown keyword!");
+			break;
+		}
+		break;
+	}
+	case(Token::cEnum::PairSymbolToken):
+	{
+		ParserError(t, "Unexpected PairSymbol while traversing expression!");
+		break;
+	}
+	case(Token::cEnum::SymbolToken):
+	{
+		ParserError(t, "Unexpected or underimplemented Symbol while traversing expression!"); //FIXME: Allow for unary expressions to be their own statements (important for ++ and -- when they are implemented)
+		break;
+	}
+	case(Token::cEnum::WordToken):
+	case(Token::cEnum::DirectoryToken):
+	case(Token::cEnum::ParentToken):
+	//If the Grammar serves me right, this is either a varstat or a functioncall.
+	//The main way to disambiguate is to check if the var_access is if any assignment operation takes place on this line.
+	{
+		int yonder = static_cast<int>(get_first_semicolon(where+1, there));
+		int found_aop = find_aOp(where + 1, yonder - 1);
+
+		if(found_aop) { // varstat
+			auto ret = readAssignmentStatement(where, yonder);
+			consume_semicolon();
+			return ret;
+		}
+		// otherwise, functioncall
+		ASTNode* luh = readlvalue(where, yonder - 1); // defers to readlvalue(), since it contains the functioncall constructor within it
+		consume_semicolon();
+		if (luh->is_expression())
+			return static_cast<Expression*>(luh);
+		ParserError(t, "Unexpected " + luh->class_name() +  " expression when Statement was expected!");
+		break;
+	}
+	case(Token::cEnum::LocalTypeToken): // So this implies we're about to read in an initialization.
+	{
+		//std::cout << "Before: " << std::to_string(tokenheader) << std::endl ;
+		LocalAssignmentStatement* localassign = readLocalAssignment(where, there);
+		consume_semicolon();
+		if(localassign) // if not nullptr
+			return localassign;
+		[[fallthrough]]; // I THINK???
+	}
+	case(Token::cEnum::StringToken):
+	case(Token::cEnum::NumberToken):
+		ParserError(t, "Misplaced literal detected while traversing expression!");
+		break;
+	default: UNLIKELY
+		ParserError(t, "Unknown Token type found when traversing expression!");
+		break;
+	}
+	return nullptr;
 }
 
 std::vector<LocalAssignmentStatement*> Parser::readClassDef(int here, int there)
@@ -1273,11 +1264,125 @@ READ_CLASSDEF_RETURN_ASTS:
 	return ASTs;
 }
 
+Function* Parser::try_parse_function() {
+	//FIXME: This is *slightly* repeated work from parse(), but I think that's okay.
+	Token* t = tokens[tokenheader];
+	std::string dir_name;
+	if (t->class_enum() == Token::cEnum::DirectoryToken)
+	{
+		dir_name = static_cast<DirectoryToken*>(t)->dir;
+		
+	}
+	tokenheader++;
+	if(tokens.size() >= tokenheader)
+		return nullptr;
+	if(tokens[tokenheader]->class_enum() != Token::cEnum::PairSymbolToken) {
+		return nullptr;
+	}
+	PairSymbolToken st = *static_cast<PairSymbolToken*>(tokens[tokenheader]);
+	switch(st.t_pOp) {
+		case PairSymbolToken::pairOp::Brace:
+			//TODO: Implement this situation!
+			ParserError(tokens[tokenheader],"Instantiating classes within interactive mode is not yet available!");
+			break;
+		case PairSymbolToken::pairOp::Bracket:
+			ParserError(tokens[tokenheader],"Unexpected brace in function declaration!");
+			break;
+		default:
+			break;
+	}
+	int close = find_closing_pairlet(PairSymbolToken::pairOp::Paren, tokenheader + 1);
+	std::vector<ImmutableString> pirate_noise;
+	if (close != tokenheader + 1)
+	{
+		pirate_noise.push_back(readName(tokenheader+1)); // Updates tokenheader hopefully
+		for (int where = tokenheader; where < close; ++where)
+		{
+			if (tokens[where]->class_enum() != Token::cEnum::CommaToken)
+			{
+				ParserError(tokens[where], "Unexpected Token when Comma expected!");
+			}
+			++where;
+			if (where == close)
+				ParserError(tokens[where], "Missing parameter name in FunctionDefinition!");
+			if (tokens[where]->class_enum() != Token::cEnum::WordToken)
+				ParserError(tokens[where], "Unexpected Token when ParameterName expected!");
+			pirate_noise.push_back(static_cast<WordToken*>(tokens[where])->word);
+		}
+	}
+
+	std::vector<Expression*> funcblock = readBlock(BlockType::Function,close+1, static_cast<int>(tokens.size()-1));
+	--tokenheader;
+
+	Function* func = new Function(dir_name, std::move(funcblock), std::move(pirate_noise), t->line);
+	return func;
+}
+
+//Determines whether the entire token stream should grammatically constitute a statement (instead of an expression)
+//Used for disambiguating between the two in the REPL code.
+bool Parser::is_statement() {
+	//What distinguishes a statement from an expression, in João,
+	//is that it contains at least one of the following tokens: if, while, for, try, break, throw, continue, return, or an assignment op.
+	for(Token* t : tokens) {
+		switch (t->class_enum())
+		{
+		case Token::cEnum::KeywordToken: {
+			KeywordToken* keywordToken = static_cast<KeywordToken*>(t);
+			switch(keywordToken->t_key) {
+				case KeywordToken::Key::If:
+				case KeywordToken::Key::Break:
+				case KeywordToken::Key::For:
+				case KeywordToken::Key::Continue:
+				case KeywordToken::Key::Return:
+				case KeywordToken::Key::Throw:
+				case KeywordToken::Key::Try:
+					return true;
+				default:
+					continue;
+			}
+			break;
+		}
+		case Token::cEnum::SymbolToken: {
+			SymbolToken* symbolToken = static_cast<SymbolToken*>(t);
+			if(symbol_to_aOp(symbolToken) != AssignmentStatement::aOps::NoOp) {
+				return true;
+			}
+		}
+		default:
+			break;
+		}
+	}
+	return false;
+}
+
 //This pointer has to be cleaned up by the caller when they're done with it.
 ASTNode* Parser::parse_repl_expression() {
-	ASTNode* ret = readBinExp(Scanner::OperationPrecedence::Logical,0,tokens.size()-1);
+	// repl ::= {funcdef | stat | exp | nothing}
+	if(tokens.empty())
+		return nullptr;
+	//check if it's a function definition, first, since that's the really weird option
+	if(Function* func = try_parse_function(); func != nullptr) {
+		if (Directory::DotDot(func->get_name()) == "/") // If this is a classless function in the globalscope
+			t_program.set_func(func->get_name(), func);
+		else // This be a method! Avast!
+			//TODO: Make this work!
+			ParserError(tokens[0],"Defining methods of classes within interactive mode is not yet implemented!");
+		return nullptr; // Nothing to execute yet :)
+	}
+	//If it isn't a function, then it's a statement or a stray expression.
+	ASTNode* ret;
+	if(is_statement()) {
+		ret = readExp(0,tokens.size()-1);
+	} else {
+		ret = readBinExp(Scanner::OperationPrecedence::Logical,0,tokens.size()-1);
+	}
 	if(t_program.is_malformed)
 		return nullptr;
+#ifdef LOUD_AST
+	std::cout << "----\nExpression AST:\n";
+	std::cout << ret->dump(0);
+	std::cout << "----\n";
+#endif
 	return ret;
 }
 

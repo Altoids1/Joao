@@ -1,6 +1,8 @@
 Here is the complete syntax of João in extended BNF. As usual in extended BNF, {A} means 0 or more As, and [A] means an optional A. Brace characters are escaped with single-quotes.
 	
 	program ::= {classdef | funcdef | includefile}
+
+	repl ::= {funcdef | stat | exp}
 	
 	includefile ::== 'include ' LiteralString
 	
@@ -19,12 +21,13 @@ Here is the complete syntax of João in extended BNF. As usual in extended BNF, 
 	stat ::=  ';' |
 		varstat ';' |
 		functioncall ';' |
-		return [exp] ';' |
+		'return' [exp] ';' |
 		'break' [PositiveInteger] ';' |
+		'continue;' |
 		'while(' exp '){' block '}' |
 		'if(' exp '){' block '}' {'elseif(' exp '){' block '}'} ['else(' exp '){' block '}'] |
 		'for('for_generic_init | for_each_init'){' block '}' |
-		'try{' block '}catch(' Name '){' block ')' |
+		'try{' block '}catch(' Name '){' block '}' |
 		'throw' [exp] ';'
 	
 	for_generic_init ::= '[varstat | exp] ';' [exp] ';' [varstat | exp]
