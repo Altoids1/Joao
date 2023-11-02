@@ -81,7 +81,8 @@ void Terminal::SetColor(std::ostream& stream, Color color) {
 
 void Terminal::SetBold(std::ostream& stream, bool isBold) {
 #ifdef _WIN32
-    return; // FIXME: Do bolding in windows emissions!
+    if(!CanUseANSIColors)
+        return; // FIXME: Do bolding in Windows 7 emissions!
 #else
     if(disableFormatting)
         return;
