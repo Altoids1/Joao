@@ -97,7 +97,7 @@ static Program interactive_default_program() {
 	return ret;
 } 
 
-static std::optional<Value> try_run_expression(Program& prog, std::string&& expr_str) {
+static std::optional<Value> try_run_expression(Interpreter& interp, Program& prog, std::string&& expr_str) {
 	std::stringstream expr_ss(expr_str);
 	Scanner scn(true);
 	scn.scan(expr_ss);
@@ -106,13 +106,13 @@ static std::optional<Value> try_run_expression(Program& prog, std::string&& expr
 	Parser prs(scn);
 	ASTNode* ptr;
 	try {
-		ptr = prs.parse_repl_expression();
+		ptr = prs.parse_repl_expression(prog);
 	} catch (error::parser& err) {
 		return {};
 	}
 	if(ptr == nullptr)
 		return {};
-	Interpreter interp(prog,true);
+	
 	Value ret = interp.evaluate_expression(ptr);
 	delete ptr; // FIXME: be RAII about this, come on.
 	if(interp.error) {
@@ -170,6 +170,8 @@ static void detail_get_line(std::string& ret)
 void Args::interactive_mode()
 {
 	Program prog = interactive_default_program();
+	Interpreter interp(prog,true);
+	interp.push_stack("#repl");
 	while (true)
 	{
 		Terminal::SetColor(std::cout,Terminal::Color::Red);
@@ -185,7 +187,9 @@ void Args::interactive_mode()
 			continue;
 		if(input == "quit()") // FIXME: support quit() more generically
 			return;
-		auto result = try_run_expression(prog, std::move(input));
+		if(input.back() != ';')
+			input.push_back(';');
+		auto result = try_run_expression(interp, prog, std::move(input));
 		if(result)
 			std::cout << result.value().to_string() << std::endl;
 	}

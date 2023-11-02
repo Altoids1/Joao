@@ -41,9 +41,7 @@ Value Interpreter::execute(Program& program, Value& jarg)
 }
 
 Value Interpreter::evaluate_expression(ASTNode* node) {
-	push_stack("#expr",nullptr);
 	Value ret = node->resolve(*this);
-	pop_stack();
 	return ret;
 }
 

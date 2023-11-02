@@ -1266,6 +1266,7 @@ READ_CLASSDEF_RETURN_ASTS:
 
 Function* Parser::try_parse_function() {
 	//FIXME: This is *slightly* repeated work from parse(), but I think that's okay.
+	tokenheader = 0;
 	Token* t = tokens[tokenheader];
 	std::string dir_name;
 	if (t->class_enum() == Token::cEnum::DirectoryToken)
@@ -1356,15 +1357,15 @@ bool Parser::is_statement() {
 }
 
 //This pointer has to be cleaned up by the caller when they're done with it.
-ASTNode* Parser::parse_repl_expression() {
+ASTNode* Parser::parse_repl_expression(Program& realProgram) {
 	// repl ::= {funcdef | stat | exp | nothing}
 	if(tokens.empty())
 		return nullptr;
 	//check if it's a function definition, first, since that's the really weird option
 	if(Function* func = try_parse_function(); func != nullptr) {
 		if (Directory::DotDot(func->get_name()) == "/") // If this is a classless function in the globalscope
-			t_program.set_func(func->get_name(), func);
-		else // This be a method! Avast!
+			realProgram.set_func(func->get_name(), func);
+		else // This be a method! Avast! 
 			//TODO: Make this work!
 			ParserError(tokens[0],"Defining methods of classes within interactive mode is not yet implemented!");
 		return nullptr; // Nothing to execute yet :)
@@ -1372,7 +1373,8 @@ ASTNode* Parser::parse_repl_expression() {
 	//If it isn't a function, then it's a statement or a stray expression.
 	ASTNode* ret;
 	if(is_statement()) {
-		ret = readExp(0,tokens.size()-1);
+		int where = 0;
+		ret = readStatement(BlockType::Function, where, tokens.size()-1);
 	} else {
 		ret = readBinExp(Scanner::OperationPrecedence::Logical,0,tokens.size()-1);
 	}

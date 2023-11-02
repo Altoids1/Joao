@@ -716,7 +716,7 @@ public: // Parser doesn't have much of an API but it does have something
 	//Used for interactive mode and other similar contexts.
 	Function* try_parse_function();
 	bool is_statement();
-	ASTNode* parse_repl_expression();
+	ASTNode* parse_repl_expression(Program&);
 	
 	//Allows outside programs to include extra "native" types.
 	void IncludeAlienType(ObjectType* ot);
