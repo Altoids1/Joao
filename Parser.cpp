@@ -890,14 +890,14 @@ Expression* Parser::readStatement(BlockType bt, int& where, int there) {
 	Token* t = tokens[where];
 	switch (t->class_enum())
 	{
-	case(Token::cEnum::EndLineToken): UNLIKELY
+	case(Token::cEnum::EndLineToken): UNLIKELY // This is a null statement, then. Weird.
 		return nullptr;
-	case(Token::cEnum::KeywordToken):
+	case(Token::cEnum::KeywordToken): // Statements started by a keyword
 	{
 		KeywordToken kt = *static_cast<KeywordToken*>(t);
 		switch (kt.t_key)
 		{
-		case(KeywordToken::Key::For):
+		case(KeywordToken::Key::For): // For loops!
 		{
 			++where; tokenheader = where;// Move the header past the for keyword
 			consume_paren(true); // (
@@ -1141,7 +1141,8 @@ Expression* Parser::readStatement(BlockType bt, int& where, int there) {
 			
 			Lets test for both.
 			*/
-			if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) // #1
+			// #1
+			if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) 
 			{
 				return new ThrowStatement(nullptr); // we can't create a default /error object yet because the object tree has yet to be generated,
 				//so lets just have the interpreter handle it :)

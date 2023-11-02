@@ -98,7 +98,9 @@ public:
 #ifndef JOAO_SAFE
 		if (definedFunctions.count(name))
 		{
-			std::cout << "WARNING: " << name << " overridden with alternate definition!";
+			Terminal::SetColor(std::cerr,Terminal::Color::Yellow);
+			std::cerr << "Warning: " << name << " overridden with alternate definition!";
+			Terminal::SetColor(std::cerr,Terminal::Color::RESET);
 		}
 #endif
 		definedFunctions[name] = f;

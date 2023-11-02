@@ -553,7 +553,6 @@ class Parser
 		case(Token::cEnum::EndLineToken):
 			return;
 		default:
-			//std::cout << "Stalling...le attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consum";
 			ParserError(t, "Unexpected Token while attempting to consume EndLineToken!");
 		}
 	}
