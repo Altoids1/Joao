@@ -1144,6 +1144,7 @@ Expression* Parser::readStatement(BlockType bt, int& where, int there) {
 			// #1
 			if (tokens[tokenheader]->class_enum() == Token::cEnum::EndLineToken) 
 			{
+				consume_semicolon();
 				return new ThrowStatement(nullptr); // we can't create a default /error object yet because the object tree has yet to be generated,
 				//so lets just have the interpreter handle it :)
 			}
