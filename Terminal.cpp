@@ -37,7 +37,11 @@ static bool IsWindows10() {
         RtlGetVersion(&osInfo);
         return (double)osInfo.dwMajorVersion;
     };
-    return getSysOpType() == 10.0;
+    if(getSysOpType() < 10.0)
+        return false;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleMode(hConsole,ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    return true;
 }
 #endif
 
@@ -52,7 +56,7 @@ void Terminal::SetColor(std::ostream& stream, Color color) {
     if(disableFormatting)
         return;
     if (CanUseANSIColors) {
-        stream << "\x1b[" << std::to_string(static_cast<int>(color)) << 'm';
+        stream << "\x1b[" + std::to_string(static_cast<int>(color)) + 'm';
         return;
     }
     //Here lies an insane Windows 7 fallback for this
@@ -80,14 +84,11 @@ void Terminal::SetColor(std::ostream& stream, Color color) {
 }
 
 void Terminal::SetBold(std::ostream& stream, bool isBold) {
-#ifdef _WIN32
     if(!CanUseANSIColors)
         return; // FIXME: Do bolding in Windows 7 emissions!
-#else
     if(disableFormatting)
         return;
-    stream << "\x1b[" << (isBold ? '1' : '0') << 'm';
-#endif
+    stream << std::string("\x1b[")  + (isBold ? "1" : "0") + "m";
 }
 
 void Terminal::ClearFormatting(std::ostream& stream) {
