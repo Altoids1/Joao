@@ -81,6 +81,65 @@ void Args::print_help()
 #endif
 	std::cout << "  -f\tDisables colour (and other formatting) when emitting errors or messages.\n";
 }
+
+//Helper function for interactive_mode, since it has a fancy output :^)
+static void print_version_fancy() {
+/*
+The original ASCII art, provided by our friends at figlet:
+     _                   
+    | | ___   __ _  ___  
+ _  | |/ _ \ / _` |/ _ \ 
+| |_| | (_) | (_| | (_) |
+ \___/ \___/ \__,_|\___/ 
+*/
+/*
+Adding the pizzazz:
+    ======_                   
+   ======| | ___   __ _  ___  
+  =======| |/ _ \ / _' |/ _ \ 
+ ====| |_| | (_) | (_| | (_) |
+===== \___/ \___/ \__,_|\___/ 
+*/
+const std::string asciiArt = R"(
+    ======_                    |  Reference: https://altoids1.github.io/Joao/index.html
+   ======| | ___   __ _  ___   |
+  =======| |/ _ \ / _' |/ _ \  |
+ ====| |_| | (_) | (_| | (_) | |  Version 1.2.3
+===== \___/ \___/ \__,_|\___/  |
+
+)";
+	// NOTE: Printing this with colour codes *could* have been a heap of spaghetti,
+	// 		 but I'm going to do it the *right* way and just have this for-loop. You're welcome.
+	size_t charsSinceNewline = 0; // This should be a for loop initializer but, we still support C++17 (for some reason)
+	for(char c : asciiArt) {
+		Terminal::SetBold(std::cout,true);
+		if(c == '\n') {
+			charsSinceNewline = 0;
+		} else {
+			++charsSinceNewline;
+		}
+		switch(c) {
+			case '=':
+				Terminal::SetBold(std::cout,false);
+				Terminal::SetColor(std::cout,
+					Terminal::Color::Red
+				);
+				std::cout << c;
+				Terminal::ClearFormatting(std::cout);
+				continue;
+			case '1':
+				std::cout << VERSION_MAJOR;
+				break;
+			case '2':
+				std::cout << VERSION_MINOR;
+				break;
+			case '3':
+				std::cout << VERSION_PATCH;
+				break;
+			default:
+				std::cout << c;
+		}
+	}
 }
 
 static Program interactive_default_program() {
@@ -169,6 +228,7 @@ static void detail_get_line(std::string& ret)
 
 void Args::interactive_mode()
 {
+	print_version_fancy();
 	Program prog = interactive_default_program();
 	Interpreter interp(prog,true);
 	interp.push_stack("#repl");
