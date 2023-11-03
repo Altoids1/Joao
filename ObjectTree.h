@@ -70,7 +70,9 @@ class ObjectTree
 		{
 			derived->typeproperties.insert(base->typeproperties.begin(), base->typeproperties.end());
 			derived->typefuncs.insert(base->typefuncs.begin(), base->typefuncs.end());
-			// Passively, this does not override (and thereby clobber) the properties already present in our objecttype, as just a behavior of the std::vector::insert() function.
+			// Passively, this does not override (and thereby clobber) the properties already present in our objecttype, as just a behavior of the HashTable::insert() function.
+			if (base->is_table_type)
+				derived->is_table_type = true;
 		}
 		for (Node* child : inheriter->children)
 		{

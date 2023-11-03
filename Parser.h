@@ -226,6 +226,9 @@ class Parser
 	//Here-there-update; does not update if no last bracket found
 	std::vector<Expression*> readBlock(BlockType, int, int);
 
+	//This one is a little weird: It's a where-there-update. FIXME: Make it not >:(
+	Expression* readStatement(BlockType, int&, int);
+
 	//Here-there-update; does not update if no last bracket found
 	std::vector<LocalAssignmentStatement*> readClassDef(int, int);
 
@@ -550,7 +553,6 @@ class Parser
 		case(Token::cEnum::EndLineToken):
 			return;
 		default:
-			//std::cout << "Stalling...le attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consumle attempting to consum";
 			ParserError(t, "Unexpected Token while attempting to consume EndLineToken!");
 		}
 	}
@@ -711,7 +713,9 @@ public: // Parser doesn't have much of an API but it does have something
 	Program parse();
 
 	//Used for interactive mode and other similar contexts.
-	ASTNode* parse_repl_expression();
+	Function* try_parse_function();
+	bool is_statement();
+	ASTNode* parse_repl_expression(Program&);
 	
 	//Allows outside programs to include extra "native" types.
 	void IncludeAlienType(ObjectType* ot);

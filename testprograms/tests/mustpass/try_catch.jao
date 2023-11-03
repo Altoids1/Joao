@@ -31,4 +31,14 @@
             throw /error/New(16,"Throwing doesn't work!"); ## Hopefully THIS gets through though :^)
         }
     }
+
+    Value didIt = false;
+    try {
+        throw;
+    } catch(err) {
+        didIt = true;
+    }
+    if(!didIt) {
+        throw /error/New(16,"Default throwing doesn't work!");
+    }
 }

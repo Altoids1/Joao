@@ -37,7 +37,7 @@ class HashTable
         {
             if (used) UNLIKELY
             {
-                std::cout << "Bucket was deleted with un-deleted contents inside!\n";
+                std::cerr << "Bucket was deleted with un-deleted contents inside!\n";
             }
         }
 #endif
@@ -45,7 +45,6 @@ class HashTable
         {
             if(used)
             {
-                //std::cout << "Deleting " << *key() << "\t" << value()->to_string() << "\n";
                 key()->~Key();
                 value()->~Value();
             }
@@ -312,7 +311,7 @@ class HashTable
             if (!shit) UNLIKELY // SHIT!!!
             {
 #ifdef HASHTABLE_DEBUG
-                std::cout << "Shit condition reached.\n";
+                std::cerr << "Shit condition reached.\n";
                 exit(1);
 #endif
                 delete[] new_block; // FIXME: This doesn't exactly work correctly.
@@ -458,7 +457,7 @@ public:
     {
         if(!bucket_block)
         {
-            std::cout << "This HashTable is empty.";
+            std::cerr << "This HashTable is empty.";
             return;
         }
         bool unprinted_collision_ptr = true;
@@ -467,78 +466,78 @@ public:
             Bucket& buck = bucket_block[i];
             if (&buck == collision_data.begin)
             {
-                std::cout << "There's more.\n"; // No!!
+                std::cerr << "There's more.\n"; // No!!
                 unprinted_collision_ptr = false;
             }
-            std::cout << std::to_string(reinterpret_cast<size_t>(&buck));
+            std::cerr << std::to_string(reinterpret_cast<size_t>(&buck));
             if(!buck.used)
             {
                 if (buck.next_collision_bucket)
                 {
-                    std::cout << " Empty Bucket WITH COLLISION BUCKET: " << std::to_string(reinterpret_cast<size_t>(buck.next_collision_bucket)) << '\n';
+                    std::cerr << " Empty Bucket WITH COLLISION BUCKET: " << std::to_string(reinterpret_cast<size_t>(buck.next_collision_bucket)) << '\n';
                     continue;
                 }
-                std::cout << " Empty Bucket\n";
+                std::cerr << " Empty Bucket\n";
                 continue;
             }
             
-            std::cout << "This is a bucket: {";
+            std::cerr << "This is a bucket: {";
             if constexpr (std::is_same<Key, std::string>::value || std::is_same<Key,::Value>::value) // FIXME: Really need a more general solution to this.
             {
-                std::cout << *buck.key();
+                std::cerr << *buck.key();
             }
             else if constexpr (std::is_enum<Key>::value)
             {
-                std::cout << std::to_string(static_cast<size_t>(*buck.key()));
+                std::cerr << std::to_string(static_cast<size_t>(*buck.key()));
             }
             else if constexpr(std::is_pointer<Key>::value)
             {
-                std::cout << std::to_string(reinterpret_cast<size_t>(*buck.key()));
+                std::cerr << std::to_string(reinterpret_cast<size_t>(*buck.key()));
             }
             else if constexpr(std::is_same<Key, ImmutableString>::value)
             {
-                std::cout << buck.key()->to_string();
+                std::cerr << buck.key()->to_string();
             }
             else if constexpr (std::is_arithmetic<Value>::value)
             {
-                std::cout << std::to_string(*buck.value());
+                std::cerr << std::to_string(*buck.value());
             }
             else
             {
-                std::cout << "???";
+                std::cerr << "???";
             }
-            std::cout << "\t";
+            std::cerr << "\t";
             if constexpr (std::is_same<Value, std::string>::value || std::is_same<Value, ::Value>::value)
             {
-                std::cout << *buck.value();
+                std::cerr << *buck.value();
             }
             else if constexpr (std::is_enum<Value>::value)
             {
-                std::cout << std::to_string(static_cast<size_t>(*buck.value()));
+                std::cerr << std::to_string(static_cast<size_t>(*buck.value()));
             }
             else if constexpr (std::is_pointer<Value>::value)
             {
-                std::cout << std::to_string(reinterpret_cast<size_t>(*buck.value()));
+                std::cerr << std::to_string(reinterpret_cast<size_t>(*buck.value()));
             }
             else if constexpr (std::is_integral<Value>::value)
             {
-                std::cout << std::to_string(*buck.value());
+                std::cerr << std::to_string(*buck.value());
             }
             else
             {
-                std::cout << "???";
+                std::cerr << "???";
             }
             if (buck.next_collision_bucket)
             {
-                std::cout << '\t' << std::to_string(reinterpret_cast<size_t>(buck.next_collision_bucket));
+                std::cerr << '\t' << std::to_string(reinterpret_cast<size_t>(buck.next_collision_bucket));
             }
-            std::cout << "}\n"; // Dear god...
+            std::cerr << "}\n"; // Dear god...
         }
         if(unprinted_collision_ptr)
         {
-            std::cout << "Dangling collision_block_begin pointer!\n";
-            std::cout << std::to_string(reinterpret_cast<size_t>(collision_data.begin)) << std::endl;
-            std::cout << std::to_string(collision_data.begin - bucket_block) << std::endl;
+            std::cerr << "Dangling collision_block_begin pointer!\n";
+            std::cerr << std::to_string(reinterpret_cast<size_t>(collision_data.begin)) << std::endl;
+            std::cerr << std::to_string(collision_data.begin - bucket_block) << std::endl;
         }
     }
     size_t hash_collisions = 0;
@@ -653,7 +652,7 @@ public:
 #ifdef HASHTABLE_DEBUG
             if (buckets_left)
             {
-                std::cout << "Hashtable failed to delete " << std::to_string(used_bucket_count) << " entries! Or something.\n";
+                std::cerr << "Hashtable failed to delete " << std::to_string(used_bucket_count) << " entries! Or something.\n";
             }
 #endif
         }
@@ -738,13 +737,13 @@ public:
         }
         if (fav_buck->used) UNLIKELY
         {
-            std::cout << "Warning, overriding previously-used bucket!";
+            std::cerr << "Warning, overriding previously-used bucket!";
             throw;
         }
         if (fav_buck->next_collision_bucket) UNLIKELY
         {
-            std::cout << "fav_buck started out with fraudulent bucket pointer!";
-        dump();
+            std::cerr << "fav_buck started out with fraudulent bucket pointer!";
+            dump();
             throw;
         }
 #endif

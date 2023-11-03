@@ -44,7 +44,6 @@ public:
 	Literal(Value V)
 		:heldval(V)
 	{
-		//std::cout << "Constructing literal...\n";
 	}
 
 	virtual Value resolve(Interpreter&) override;
@@ -80,7 +79,6 @@ public:
 	Identifier(const ImmutableString& s)
 		:t_name(s)
 	{
-		//std::cout << "I've been created with name " + s + "!\n";
 	}
 	const ImmutableString& get_str() const
 	{
@@ -114,8 +112,6 @@ public:
 		t_op(o)
 	{
 		my_line = linenum;
-		
-		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}
 	virtual ~AssignmentStatement()
 	{
@@ -181,7 +177,6 @@ public:
 		,ty(localtype)
 	{
 		my_line = linenum;
-		//std::cout << "My identifier has the name " + id->get_str() + "!\n";
 	}
 
 	virtual Value resolve(Interpreter&) override;

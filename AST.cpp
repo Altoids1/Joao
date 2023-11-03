@@ -86,7 +86,7 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 	if (lhs_val.t_vType == Value::vType::Function)
 	{
 #if !defined(JOAO_SAFE) && defined(DEBUG)
-		std::cout << "WARNING: Overwriting a Value which stores a function pointer!\n";
+		std::cerr << "WARNING: Overwriting a Value which stores a function pointer!\n";
 #else
 		return Value();
 #endif
@@ -122,7 +122,6 @@ Value LocalAssignmentStatement::resolve(Interpreter& interp)
 	increment();
 #endif
 	Value rhs_val = rhs->resolve(interp);
-	//std::cout << "Their name is " + id->get_str() + " and their value is " + std::to_string(rhs_val.t_value.as_int) + "\n";
 
 	if (t_op != aOps::Assign) UNLIKELY // This is mostly derelict code, but might come up later if composite assignment gets refactored at the AST layer, for some reason.
 	{

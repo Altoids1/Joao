@@ -90,16 +90,16 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			std::cout << "Unrecognized daemon directive '" << filestr << "'\n";
+			std::cerr << "Unrecognized daemon directive '" << filestr << "'\n";
 			exit(EXIT_FAILURE);
 		}
 		exit(EXIT_SUCCESS);
 	#else
-		std::cout << "Joao can only run as a daemon when compiled in Safe Mode.\n";
+		std::cerr << "Joao can only run as a daemon when compiled in Safe Mode.\n";
 		exit(EXIT_FAILURE);
 	#endif
 #else
-		std::cout << "Opening as a daemon is not available on this platform!\n";
+		std::cerr << "Opening as a daemon is not available on this platform!\n";
 		exit(EXIT_FAILURE);
 #endif
 	}
@@ -119,12 +119,12 @@ int main(int argc, char** argv)
 	std::chrono::steady_clock::time_point t1;
 	std::ifstream file;
 #ifdef _DEBUG
-	std::cout << "Opening file " << filestr << "...\n";
+	std::cerr << "Opening file " << filestr << "...\n";
 #endif
 	file.open(filestr);
 	if (!file.good())
 	{
-		std::cout << "Unable to open file " << filestr << "!\n";
+		std::cerr << "Unable to open file " << filestr << "!\n";
 		exit(1);
 	}
 	t1 = std::chrono::steady_clock::now();

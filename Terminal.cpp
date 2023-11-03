@@ -64,7 +64,7 @@ void Terminal::SetColor(std::ostream& stream, Color color) {
         SetConsoleTextAttribute(hConsole, 7);
         return;
     }
-    static std::unordered_map<Color, WindowsColor> colorMap = {
+    static HashTable<Color, WindowsColor> colorMap = {
         {Color::Red, WindowsColor::Red},
         {Color::Green, WindowsColor::Green},
         {Color::Yellow, WindowsColor::Yellow},
@@ -81,7 +81,8 @@ void Terminal::SetColor(std::ostream& stream, Color color) {
 
 void Terminal::SetBold(std::ostream& stream, bool isBold) {
 #ifdef _WIN32
-    return; // FIXME: Do bolding in windows emissions!
+    if(!CanUseANSIColors)
+        return; // FIXME: Do bolding in Windows 7 emissions!
 #else
     if(disableFormatting)
         return;
