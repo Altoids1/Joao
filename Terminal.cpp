@@ -64,7 +64,7 @@ void Terminal::SetColor(std::ostream& stream, Color color) {
         SetConsoleTextAttribute(hConsole, 7);
         return;
     }
-    static std::unordered_map<Color, WindowsColor> colorMap = {
+    static HashTable<Color, WindowsColor> colorMap = {
         {Color::Red, WindowsColor::Red},
         {Color::Green, WindowsColor::Green},
         {Color::Yellow, WindowsColor::Yellow},
