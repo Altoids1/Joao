@@ -2,7 +2,7 @@ project('joao', 'cpp',
 		default_options : ['cpp_std=c++17', 'warning_level=0'],
 		license : 'MIT')
 
-VERSION = '2.2.0'
+VERSION = '2.3.0'
 
 src = [
 	'Args.cpp',
