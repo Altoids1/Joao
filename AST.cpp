@@ -83,6 +83,9 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 
 	Value& lhs_val = id->handle(interp);
 
+	if(interp.error)
+		return Value();
+
 	if (lhs_val.t_vType == Value::vType::Function)
 	{
 #if !defined(JOAO_SAFE) && defined(DEBUG)
@@ -90,6 +93,13 @@ Value AssignmentStatement::resolve(Interpreter& interp)
 #else
 		return Value();
 #endif
+	}
+	if (id->class_name() == "ParentGet") {
+#if !defined(JOAO_SAFE) && defined(DEBUG)
+		std::cerr << "WARNING: Attempted to override the 'this' pointer thing!\n";
+#endif
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot assign a new parent object!");
+		return Value();
 	}
 
 	switch (t_op) // FIXME: Make this suck less
@@ -183,11 +193,15 @@ Value UnaryExpression::resolve(Interpreter& interp)
 	case(UN_ENUMS(uOps::BitwiseNot, Value::vType::Double)): // Does, indeed, flip the bits of the double
 	{
 		double beta = rhs.t_value.as_double;
+#ifdef __cpp_lib_bitops
+		beta = std::bit_cast<double,uint64_t>(~std::bit_cast<uint64_t,double>(beta));
+#else
 		unsigned char* charlie = reinterpret_cast<unsigned char*>(&beta);
 		for(int i = 0; i < sizeof(double);++i)
 		{
 			charlie[i] = ~charlie[i];
 		}
+#endif
 		return Value(beta);
 	}
 	//LENGTH
@@ -230,14 +244,12 @@ Value BinaryExpression::resolve(Interpreter& interp)
 	//The Chef's ingredients: t_op, t_lhs, t_rhs
 	Value lhs = t_lhs->resolve(interp);
 	if (interp.error) // If we somehow gained a novel error in the course of resolving the operands
-	{
 		return Value(); // Propagate that. I'm a BinaryExpression, not a TryCatch.
-	}
+
 	Value rhs = t_rhs->resolve(interp); //TODO: This fails the principle of short-circuiting but we'll be fine for now
 	if (interp.error) // Ditto.
-	{
 		return Value();
-	}
+
 	return BinaryOperation(lhs, rhs, t_op).get_or_throw(interp);
 }
 
@@ -718,13 +730,33 @@ Value& ParentAccess::handle(Interpreter& interp)
 	Object* o = interp.get_objectscope();
 	if (!o)
 	{
-		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot do ParentAccess in classless function!");
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot access member in classless function!");
 		return Value::dev_null;
 	}
 	Function* funk = o->has_method(interp,prop.to_string());
 	if(funk)
 		return funk->to_value();
 	return *(o->has_property(interp,prop));
+}
+
+Value ParentGet::resolve(Interpreter& interp) {
+	Object* obj = interp.get_objectscope();
+	if (!obj) {
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot acquire parent object in a classless function!");
+		return Value();
+	}
+	return Value(obj);
+}
+
+Value& ParentGet::handle(Interpreter& interp) {
+	Object* obj = interp.get_objectscope();
+	if (!obj) {
+		interp.RuntimeError(this, ErrorCode::BadMemberAccess, "Cannot acquire parent object in a classless function!");
+		return Value::dev_null;
+	}
+	//FIXME: This is so stupid omfg
+	interp.tempvalue = Value(obj);
+	return interp.tempvalue;
 }
 
 Value GrandparentAccess::resolve(Interpreter& interp)

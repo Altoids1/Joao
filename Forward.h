@@ -9,11 +9,12 @@
 #include <cmath>
 #include <cstdint>
 #endif
-#ifdef __cpp_lib_bitops
-#include <bit>
-#endif
 
 #if __cplusplus > 202000L
+#include <version>
+#ifdef __cpp_lib_bitops
+    #include <bit>
+#endif
 #define LIKELY [[likely]]
 #define UNLIKELY [[unlikely]]
 #else

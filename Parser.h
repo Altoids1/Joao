@@ -362,10 +362,15 @@ class Parser
 			break;
 		case(Token::cEnum::ParentToken):
 		{
-			if (there == here || tokens[here + 1]->class_enum() != Token::cEnum::WordToken)
-				ParserError(t, "ParentToken found with no corresponding Name!");
-			scoped_access = new ParentAccess(static_cast<WordToken*>(tokens[here + 1])->word);
-			tokenheader = here + 2;
+			if (there == here || tokens[here + 1]->class_enum() != Token::cEnum::WordToken) {
+				//ParserError(t, "ParentToken found with no corresponding Name!");
+				scoped_access = new ParentGet();
+				tokenheader = here + 1;
+			}
+			else {
+				scoped_access = new ParentAccess(static_cast<WordToken*>(tokens[here + 1])->word);
+				tokenheader = here + 2;
+			}
 			break;
 		}
 		case(Token::cEnum::GrandparentToken):

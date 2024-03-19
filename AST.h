@@ -943,6 +943,22 @@ public:
 	virtual Value& handle(Interpreter&) override;
 };
 
+class ParentGet : public ASTNode
+{
+public:
+	ParentGet(int linenum = 0)
+	{
+		my_line = linenum;
+	}
+	virtual const std::string class_name() const override { return "ParentGet"; }
+	virtual std::string dump(int indent) override
+	{
+		return std::string(indent, ' ') + "ParentGet\n";
+	}
+	virtual Value resolve(Interpreter&) override;
+	virtual Value& handle(Interpreter&) override;
+};
+
 class GrandparentAccess : public ASTNode
 {
 	unsigned int depth;

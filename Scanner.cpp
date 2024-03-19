@@ -208,6 +208,9 @@ int Scanner::readSymbol(int it, std::istream& ifst)
 						ascii_lower:
 						ascii_UPPER:
 						ascii_other:
+						case '[':
+						case ' ':
+						case '(':
 							append(new ParentToken(linenum, syntactic_linenum));
 							return it + 1;
 						default:
