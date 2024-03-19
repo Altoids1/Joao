@@ -218,6 +218,14 @@ Value& Value::operator=(Value&& rhs)
 	if (this == &Value::dev_null)
 		return *this;
 
+	// This is mostly logically impossible (since the rvalue lives and dies just for the sake of this assignment)
+	// but it can happen in some cases where two Values are storing the same Object/String/whatever.
+	if (t_vType == rhs.t_vType && t_value.as_object_ptr == rhs.t_value.as_object_ptr) UNLIKELY{
+		rhs.t_vType = vType::Null;
+		rhs.t_value.as_object_ptr = nullptr;
+		return *this;
+	}
+
 	//Logic to drop the ref to a string or object already held by lhs
 	switch (t_vType)
 	{
@@ -256,7 +264,7 @@ Value& Value::operator=(Value&& rhs)
 		break;
 	}
 	rhs.t_vType = vType::Null;
-	rhs.t_value.as_int = 0;
+	rhs.t_value.as_object_ptr = nullptr;
 	return *this;
 }
 /*
