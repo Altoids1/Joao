@@ -1133,7 +1133,7 @@ public:
 class ConstExpression : public Block {
 	static std::vector<ConstExpression*> _registry;
 #ifdef ENVIRONMENT32
-	char bloat[16];
+	char bloat[16]; // See the impl of transmute() to understand why this is here
 #endif
 public:
 	ConstExpression(const std::vector<Expression*>& s)

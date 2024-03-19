@@ -758,8 +758,11 @@ Value& GlobalAccess::handle(Interpreter& interp)
 
 Value IndexAccess::resolve(Interpreter& interp)
 {
+	
 	Value& lhs = container->handle(interp);
 	Value rhs = index->resolve(interp);
+	if (interp.error)
+		return Value();
 
 	switch (lhs.t_vType)
 	{
@@ -798,6 +801,8 @@ Value& IndexAccess::handle(Interpreter& interp)
 {
 	Value& lhs = container->handle(interp);
 	Value rhs = index->resolve(interp);
+	if (interp.error)
+		return Value::dev_null;
 
 	if (lhs.t_vType != Value::vType::Object) // FIXME: Allow for index-based setting of string data
 	{
