@@ -83,7 +83,7 @@ int Scanner::readString(int it)
 int Scanner::readNumber(int it)
 {
 	bool is_double = false; // False until proven otherwise with a decimal place. Note that this means that "1.0" resolves towards a double.
-	int base = 10;
+	int base = 10; // TODO: Support other bases
 	std::string str = "";
 	for (; it < line.length(); ++it)
 	{
@@ -91,6 +91,7 @@ int Scanner::readNumber(int it)
 		switch (c)
 		{
 		case('_'): // Helper underline that makes it easier to read the number, i.e "1_000_000"
+		// TODO: Support ' character once internationali[sz]ation is working
 			break; // just consume it and move on
 		case('.'):
 			if (is_double) // Wait, we already found a decimal! What gives??
@@ -104,19 +105,19 @@ int Scanner::readNumber(int it)
 			str.push_back(c);
 			break;
 		TOKEN_SEPARATOR: // Okay we're done I guess
-			makeNumber(is_double, str, base);
+			makeNumber(it, is_double, str, base);
 			return it;
 		case(';'): // Ugh, we have to do the endline token as well
-			makeNumber(is_double, str, base);
+			makeNumber(it, is_double, str, base);
 			makeEndline();
 			return it;
 		default: //Found something wacky?
 			//just make our number and move on.
-			makeNumber(is_double, str, base);
+			makeNumber(it, is_double, str, base);
 			return --it;
 		}
 	}
-	makeNumber(is_double, str, base);
+	makeNumber(it, is_double, str, base);
 	return it;
 }
 

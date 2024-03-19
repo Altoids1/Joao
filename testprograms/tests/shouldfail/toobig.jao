@@ -1,0 +1,14 @@
+/planet {
+    Number semiMajor;
+    Number velocity;
+}
+/planet/New(s,v) {
+    semiMajor = s;
+    velocity = v;
+}
+
+/main() {
+    ## This number is TOOOOOO big!
+    Object earth = /planet/New(13_599_840_000, 9285);
+    Object mars = /planet/New(20_726_000_000, 7500);
+}

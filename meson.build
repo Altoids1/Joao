@@ -86,6 +86,7 @@ endforeach
 ## Tests that should fail
 shouldfail = [
 	'nomain',
+	'toobig',
 	'file_doesnt_exist', #Phantom test :^)
 ]
 foreach diag : shouldfail

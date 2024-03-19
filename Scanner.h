@@ -624,20 +624,26 @@ class Scanner
 		lowop = OperationPrecedence::NONE;
 		++syntactic_linenum;
 	}
-	void makeNumber(bool is_double, std::string& str, int base = 10)
+	void makeNumber(int it, bool is_double, std::string& str, int base = 10)
 	{
-		if (is_double)
-		{
-			double d = std::stod(str); // Because of how stringent we were with assembling this string, we can pretty confidently do this w/o sanity-checking;
-			//stod() will pretty much for-sure give us something sensible.
-			NumberToken* nt = new NumberToken(linenum, syntactic_linenum, d);
-			append(nt);
+		try {
+			if (is_double)
+			{
+				double d = std::stod(str); // Because of how stringent we were with assembling this string, we can pretty confidently do this w/o sanity-checking;
+				//stod() will pretty much for-sure give us something sensible.
+				NumberToken* nt = new NumberToken(linenum, syntactic_linenum, d);
+				append(nt);
+			}
+			else
+			{
+
+				int i = std::stoi(str, nullptr, base); //^^^ Ditto for stoi().
+				NumberToken* nt = new NumberToken(linenum, syntactic_linenum, i);
+				append(nt);
+			}
 		}
-		else
-		{
-			int i = std::stoi(str, nullptr, base); //^^^ Ditto for stoi().
-			NumberToken* nt = new NumberToken(linenum, syntactic_linenum, i);
-			append(nt);
+		catch (std::out_of_range except) {
+			ScannerError(it, ScanError::MalformedNumber);
 		}
 	}
 	void makeWord(std::string str)
